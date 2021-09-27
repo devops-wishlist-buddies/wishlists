@@ -1,5 +1,7 @@
-**As a** [role]  
-**I need** [functionality] 
+**As a** [role]
+
+**I need** [functionality]
+
 **So that** [benefit]
 
 **Details & Assumptions:** 
