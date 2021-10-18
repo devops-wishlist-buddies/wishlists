@@ -6,9 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 logger = logging.getLogger("flask.app")
 db = SQLAlchemy()
 
-# def init_db(app):
-#   Product.init_db(app)
-
 class DataValidationError(ValueError):
     pass
 
