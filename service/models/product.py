@@ -62,7 +62,7 @@ class Product(db.Model):
       if isinstance(data["status"],Availability) and data['status'] in [Availability.Available, Availability.Unavailable]:
         self.status = data['status']
       else:
-        raise DataValidationError("Invalid type for field status, Integer expected")
+        raise DataValidationError("Invalid type for field status, integer expected")
       self.pic_url = data['pic_url']
       self.short_desc = data['short_desc']
 
@@ -74,7 +74,7 @@ class Product(db.Model):
   
   @classmethod
   def init_db(cls, app:Flask):
-    logger.info("Product: Initializing database")
+    logger.info("Product: initializing database")
     cls.app = app
 
     db.init_app(app)
@@ -89,34 +89,39 @@ class Product(db.Model):
   @classmethod
   def find_by_id(cls, product_id:int):
     """ Find a Product by it's id """
-    logger.info('Processing product lookup for id %s ...', product_id)
+    logger.info('Products: processing product lookup for id %s ...', product_id)
     return cls.query.get(product_id)
 
   @classmethod
   def find_by_id_and_status(cls, product_id:int, status:Availability):
-    logger.info('Processing product lookup for id %s and status %s ...' % (product_id, status))
+    logger.info('Products: processing product lookup for id %s and status %s ...' % (product_id, status))
     res = [r for r in cls.query.filter(cls.id == product_id, cls.status == status)]
     if len(res) == 0:
       return None
     else:
       return res[0]
-    
 
   @classmethod
   def find_or_404(cls,product_id:int):
-    logger.info("Processing lookup or 404 for id %s ...", product_id)
+    logger.info("Products: processing lookup or 404 for id %s ...", product_id)
     return cls.query.get_or_404(product_id)
 
   @classmethod
-  def find_all_by_id_and_status(cls, product_ids:list, status:Availability=Availability.Available) -> list:
+  def find_all_by_id(cls, product_ids:list) -> list:
     """Find a product by id and its status"""
-    logger.info("Processing lookup for ids in %s and status %s ...", product_ids, status)
+    logger.info("Products: processing lookup for ids in %s ...", product_ids)
+    res = cls.query.filter(cls.id.in_(product_ids))
+    return [r for r in res]
+  
+  @classmethod
+  def find_all_by_id_and_status(cls, product_ids:list, status:Availability=Availability.Available) -> list:
+    """Find products by id and its status"""
+    logger.info("Products: processing lookup for ids in %s and status %s ...", product_ids, status)
     res = cls.query.filter(cls.id.in_(product_ids), cls.status == status)
     return [r for r in res]
   
-  
-  
   @classmethod
   def find_by_name(cls,name:str)->list:
-    logger.info("Processing name query for %s ...", name)
+    """Find a product by its name"""
+    logger.info("Products: processing name query for %s ...", name)
     return cls.query.filter(cls.name == name)

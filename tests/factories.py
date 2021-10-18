@@ -25,7 +25,6 @@ class ProductFactory(factory.Factory):
     class Meta:
         model = Product
     
-    #id = factory.Sequence(lambda n:n)
     name = factory.Sequence(lambda n : "Product_%d"% n)
     price = random.random() * 100
     status = FuzzyChoice(choices=[Availability.Available, Availability.Unavailable])
@@ -37,3 +36,7 @@ class WishlistFactory(factory.Factory):
 
     class Meta:
         model = Wishlist
+    
+    name = factory.Sequence(lambda n : "Wishlist_%d"% n)
+    user_id = random.randint(0,100)
+

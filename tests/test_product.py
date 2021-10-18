@@ -182,18 +182,28 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(product_instance.id, Products[1].id)
         self.assertEqual(product_instance.name, Products[1].name)
         self.assertEqual(product_instance.status, Products[1].status)
+    
+    def test_find_all_by_id(self):
+        Product(name="toy", status=Availability.Available, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
+        Product(name="book", status=Availability.Available, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
+        Product(name="table", status=Availability.Unavailable, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
+        products = Product.find_all_by_id([1,2,3])
+        self.assertEqual(len(products),3)
+        self.assertEqual(products[1].name, "book")
+        self.assertEqual(products[1].price, 13.5)
+        self.assertEqual(products[1].status, Availability.Available)
 
-    def test_find_by_ids_and_status(self):
+    def test_find_all_by_id_and_status(self):
         """Find products by id and status"""
         Product(name="toy", status=Availability.Available, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
         Product(name="book", status=Availability.Available, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
         Product(name="table", status=Availability.Unavailable, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
         
-        Products = Product.find_all_by_id_and_status([1,2,3],Availability.Available)
-        self.assertEqual(len(Products),2)
-        self.assertEqual(Products[1].name, "book")
-        self.assertEqual(Products[1].price, 13.5)
-        self.assertEqual(Products[1].status, Availability.Available)
+        products = Product.find_all_by_id_and_status([1,2,3],Availability.Available)
+        self.assertEqual(len(products),2)
+        self.assertEqual(products[1].name, "book")
+        self.assertEqual(products[1].price, 13.5)
+        self.assertEqual(products[1].status, Availability.Available)
 
     def test_find_by_id_and_status(self):
         """Find product by id and status"""
