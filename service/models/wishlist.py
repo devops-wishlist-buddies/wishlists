@@ -13,9 +13,10 @@ TBD
 
 from flask import Flask
 from sqlalchemy.orm import query
+from sqlalchemy.sql.expression import desc
 from service.models.product import Product
 from service.models.wishlist_product import WishlistProduct
-from .model_utils import EntityNotFoundError, db,logger,Availability,DataValidationError
+from .model_utils import EntityNotFoundError, db,logger,DataValidationError,asc
 
 class Wishlist(db.Model):
   __tablename__ = 'wishlist'
@@ -57,6 +58,7 @@ class Wishlist(db.Model):
     db.session.commit()
   
   def read(self):
+    logger.info("Wishlist: reading content from wishlist with id %s ..." % self.id)
     wishlist = Wishlist.find_by_id(self.id)
     if wishlist is None:
       raise EntityNotFoundError("Cannot find wishlist with id %s" % self.id)
@@ -68,6 +70,7 @@ class Wishlist(db.Model):
       return WishlistVo(self,products).serialize()
   
   def add_items(self,product_ids:list):
+    logger.info("Wishlist: adding items to wishlist with id %s. Items are %s ..." % (self.id, product_ids))
     cnt = 0
     for pid in product_ids:
       if WishlistProduct.find_by_wishlist_id_and_product_id(self.id,pid) is None:
@@ -76,6 +79,7 @@ class Wishlist(db.Model):
     return cnt
 
   def delete_items(self, product_ids:list):
+    logger.info("Wishlist: deleting items from wishlist with id %s. Items are %s ..." % (self.id,product_ids))
     cnt = 0
     for pid in product_ids:
       entity = WishlistProduct.find_by_wishlist_id_and_product_id(self.id, pid)
@@ -90,7 +94,7 @@ class Wishlist(db.Model):
       return 0
     wishlist = Wishlist.find_by_id(self.id)
     if wishlist is None:
-      logger.info("Wishlist: cannot find this wishlist")
+      logger.info("Wishlist: cannot find wishlist with id %s ..." % self.id)
       return 0
     else:
       WishlistProduct.delete_all_by_wishlist_id(self.id)
@@ -121,7 +125,7 @@ class Wishlist(db.Model):
   @classmethod
   def find_all_by_user_id(cls,user_id:int)->list:
     logger.info("Wishlist: porcessing lookup for user id: %s ..." % user_id)
-    query_res = cls.query.filter(cls.user_id == user_id)
+    query_res = cls.query.filter(cls.user_id == user_id).order_by(asc(Wishlist.id))
     if query_res.count() == 0:
       return []
     else:

@@ -1,6 +1,6 @@
 from enum import Enum
 import logging
-from flask import Flask
+from sqlalchemy import asc
 from flask_sqlalchemy import SQLAlchemy
 
 logger = logging.getLogger("flask.app")

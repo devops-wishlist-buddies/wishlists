@@ -13,7 +13,7 @@ TBD
 
 from flask import Flask
 from service.models.product import Product
-from .model_utils import db,logger,DataValidationError
+from .model_utils import db,logger,DataValidationError,asc
 
 class WishlistProduct(db.Model):
     __tablename__ = "wishlistProduct"
@@ -78,13 +78,13 @@ class WishlistProduct(db.Model):
     @classmethod
     def find_all_by_wishlist_id(cls, wishlist_id:int)->list:
         logger.info("WishlistProduct: processing lookup for wishlist_id %s ..." % wishlist_id)
-        res = cls.query.filter(cls.wishlist_id == wishlist_id)
+        res = cls.query.filter(cls.wishlist_id == wishlist_id).order_by(asc(WishlistProduct.id))
         return [r for r in res]
     
     @classmethod
     def find_by_wishlist_id_and_product_id(cls, wishlist_id:int,product_id:int):
         logger.info("WishlistProduct: processing lookup for wishlist_id: %s and product_id %s ..." % (wishlist_id,product_id))
-        res = cls.query.filter(cls.wishlist_id == wishlist_id, cls.product_id == product_id)
+        res = cls.query.filter(cls.wishlist_id == wishlist_id, cls.product_id == product_id).order_by(asc(WishlistProduct.id))
         if res.count() == 0:
             return None
         else:

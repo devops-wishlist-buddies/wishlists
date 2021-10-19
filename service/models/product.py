@@ -12,7 +12,7 @@ TBD
 """
 
 from flask import Flask
-from .model_utils import db,logger,Availability,DataValidationError
+from .model_utils import db,logger,Availability,DataValidationError,asc
 
 class Product(db.Model):
 
@@ -95,7 +95,7 @@ class Product(db.Model):
   @classmethod
   def find_by_id_and_status(cls, product_id:int, status:Availability):
     logger.info('Products: processing product lookup for id %s and status %s ...' % (product_id, status))
-    res = [r for r in cls.query.filter(cls.id == product_id, cls.status == status)]
+    res = [r for r in cls.query.filter(cls.id == product_id, cls.status == status).order_by(asc(Product.id))]
     if len(res) == 0:
       return None
     else:
@@ -110,18 +110,18 @@ class Product(db.Model):
   def find_all_by_id(cls, product_ids:list) -> list:
     """Find a product by id and its status"""
     logger.info("Products: processing lookup for ids in %s ...", product_ids)
-    res = cls.query.filter(cls.id.in_(product_ids))
+    res = cls.query.filter(cls.id.in_(product_ids)).order_by(asc(Product.id))
     return [r for r in res]
   
   @classmethod
   def find_all_by_id_and_status(cls, product_ids:list, status:Availability=Availability.Available) -> list:
     """Find products by id and its status"""
     logger.info("Products: processing lookup for ids in %s and status %s ...", product_ids, status)
-    res = cls.query.filter(cls.id.in_(product_ids), cls.status == status)
+    res = cls.query.filter(cls.id.in_(product_ids), cls.status == status).order_by(asc(Product.id))
     return [r for r in res]
   
   @classmethod
   def find_by_name(cls,name:str)->list:
     """Find a product by its name"""
     logger.info("Products: processing name query for %s ...", name)
-    return cls.query.filter(cls.name == name)
+    return [p for p in cls.query.filter(cls.name == name).order_by(asc(Product.id))]

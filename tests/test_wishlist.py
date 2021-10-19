@@ -36,8 +36,6 @@ DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
 
-COUCHDB_NAME = "test"
-
 ######################################################################
 #  W I S H L I S T   M O D E L   T E S T   C A S E S
 ######################################################################

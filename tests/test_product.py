@@ -235,3 +235,13 @@ class TestProductModel(unittest.TestCase):
     def test_find_or_404_not_found(self):
         """Find or return 404 NOT found"""
         self.assertRaises(NotFound, Product.find_or_404, 0)
+    
+    def test_find_by_name(self):
+        """Find a product by its name"""
+        Product(name="toy", status=Availability.Available, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
+        Product(name="toy", status=Availability.Available, price = 22.5, pic_url="www.toy.com/2.png", short_desc = "this is another toy").create()
+        Product(name="book", status=Availability.Available, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
+        Product(name="table", status=Availability.Unavailable, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
+
+        self.assertEqual(len(Product.find_by_name("book")),1)
+        self.assertEqual(len(Product.find_by_name("toy")),2)
