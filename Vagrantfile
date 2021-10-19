@@ -16,6 +16,7 @@ Vagrant.configure(2) do |config|
   # config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network "forwarded_port", guest: 5000, host: 5000, host_ip: "127.0.0.1"
 
+
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   config.vm.network "private_network", ip: "192.168.33.10"
@@ -103,5 +104,17 @@ Vagrant.configure(2) do |config|
     d.run "postgres:alpine",
        args: "-d --name postgres -p 5432:5432 -v psqldata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=postgres"
   end
-
+  
+  ######################################################################
+  # Add a test database after PostgreSQL is provisioned
+  ######################################################################
+  config.vm.provision "shell", inline: <<-SHELL
+    # Create testdb database using postgres cli
+    echo "Pausing for 60 seconds to allow PostgreSQL to initialize..."
+    sleep 60
+    echo "Creating test database"
+	  docker exec postgres psql -c "drop database if exists testdb;" -U postgres
+    docker exec postgres psql -c "create database testdb;" -U postgres
+    # Done
+  SHELL
 end
