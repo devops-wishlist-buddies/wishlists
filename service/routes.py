@@ -30,6 +30,9 @@ from werkzeug.exceptions import NotFound
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
 # variety of backends including SQLite, MySQL, and PostgreSQL
 from flask_sqlalchemy import SQLAlchemy
+from service.models.wishlist import Wishlist
+from service.models.product import Product
+from service.models.wishlist_product import WishlistProduct
 
 # Import Flask application
 from . import app
@@ -57,4 +60,53 @@ def wishlists_index():
             {"message": "Nothing here yet!" }
         ),
         status.HTTP_200_OK,
+    )
+
+
+######################################################################
+# DELETE A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
+def delete_wishlists(wishlist_id):
+    """
+    Delete a wishlist
+    This endpoint will delete a wishlist based the id specified in the path
+    """
+    app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
+    wishlist = Wishlist.find_by_id(wishlist_id)
+
+    if wishlist:
+        wishlist.delete()
+        WishlistProduct.delete_all_by_wishlist_id(wishlist_id)
+
+    return make_response("", status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+######################################################################
+# ADD A NEW PRODUCT IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/products", methods=["POST"])
+def create_products():
+    """
+    Creates a product
+    This endpoint will create a product based the data in the body that is posted
+    """
+    app.logger.info("Request to create a product")
+    check_content_type("application/json")
+    product = Product()
+    product.deserialize(request.get_json())
+    product.create()
+    message = product.serialize()
+
+    dic = {'product_id': product.id, 'wishlist_id': wishlist_id}
+    wishlistproduct = WishlistProduct()
+    wishlistproduct.deserialize(dic)
+    wishlistproduct.create()
+
+    location_url = url_for("get_products", product_id=product.id, _external=True)
+    return make_response(
+        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
