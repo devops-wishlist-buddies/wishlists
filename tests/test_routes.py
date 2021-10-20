@@ -27,9 +27,9 @@ import logging
 import unittest
 from urllib.parse import quote_plus
 from service import status  # HTTP Status Codes
-from service.models import db
+from service.models.model_utils import db
 from service.routes import app, init_db
-from .factories import WishlistFactory
+from .factories import ProductFactory, WishlistFactory
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
@@ -66,3 +66,143 @@ class TestWishlistsServer(unittest.TestCase):
     # def tearDown(self):
     #     db.session.remove()
     #     db.drop_all()
+    def _create_products(self, count):
+      """ Factory method to create pets in bulk """
+      products = []
+      for _ in range(count):
+        test_product = ProductFactory()
+        resp = self.app.post(
+          BASE_URL, json=test_product.serialize(), content_type="application/json"
+        )
+        self.assertEqual(
+          resp.status_code, status.HTTP_201_CREATED, "Could not create test product"
+        )
+        new_product = resp.get_json()
+        test_product.id = new_product["id"]
+        products.append(test_product)
+      return products
+
+
+    def test_create_product(self):
+      """ Create a new Product """
+      test_product = ProductFactory()
+      logging.debug(test_product)
+      resp = self.app.post(
+        BASE_URL, json=test_product.serialize(), content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+      # Make sure location header is set
+      location = resp.headers.get("Location", None)
+      self.assertIsNotNone(location)
+      # Check the data is correct
+      new_product = resp.get_json()
+      self.assertEqual(new_product["name"], test_product.name, "Names do not match")
+      self.assertEqual(
+        new_product["price"], test_product.price, "Prices do not match"
+      )
+      self.assertEqual(
+        new_product["status"], test_product.status, "Status does not match"
+      )
+      self.assertEqual(
+        new_product["pic_url"], test_product.pic_url, "Pic_url does not match"
+      )
+      self.assertEqual(
+        new_product["short_desc"], test_product.short_desc, "Short_desc does not match"
+      )
+
+      # Check that the location header was correct
+      resp = self.app.get(location, content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      new_product = resp.get_json()
+      self.assertEqual(new_product["name"], test_product.name, "Names do not match")
+      self.assertEqual(
+        new_product["price"], test_product.price, "Prices do not match"
+      )
+      self.assertEqual(
+        new_product["status"], test_product.status, "Status does not match"
+      )
+      self.assertEqual(
+        new_product["pic_url"], test_product.pic_url, "Pic_url does not match"
+      )
+      self.assertEqual(
+        new_product["short_desc"], test_product.short_desc, "Short_desc does not match"
+      )
+
+
+    def test_create_product_no_data(self):
+      """ Create a Product with missing data """
+      resp = self.app.post(
+        BASE_URL, json={}, content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_create_product_bad_name(self):
+      """ Create a Product with bad name data """
+      test_product = ProductFactory()
+      logging.debug(test_product)
+      # change available to a string
+      test_product.name = "hello"
+      resp = self.app.post(
+        BASE_URL, json=test_product.serialize(), content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_create_product_bad_price(self):
+      """ Create a Product with bad price data """
+      product = ProductFactory()
+      logging.debug(product)
+      # change gender to a bad string
+      test_product = product.serialize()
+      test_product["price"] = 1000  # wrong case
+      resp = self.app.post(
+        BASE_URL, json=test_product, content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_create_product_bad_pic_url(self):
+      """ Create a Product with bad pic_url data """
+      product = ProductFactory()
+      logging.debug(product)
+      # change gender to a bad string
+      test_product = product.serialize()
+      test_product["pic_url"] = "www.123.com"  # wrong case
+      resp = self.app.post(
+        BASE_URL, json=test_product, content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_product_bad_short_desc(self):
+      """ Create a Product with bad short_desc data """
+      product = ProductFactory()
+      logging.debug(product)
+      # change gender to a bad string
+      test_product = product.serialize()
+      test_product["short_desc"] = "this is nothing"  # wrong case
+      resp = self.app.post(
+        BASE_URL, json=test_product, content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_product_no_content_type(self):
+      """ Create a Product with no content type """
+      resp = self.app.post(BASE_URL)
+      self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+
+
+    def test_delete_wishlist(self):
+      """ Delete a Wishlist """
+      test_wishlist = self._create_wishlists(1)[0]
+      resp = self.app.delete(
+        "{0}/{1}".format(BASE_URL, test_wishlist.id), content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+      self.assertEqual(len(resp.data), 0)
+      # make sure they are deleted
+      resp = self.app.get(
+        "{}/{}".format(BASE_URL, test_wishlist.id), content_type="application/json"
+      )
+      self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
