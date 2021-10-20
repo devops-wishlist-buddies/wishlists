@@ -27,13 +27,16 @@ import logging
 import unittest
 from urllib.parse import quote_plus
 from service import status  # HTTP Status Codes
-from service.models import db
+from service.models.model_utils import db
+from service.models.product import Product
+from service.models.wishlist import Wishlist
+from service.models.wishlist_product import WishlistProduct
 from service.routes import app, init_db
 from .factories import WishlistFactory
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
 
 BASE_URL = "/wishlists"
@@ -44,25 +47,49 @@ BASE_URL = "/wishlists"
 class TestWishlistsServer(unittest.TestCase):
     """ Wishlists Server Tests """
 
-    # @classmethod
-    # def setUpClass(cls):
-    #     """ Run once before all tests """
-    #     app.config["TESTING"] = True
-    #     app.config["DEBUG"] = False
-    #     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-    #     app.logger.setLevel(logging.CRITICAL)
-    #     init_db()
+    @classmethod
+    def setUpClass(cls):
+        """ Run once before all tests """
+        app.config["TESTING"] = True
+        app.config["DEBUG"] = False
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.logger.setLevel(logging.CRITICAL)
+        Product.init_db(app)
+        Wishlist.init_db(app)
+        WishlistProduct.init_db(app)
 
-    # @classmethod
-    # def tearDownClass(cls):
-    #     pass
+    @classmethod
+    def tearDownClass(cls):
+        db.session.close()
 
-    # def setUp(self):
-    #     """ Runs before each test """
-    #     db.drop_all()  # clean up the last tests
-    #     db.create_all()  # create new tables
-    #     self.app = app.test_client()
+    def setUp(self):
+        """ Runs before each test """
+        db.drop_all()  # clean up the last tests
+        db.create_all()  # create new tables
+        self.app = app.test_client()
 
-    # def tearDown(self):
-    #     db.session.remove()
-    #     db.drop_all()
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+
+
+######################################################################
+# #  T E S T   C A S E S
+######################################################################
+    def test_index(self):
+      """Test the index page"""
+      resp = self.app.get("/")
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      data = resp.get_json()
+      self.assertEqual(data["name"], "Wishlists REST API Service")
+      self.assertEqual(data["version"], "1.0")
+
+    def test_create_wishlist(self):
+      new_wl = {"name": "test", "user_id": 1}
+      resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+      new_json = resp.get_json()
+      wl = Wishlist.find_by_id(new_json['data'])
+      self.assertEqual(wl.name, "test")
+      self.assertEqual(wl.user_id, 1)
+

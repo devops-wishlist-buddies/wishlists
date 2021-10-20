@@ -34,27 +34,71 @@ from flask_sqlalchemy import SQLAlchemy
 # Import Flask application
 from . import app
 
+from service.models.wishlist import Wishlist
+from service.models.product import Product
+from service.models.wishlist_product import WishlistProduct
+
+DATABASE_URI = os.getenv(
+    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
+)
+
 ######################################################################
 # GET INDEX
 ######################################################################
-@app.route("/")
+@app.route("/",methods=["GET"])
 def index():
     """ Root URL response """
     return (
         jsonify(
             name="Wishlists REST API Service",
             version="1.0",
-            paths=url_for("wishlists_index", _external=True),
         ),
         status.HTTP_200_OK,
     )
 
-## Define functional routes below
-@app.route("/wishlists", methods=["GET"])
-def wishlists_index():
-  return (
+######################################################################
+# CREATE A NEW WISHLIST
+######################################################################
+@app.route("/wishlists", methods=["POST"])
+def create_wishlists():
+    """
+    Creates a wishlist
+    This endpoint will create a wishlist based the data in the body that is posted
+    or data that is sent via an html form post.
+    """
+    app.logger.info("Request to create a wishlist")
+    data = {}
+    # Check for form submission data
+    if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+        app.logger.info("Processing FORM data")
+        data = {
+            "name": request.form.get("name"),
+            "user_id": request.form.get("user_id"),
+        }
+    else:
+        app.logger.info("Processing JSON data")
+        data = request.get_json()
+    wishlist = Wishlist()
+    wishlist.deserialize(data)
+    wishlist.create()
+    return make_response(
         jsonify(
-            {"message": "Nothing here yet!" }
+            data = wishlist.id,
+            message = "Wishlist Created!"
         ),
-        status.HTTP_200_OK,
+        status.HTTP_201_CREATED
     )
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+def init_db():
+    """Initlaize the model"""
+    app.config["TESTING"] = True
+    app.config["DEBUG"] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+    app.logger.setLevel(logging.CRITICAL)
+    Wishlist.init_db(app)
+    Product.init_db(app)
+    WishlistProduct.init_db(app)

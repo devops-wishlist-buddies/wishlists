@@ -50,6 +50,7 @@ class Wishlist(db.Model):
     self.id = None
     db.session.add(self)
     db.session.commit()
+    return self.id
 
   def update(self):
     logger.info("Updating wishlist %s ...", self.name)
