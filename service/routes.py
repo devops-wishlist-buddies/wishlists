@@ -108,37 +108,6 @@ def delete_wishlists(wishlist_id):
     return make_response("", status.HTTP_204_NO_CONTENT)
 
 
-
-
-
-######################################################################
-# ADD A NEW PRODUCT IN A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products", methods=["POST"])
-def create_products():
-    """
-    Creates a product
-    This endpoint will create a product based the data in the body that is posted
-    """
-    app.logger.info("Request to create a product")
-    check_content_type("application/json")
-    product = Product()
-    product.deserialize(request.get_json())
-    product.create()
-    message = product.serialize()
-
-    dic = {'product_id': product.id, 'wishlist_id': wishlist_id}
-    wishlistproduct = WishlistProduct()
-    wishlistproduct.deserialize(dic)
-    wishlistproduct.create()
-
-    location_url = url_for("get_products", product_id=product.id, _external=True)
-    return make_response(
-        jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-    )
-
-
-
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
