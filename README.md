@@ -14,24 +14,21 @@ This repo is for the Wishlists squad in DevOps Fall 2021 class.
 
 ## How to perform unit tests
 
-----
-
 Once the vagrant is up and you are inside the ```/vagrant``` folder, type the following command inside your terminal.
 
 ```
-python -m uniittest tests.test_product
+python -m unittest tests.test_product
 ```
 
 Please replace the ```tests.test_product``` with the module name you want to test. The followings are available at this time.
 
 ```
-python -m uniittest tests.test_product
-python -m uniittest tests.test_wishlist
-python -m uniittest tests.test_wishlist_product
+python -m unittest tests.test_product
+python -m unittest tests.test_wishlist
+python -m unittest tests.test_wishlist_product
 ```
 
 ## How to invoke nosetests
-----
 
 Once the vagrant is up and you are inside the ```/vagrant``` folder, type the following command inside your terminal.
 
@@ -41,9 +38,7 @@ nosetests --with-spec --spec-color
 
 ## How to run the flask service
 
-----
-
-Once the vagrant is up and you are **inside the VM**
+Once the vagrant is up and you are inside the ```/vagrant``` folder
 
 ```
 cd /vagrant
