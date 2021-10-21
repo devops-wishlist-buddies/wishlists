@@ -93,32 +93,6 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(wl.name, "test")
       self.assertEqual(wl.user_id, 1)
 
-    def test_create_product(self):
-      new_wl = {"name": "test", "user_id": 1}
-      resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
-
-      new=resp.get_json()
-
-      new_product = ProductFactory()
-
-      # new_product = Product.serialize(new_product)
-
-      new_product = {"name": "hello", "price": 1, "pic-url": "www.google.com", "short_desc" : "hello"}
-
-
-
-      resp = self.app.post("{0}/{1}/{0}".format(BASE_URL, new['data'], "products"), json=new_product, content_type="application/json")
-      self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-
-
-      new_json = resp.get_json()
-      product = Product.find_by_id(new_json['data'])
-      self.assertEqual(product.short_desc, new_product.short_desc)
-      self.assertEqual(product.pic_url, new_product.pic_url)
-      self.assertEqual(product.status, new_product.status)
-      self.assertEqual(product.price, new_product.price)
-      self.assertEqual(product.name, new_product.name)
-
 
 
     def test_delete_wishlist(self):
@@ -132,3 +106,4 @@ class TestWishlistsServer(unittest.TestCase):
       # make sure they are deleted
       resp = Wishlist.find_by_id(new_json['data'])
       self.assertEqual(resp, None)
+
