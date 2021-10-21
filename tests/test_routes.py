@@ -28,12 +28,15 @@ import unittest
 from urllib.parse import quote_plus
 from service import status  # HTTP Status Codes
 from service.models.model_utils import db
+from service.models.product import Product
+from service.models.wishlist import Wishlist
+from service.models.wishlist_product import WishlistProduct
 from service.routes import app, init_db
-from .factories import ProductFactory, WishlistFactory
+from .factories import WishlistFactory, ProductFactory
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
 
 BASE_URL = "/wishlists"
@@ -44,165 +47,88 @@ BASE_URL = "/wishlists"
 class TestWishlistsServer(unittest.TestCase):
     """ Wishlists Server Tests """
 
-    # @classmethod
-    # def setUpClass(cls):
-    #     """ Run once before all tests """
-    #     app.config["TESTING"] = True
-    #     app.config["DEBUG"] = False
-    #     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-    #     app.logger.setLevel(logging.CRITICAL)
-    #     init_db()
+    @classmethod
+    def setUpClass(cls):
+        """ Run once before all tests """
+        app.config["TESTING"] = True
+        app.config["DEBUG"] = False
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.logger.setLevel(logging.CRITICAL)
+        Product.init_db(app)
+        Wishlist.init_db(app)
+        WishlistProduct.init_db(app)
 
-    # @classmethod
-    # def tearDownClass(cls):
-    #     pass
+    @classmethod
+    def tearDownClass(cls):
+        db.session.close()
 
-    # def setUp(self):
-    #     """ Runs before each test """
-    #     db.drop_all()  # clean up the last tests
-    #     db.create_all()  # create new tables
-    #     self.app = app.test_client()
+    def setUp(self):
+        """ Runs before each test """
+        db.drop_all()  # clean up the last tests
+        db.create_all()  # create new tables
+        self.app = app.test_client()
 
-    # def tearDown(self):
-    #     db.session.remove()
-    #     db.drop_all()
-    def _create_products(self, count):
-      """ Factory method to create pets in bulk """
-      products = []
-      for _ in range(count):
-        test_product = ProductFactory()
-        resp = self.app.post(
-          BASE_URL, json=test_product.serialize(), content_type="application/json"
-        )
-        self.assertEqual(
-          resp.status_code, status.HTTP_201_CREATED, "Could not create test product"
-        )
-        new_product = resp.get_json()
-        test_product.id = new_product["id"]
-        products.append(test_product)
-      return products
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
 
+
+######################################################################
+# #  T E S T   C A S E S
+######################################################################
+    def test_index(self):
+      """Test the index page"""
+      resp = self.app.get("/")
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      data = resp.get_json()
+      self.assertEqual(data["name"], "Wishlists REST API Service")
+      self.assertEqual(data["version"], "1.0")
+
+    def test_create_wishlist(self):
+      new_wl = {"name": "test", "user_id": 1}
+      resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+      new_json = resp.get_json()
+      wl = Wishlist.find_by_id(new_json['data'])
+      self.assertEqual(wl.name, "test")
+      self.assertEqual(wl.user_id, 1)
 
     def test_create_product(self):
-      """ Create a new Product """
-      test_product = ProductFactory()
-      logging.debug(test_product)
-      resp = self.app.post(
-        BASE_URL, json=test_product.serialize(), content_type="application/json"
-      )
+      new_wl = {"name": "test", "user_id": 1}
+      resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
+
+      new=resp.get_json()
+
+      new_product = ProductFactory()
+
+      # new_product = Product.serialize(new_product)
+
+      new_product = {"name": "hello", "price": 1, "pic-url": "www.google.com", "short_desc" : "hello"}
+
+
+
+      resp = self.app.post("{0}/{1}/{0}".format(BASE_URL, new['data'], "products"), json=new_product, content_type="application/json")
       self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-      # Make sure location header is set
-      location = resp.headers.get("Location", None)
-      self.assertIsNotNone(location)
-      # Check the data is correct
-      new_product = resp.get_json()
-      self.assertEqual(new_product["name"], test_product.name, "Names do not match")
-      self.assertEqual(
-        new_product["price"], test_product.price, "Prices do not match"
-      )
-      self.assertEqual(
-        new_product["status"], test_product.status, "Status does not match"
-      )
-      self.assertEqual(
-        new_product["pic_url"], test_product.pic_url, "Pic_url does not match"
-      )
-      self.assertEqual(
-        new_product["short_desc"], test_product.short_desc, "Short_desc does not match"
-      )
-
-      # Check that the location header was correct
-      resp = self.app.get(location, content_type="application/json")
-      self.assertEqual(resp.status_code, status.HTTP_200_OK)
-      new_product = resp.get_json()
-      self.assertEqual(new_product["name"], test_product.name, "Names do not match")
-      self.assertEqual(
-        new_product["price"], test_product.price, "Prices do not match"
-      )
-      self.assertEqual(
-        new_product["status"], test_product.status, "Status does not match"
-      )
-      self.assertEqual(
-        new_product["pic_url"], test_product.pic_url, "Pic_url does not match"
-      )
-      self.assertEqual(
-        new_product["short_desc"], test_product.short_desc, "Short_desc does not match"
-      )
 
 
-    def test_create_product_no_data(self):
-      """ Create a Product with missing data """
-      resp = self.app.post(
-        BASE_URL, json={}, content_type="application/json"
-      )
-      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-    def test_create_product_bad_name(self):
-      """ Create a Product with bad name data """
-      test_product = ProductFactory()
-      logging.debug(test_product)
-      # change available to a string
-      test_product.name = "hello"
-      resp = self.app.post(
-        BASE_URL, json=test_product.serialize(), content_type="application/json"
-      )
-      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-    def test_create_product_bad_price(self):
-      """ Create a Product with bad price data """
-      product = ProductFactory()
-      logging.debug(product)
-      # change gender to a bad string
-      test_product = product.serialize()
-      test_product["price"] = 1000  # wrong case
-      resp = self.app.post(
-        BASE_URL, json=test_product, content_type="application/json"
-      )
-      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-    def test_create_product_bad_pic_url(self):
-      """ Create a Product with bad pic_url data """
-      product = ProductFactory()
-      logging.debug(product)
-      # change gender to a bad string
-      test_product = product.serialize()
-      test_product["pic_url"] = "www.123.com"  # wrong case
-      resp = self.app.post(
-        BASE_URL, json=test_product, content_type="application/json"
-      )
-      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_create_product_bad_short_desc(self):
-      """ Create a Product with bad short_desc data """
-      product = ProductFactory()
-      logging.debug(product)
-      # change gender to a bad string
-      test_product = product.serialize()
-      test_product["short_desc"] = "this is nothing"  # wrong case
-      resp = self.app.post(
-        BASE_URL, json=test_product, content_type="application/json"
-      )
-      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_create_product_no_content_type(self):
-      """ Create a Product with no content type """
-      resp = self.app.post(BASE_URL)
-      self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+      new_json = resp.get_json()
+      product = Product.find_by_id(new_json['data'])
+      self.assertEqual(product.short_desc, new_product.short_desc)
+      self.assertEqual(product.pic_url, new_product.pic_url)
+      self.assertEqual(product.status, new_product.status)
+      self.assertEqual(product.price, new_product.price)
+      self.assertEqual(product.name, new_product.name)
 
 
 
     def test_delete_wishlist(self):
       """ Delete a Wishlist """
-      test_wishlist = self._create_wishlists(1)[0]
-      resp = self.app.delete(
-        "{0}/{1}".format(BASE_URL, test_wishlist.id), content_type="application/json"
-      )
+      new_wl = WishlistFactory()
+      resp = self.app.post("/wishlists", json=new_wl.serialize(), content_type="application/json")
+      new_json = resp.get_json()
+      resp = self.app.delete("{0}/{1}".format(BASE_URL, new_json['data']), content_type="application/json")
       self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
       self.assertEqual(len(resp.data), 0)
       # make sure they are deleted
-      resp = self.app.get(
-        "{}/{}".format(BASE_URL, test_wishlist.id), content_type="application/json"
-      )
-      self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+      resp = Wishlist.find_by_id(new_json['data'])
+      self.assertEqual(resp, None)
