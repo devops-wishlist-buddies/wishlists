@@ -37,6 +37,7 @@ from . import app
 from service.models.wishlist import Wishlist
 from service.models.product import Product
 from service.models.wishlist_product import WishlistProduct
+from service.models.model_utils import Availability
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
