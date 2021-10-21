@@ -105,7 +105,13 @@ def delete_wishlists(wishlist_id):
         wishlist.delete()
         WishlistProduct.delete_all_by_wishlist_id(wishlist_id)
 
-    return make_response("", status.HTTP_204_NO_CONTENT)
+    return make_response(
+      jsonify(
+          data = wishlist_id,
+          message = "Wishlist Deleted!"
+        ), 
+        status.HTTP_204_NO_CONTENT
+    )
 
 
 ######################################################################
