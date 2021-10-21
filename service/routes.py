@@ -90,6 +90,126 @@ def create_wishlists():
     )
 
 ######################################################################
+# RETRIEVE A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>", methods=["GET"])
+def get_wishlist(wishlist_id):
+    """
+    Retrieve a single wishlist
+    This endpoint will return a wishlist based on it"s id
+    """
+    app.logger.info("Request for wishlist with id: %s", wishlist_id)
+    wishlist = Wishlist.find_by_id(wishlist_id)
+    if not wishlist:
+        return(
+            f"Wishlist with id {wishlist_id} was not found",
+            status.HTTP_404_NOT_FOUND
+        )
+    return make_response(jsonify(wishlist.serialize()), status.HTTP_200_OK)
+
+
+######################################################################
+# ADD A PRODUCT IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/products", methods=["POST"])
+def add_product_to_wishlist(wishlist_id):
+    """
+    This endpoint will add a product into wishlist
+    """
+    app.logger.info("Request to add a product")
+    check_content_type("application/json")
+
+    data = request.get_json()
+    product_id = data["id"]
+    product_exist_check = Product.find_by_id( product_id )
+    if not product_exist_check:
+        return(
+            f"Product with id {product_id} was not found",
+            status.HTTP_404_NOT_FOUND
+        )
+    
+    wishlistproduct = WishlistProduct()
+    wishlistproduct.product_id = product_id
+    wishlistproduct.wishlist_id = wishlist_id
+    if not Wishlist.find_by_id( wishlist_id ):
+        return(
+            f"Wishlist with id {wishlist_id} was not found",
+            status.HTTP_404_NOT_FOUND
+        )
+    wishlistproduct.create()
+    message = wishlistproduct.serialize()
+
+    return make_response(jsonify(message), status.HTTP_201_CREATED)
+
+######################################################################
+# LIST PRODUCTS IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/products", methods=["GET"])
+def list_products_in_wishlist(wishlist_id):
+    """
+    List all products in a wishlist based on a wishlist_id
+    """
+    app.logger.info("Request to list products in a wishlist")
+    wishlist_products= WishlistProduct.find_all_by_wishlist_id(wishlist_id)
+    products_id_list = [ wishlist_product.product_id for wishlist_product in wishlist_products ]
+    res = []
+    for product_id in products_id_list:
+        product = Product.find_by_id( product_id )
+        if not product:
+            return(
+                f"Product with id {product_id} was not found",
+                status.HTTP_404_NOT_FOUND
+            )
+        res.append( product.serialize() )
+    return make_response(jsonify(res), status.HTTP_200_OK)
+
+######################################################################
+# CREATE A NEW PRODUCT
+######################################################################
+@app.route("/products", methods=["POST"])
+def create_products():
+    """
+    Creates a product
+    This endpoint will create a product based the data in the body that is posted
+    """
+    app.logger.info("Request to create a product")
+    data = request.get_json()
+    product= Product()
+    if isinstance(data["status"], str):
+        if not hasattr(Availability, data["status"]):
+            return(
+                f"product got wrong status",
+                status.HTTP_400_BAD_REQUEST
+            )
+        data["status"] = getattr(Availability, data["status"])
+    product.deserialize(data)
+    product.create()
+    return make_response(
+        jsonify( product.serialize() ),
+        status.HTTP_201_CREATED
+    )
+
+######################################################################
+# RETRIEVE A PRODUCT
+######################################################################
+@app.route("/products/<int:product_id>", methods=["GET"])
+def get_product(product_id):
+    """
+    Retrieve a single product
+    This endpoint will return a product based on it"s id
+    """
+    app.logger.info("Request for product with id: %s", product_id)
+    product = Product.find_by_id(product_id)
+    if not product:
+        return(
+            f"product with id {product_id} was not found",
+            status.HTTP_404_NOT_FOUND
+        )
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
+
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 
@@ -102,3 +222,14 @@ def init_db():
     Wishlist.init_db(app)
     Product.init_db(app)
     WishlistProduct.init_db(app)
+
+def check_content_type(media_type):
+    """Checks that the media type is correct"""
+    content_type = request.headers.get("Content-Type")
+    if content_type and content_type == media_type:
+        return
+    app.logger.error("Invalid Content-Type: %s", content_type)
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        "Content-Type must be {}".format(media_type),
+    )
