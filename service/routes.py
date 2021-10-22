@@ -101,7 +101,7 @@ def list_wishlists_by_userid(user_id):
             status.HTTP_404_NOT_FOUND, "Wishlists with user_id '{}' was not found.".format(user_id)
         )
     return make_response(
-        jsonify(res),
+        jsonify(data = res, message = "Wishlists for user_id '{}'.".format(user_id)),
         status.HTTP_200_OK
     )
 

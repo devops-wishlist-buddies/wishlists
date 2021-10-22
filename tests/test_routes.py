@@ -105,11 +105,11 @@ class TestWishlistsServer(unittest.TestCase):
         wishlist2.create()
         resp = self.app.get("/wishlists/1")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data, Wishlist.find_all_by_user_id(1))
+        d = resp.get_json()["data"]
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d, Wishlist.find_all_by_user_id(1))
         resp = self.app.get("/wishlists/2")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-        data = resp.get_json()
-        self.assertEqual(data["message"],"404 Not Found: Wishlists with user_id '2' was not found.")
+        d = resp.get_json()
+        self.assertEqual(d["message"],"404 Not Found: Wishlists with user_id '2' was not found.")
 
