@@ -32,7 +32,7 @@ from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.models.wishlist_product import WishlistProduct
 from service.routes import app, init_db
-from .factories import WishlistFactory
+from .factories import WishlistFactory, ProductFactory
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
@@ -72,10 +72,6 @@ class TestWishlistsServer(unittest.TestCase):
         db.session.remove()
         db.drop_all()
 
-
-######################################################################
-# #  T E S T   C A S E S
-######################################################################
     def test_index(self):
       """Test the index page"""
       resp = self.app.get("/")
@@ -92,7 +88,6 @@ class TestWishlistsServer(unittest.TestCase):
       wl = Wishlist.find_by_id(new_json['data'])
       self.assertEqual(wl.name, "test")
       self.assertEqual(wl.user_id, 1)
-
 
     def test_list_wishlists_by_userid(self):
         t1 = {"name": "test 1", "user_id": 1}
@@ -112,4 +107,16 @@ class TestWishlistsServer(unittest.TestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         d = resp.get_json()
         self.assertEqual(d["message"],"404 Not Found: Wishlists with user_id '2' was not found.")
+
+    def test_delete_wishlist(self):
+      """ Delete a Wishlist """
+      new_wl = WishlistFactory()
+      resp = self.app.post("/wishlists", json=new_wl.serialize(), content_type="application/json")
+      new_json = resp.get_json()
+      resp = self.app.delete("{0}/{1}".format(BASE_URL, new_json['data']), content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+      self.assertEqual(len(resp.data), 0)
+      # make sure they are deleted
+      resp = Wishlist.find_by_id(new_json['data'])
+      self.assertEqual(resp, None)
 
