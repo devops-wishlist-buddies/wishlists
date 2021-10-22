@@ -92,7 +92,7 @@ def create_wishlists():
 ######################################################################
 # List ALL WISHLISTS FOR A USER
 ######################################################################
-@app.route("/wishlists/<int:user_id>", methods=["GET"])
+@app.route("/wishlists/user/<int:user_id>", methods=["GET"])
 def list_wishlists_by_userid(user_id):
     app.logger.info("Request for wishlists with user_id: %s", user_id)
     res = Wishlist.find_all_by_user_id(user_id)
