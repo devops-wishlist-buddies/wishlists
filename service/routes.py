@@ -90,6 +90,22 @@ def create_wishlists():
     )
 
 ######################################################################
+# List ALL WISHLISTS FOR A USER
+######################################################################
+@app.route("/wishlists/user/<int:user_id>", methods=["GET"])
+def list_wishlists_by_userid(user_id):
+    app.logger.info("Request for wishlists with user_id: %s", user_id)
+    res = Wishlist.find_all_by_user_id(user_id)
+    if not res:
+        abort(
+            status.HTTP_404_NOT_FOUND, "Wishlists with user_id '{}' was not found.".format(user_id)
+        )
+    return make_response(
+        jsonify(data = res, message = "Wishlists for user_id '{}'.".format(user_id)),
+        status.HTTP_200_OK
+    )
+
+######################################################################
 # DELETE A WISHLIST
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
@@ -112,7 +128,6 @@ def delete_wishlists(wishlist_id):
         ), 
         status.HTTP_204_NO_CONTENT
     )
-
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S

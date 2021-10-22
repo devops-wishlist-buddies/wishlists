@@ -72,10 +72,6 @@ class TestWishlistsServer(unittest.TestCase):
         db.session.remove()
         db.drop_all()
 
-
-######################################################################
-# #  T E S T   C A S E S
-######################################################################
     def test_index(self):
       """Test the index page"""
       resp = self.app.get("/")
@@ -93,7 +89,24 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(wl.name, "test")
       self.assertEqual(wl.user_id, 1)
 
-
+    def test_list_wishlists_by_userid(self):
+        t1 = {"name": "test 1", "user_id": 1}
+        t2 = {"name": "test 2", "user_id": 1}
+        wishlist1 = Wishlist()
+        wishlist1.deserialize(t1)
+        wishlist1.create()
+        wishlist2 = Wishlist()
+        wishlist2.deserialize(t2)
+        wishlist2.create()
+        resp = self.app.get("/wishlists/user/1")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        d = resp.get_json()["data"]
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d, Wishlist.find_all_by_user_id(1))
+        resp = self.app.get("/wishlists/user/2")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        d = resp.get_json()
+        self.assertEqual(d["message"],"404 Not Found: Wishlists with user_id '2' was not found.")
 
     def test_delete_wishlist(self):
       """ Delete a Wishlist """
