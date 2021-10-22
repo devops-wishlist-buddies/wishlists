@@ -32,7 +32,7 @@ from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.models.wishlist_product import WishlistProduct
 from service.routes import app, init_db
-from .factories import WishlistFactory
+from .factories import WishlistFactory, ProductFactory
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
@@ -92,4 +92,18 @@ class TestWishlistsServer(unittest.TestCase):
       wl = Wishlist.find_by_id(new_json['data'])
       self.assertEqual(wl.name, "test")
       self.assertEqual(wl.user_id, 1)
+
+
+
+    def test_delete_wishlist(self):
+      """ Delete a Wishlist """
+      new_wl = WishlistFactory()
+      resp = self.app.post("/wishlists", json=new_wl.serialize(), content_type="application/json")
+      new_json = resp.get_json()
+      resp = self.app.delete("{0}/{1}".format(BASE_URL, new_json['data']), content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+      self.assertEqual(len(resp.data), 0)
+      # make sure they are deleted
+      resp = Wishlist.find_by_id(new_json['data'])
+      self.assertEqual(resp, None)
 
