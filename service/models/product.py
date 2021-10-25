@@ -11,6 +11,7 @@ TBD
 
 """
 
+import logging
 from flask import Flask
 from .model_utils import db,logger,Availability,DataValidationError,asc
 
@@ -78,9 +79,9 @@ class Product(db.Model):
     cls.app = app
 
     db.init_app(app)
-    app.app_context().push()
-    db.drop_all()
-    db.create_all()
+    with app.app_context():
+      db.drop_all()
+      db.create_all()
 
   @classmethod
   def find_all(cls)->list:

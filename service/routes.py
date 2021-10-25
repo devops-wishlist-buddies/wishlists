@@ -183,17 +183,27 @@ def init_db():
     app.config["DEBUG"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
     app.logger.setLevel(logging.CRITICAL)
-    Wishlist.init_db(app)
     Product.init_db(app)
+    Wishlist.init_db(app)
     WishlistProduct.init_db(app)
 
-    Wishlist(name = "User 1 first wishlist", user_id = 1).create()
-    Wishlist(name = "User 1 second wishlist", user_id = 1).create()
-    Wishlist(name = "User 2 first wishlist", user_id = 2).create()
+    w_1 = Wishlist(name = "User 1 first wishlist", user_id = 1)
+    w_1.create()
+    w_2 = Wishlist(name = "User 1 second wishlist", user_id = 1)
+    w_2.create()
+    w_3 = Wishlist(name = "User 2 first wishlist", user_id = 2)
+    w_3.create()
 
-    Product(name = "toy",price=11.5,status=Availability.Available,pic_url="www.toy.com/1.png",short_desc="this is a toy")
-    Product(name = "book",price=20.5,status=Availability.Available,pic_url="www.book.com/1.png",short_desc="this is a book")
-    Product(name = "tv",price=1001.5,status=Availability.Available,pic_url="www.tv.com/1.png",short_desc="this is a tv")
-    Product(name = "pepsi",price=7.5,status=Availability.Available,pic_url="www.drinks.com/pepsi.png",short_desc="this is pepsi coke")
-    Product(name = "bread",price=3.5,status=Availability.Available,pic_url="www.bakery.com/1.png",short_desc="this is a bread")
-    Product(name = "soccer",price=23.5,status=Availability.Available,pic_url="www.soccer.com/1.png",short_desc="this is a soccer")
+    p_1 = Product(name = "toy",price=11.5,status=Availability.Available,pic_url="www.toy.com/1.png",short_desc="this is a toy")    
+    p_2 = Product(name = "book",price=20.5,status=Availability.Available,pic_url="www.book.com/1.png",short_desc="this is a book")
+    p_3 = Product(name = "tv",price=1001.5,status=Availability.Available,pic_url="www.tv.com/1.png",short_desc="this is a tv")
+    p_4 = Product(name = "pepsi",price=7.5,status=Availability.Available,pic_url="www.drinks.com/pepsi.png",short_desc="this is pepsi coke")
+    p_5 = Product(name = "bread",price=3.5,status=Availability.Available,pic_url="www.bakery.com/1.png",short_desc="this is a bread")
+    p_6 = Product(name = "soccer",price=23.5,status=Availability.Available,pic_url="www.soccer.com/1.png",short_desc="this is a soccer")
+
+    p = [p_1,p_2,p_3,p_4,p_5,p_6]
+    for i in range(0, len(p)):
+        p[i].create()
+    
+    w_1.add_items([1,2,3,4,5,6])
+    w_2.add_items([1,5,6])
