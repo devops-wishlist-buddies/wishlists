@@ -68,6 +68,7 @@ class WishlistProduct(db.Model):
 
         db.init_app(app)
         app.app_context().push()
+        db.drop_all()
         db.create_all()
     
     @classmethod

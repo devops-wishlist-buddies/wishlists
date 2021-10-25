@@ -84,9 +84,7 @@ class TestProductModel(unittest.TestCase):
         """Update a Product"""
         product_instance = ProductFactory()
         product_instance.id = None
-        logging.debug(product_instance)
         product_instance.create()
-        logging.debug(product_instance)
         self.assertEqual(product_instance.id, 1)
         # Change it an save it
         product_instance.name = "toy"

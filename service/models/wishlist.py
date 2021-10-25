@@ -12,8 +12,6 @@ TBD
 """
 
 from flask import Flask
-from sqlalchemy.orm import query
-from sqlalchemy.sql.expression import desc
 from service.models.product import Product
 from service.models.wishlist_product import WishlistProduct
 from .model_utils import EntityNotFoundError, db,logger,DataValidationError,asc
@@ -110,8 +108,9 @@ class Wishlist(db.Model):
     cls.app = app
 
     db.init_app(app)
-    app.app_context().push()
-    db.create_all()
+    with app.app_context():
+      db.drop_all()
+      db.create_all()
   
   @classmethod
   def find_all(cls):
