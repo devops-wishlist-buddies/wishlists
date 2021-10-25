@@ -201,13 +201,9 @@ def add_items_to_wishlist(wishlist_id):
         w = Wishlist.find_by_id(wishlist_id)
 
         if not w:
-            return make_response(
-                    jsonify(
-                            data = [],
-                            message = "Wishlist {} not found".format(wishlist_id)
-                        ),
-                        status.HTTP_200_OK
-                    )
+            abort(
+            status.HTTP_404_NOT_FOUND, "Wishlist with id %s not found!".format(wishlist_id)   
+        )
         else:
             cnt = w.add_items(product_id)
             if(cnt == len(product_id)):

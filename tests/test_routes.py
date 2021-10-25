@@ -194,7 +194,7 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(len(wps),3)
 
       resp = self.app.put("/wishlists/26504/items",json=resp_body,content_type="application/json")
-      self.assertEqual(resp.status_code,200)
+      self.assertEqual(resp.status_code,404)
 
       resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="multipart/form-data")
       self.assertEqual(resp.status_code,415)
