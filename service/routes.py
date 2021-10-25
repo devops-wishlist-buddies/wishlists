@@ -174,6 +174,48 @@ def delete_items_from_wishlist(wishlist_id):
                 )
 
 ######################################################################
+# Add items to a wishlist
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/add-items", methods=["POST"])
+def add_items_to_wishlist(wishlist_id):
+    """
+    Add items to wishlist
+    This endpoint will add items to a wishlist based on the ids 
+    """
+    if request.headers.get("Content-Type") != "application/json":
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Unsupported media type : application/json expected"   
+        )
+    else:   
+        data = request.get_json()
+        product_id = data['id']
+        app.logger.info("Request to add items with id %s to wishlist %s" % (product_id,wishlist_id))
+        w = Wishlist.find_by_id(wishlist_id)
+
+        if not w:
+            abort (
+                status.HTTP_404_NOT_FOUND, "Wishlist with id '{}' not found!".format(wishlist_id)
+            )
+        else:
+            cnt = w.add_items(product_id)
+            if(cnt == len(product_id)):
+                return make_response(
+                    jsonify(
+                            data = [],
+                            message = "All items are added"
+                        ),
+                        status.HTTP_200_OK
+                    )
+            else:
+                return make_response(
+                    jsonify(
+                        data = [],
+                        message = "{} items are added".format(cnt)
+                    ),
+                    status.HTTP_206_PARTIAL_CONTENT
+                )
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 

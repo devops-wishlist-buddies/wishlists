@@ -169,3 +169,31 @@ class TestWishlistsServer(unittest.TestCase):
 
       resp = self.app.get("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,405)
+    
+    def test_add_items_to_wishlist(self):
+      """add items to wishlist"""
+      p_instance_1 = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test book")
+      p_instance_1.create()
+      p_instance_2 = Product(name="toy",price=121.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test toy")
+      p_instance_2.create()
+      p_instance_3 = Product(name="TV",price=1210.5,status=Availability.Available,pic_url="www.tv.com",short_desc="this is a test tv")
+      p_instance_3.create()
+      w_instance_1 = WishlistFactory()
+      w_instance_1.create()
+      w_instance_2 = WishlistFactory()
+      w_instance_2.create()
+
+      resp_body = {"id":[1,2,3]}
+      resp = self.app.post("/wishlists/1/add-items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+      wps = WishlistProduct.find_all()
+      self.assertEqual(len(wps),3)
+
+      resp = self.app.post("/wishlists/1/add-items",json=resp_body,content_type="multipart/form-data")
+      self.assertEqual(resp.status_code,415)
+
+      resp = self.app.post("/wishlists/1/add-items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,206)
+
+      resp = self.app.get("/wishlists/1/add-items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,405)
