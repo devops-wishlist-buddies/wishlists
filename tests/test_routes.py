@@ -27,12 +27,12 @@ import logging
 import unittest
 from urllib.parse import quote_plus
 from service import status  # HTTP Status Codes
-from service.models.model_utils import db
+from service.models.model_utils import db, Availability
 from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.models.wishlist_product import WishlistProduct
 from service.routes import app, init_db
-from .factories import WishlistFactory, ProductFactory
+from .factories import WishlistFactory
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
@@ -89,6 +89,17 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(wl.name, "test")
       self.assertEqual(wl.user_id, 1)
 
+      resp = self.app.post("/wishlists", content_type="multipart/form-data")
+      self.assertEqual(resp.status_code, 415)
+
+      new_wl = {"user_id": 1}
+      resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
+      self.assertEqual(resp.status_code, 400)
+
+      new_wl = {"name": "test", "user_id": 1}
+      resp = self.app.get("/wishlists", json=new_wl, content_type="application/json")
+      self.assertEqual(resp.status_code,405)
+
     def test_list_wishlists_by_userid(self):
         t1 = {"name": "test 1", "user_id": 1}
         t2 = {"name": "test 2", "user_id": 1}
@@ -98,6 +109,7 @@ class TestWishlistsServer(unittest.TestCase):
         wishlist2 = Wishlist()
         wishlist2.deserialize(t2)
         wishlist2.create()
+
         resp = self.app.get("/wishlists/user/1")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         d = resp.get_json()["data"]
@@ -106,17 +118,54 @@ class TestWishlistsServer(unittest.TestCase):
         resp = self.app.get("/wishlists/user/2")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         d = resp.get_json()
-        self.assertEqual(d["message"],"404 Not Found: Wishlists with user_id '2' was not found.")
+        self.assertEqual(d["message"],"404 Not Found: wishlists with user_id '2' not found!")
+        resp = self.app.post("/wishlists/user/1")
+        self.assertEqual(resp.status_code,405)
 
     def test_delete_wishlist(self):
       """ Delete a Wishlist """
-      new_wl = WishlistFactory()
-      resp = self.app.post("/wishlists", json=new_wl.serialize(), content_type="application/json")
-      new_json = resp.get_json()
-      resp = self.app.delete("{0}/{1}".format(BASE_URL, new_json['data']), content_type="application/json")
-      self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-      self.assertEqual(len(resp.data), 0)
+      w = WishlistFactory()
+      w.create()
+      resp = self.app.delete("{0}/{1}".format(BASE_URL, w.id), content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      self.assertEqual(resp.get_json()['message'],"Wishlist Deleted!")
       # make sure they are deleted
-      resp = Wishlist.find_by_id(new_json['data'])
+      resp = Wishlist.find_by_id(w.id)
       self.assertEqual(resp, None)
 
+      resp = self.app.delete("{0}/{1}".format(BASE_URL, 20000), content_type="application/json")
+      self.assertEqual(resp.status_code,404)
+
+      resp = self.app.get("{0}/{1}".format(BASE_URL, 1), content_type="application/json")
+      self.assertEqual(resp.status_code, 405)
+    
+    def test_delete_items_from_wishlist(self):
+      """delete items from wishlist"""
+      p_instance_1 = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test book")
+      p_instance_1.create()
+      p_instance_2 = Product(name="toy",price=121.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test toy")
+      p_instance_2.create()
+      p_instance_3 = Product(name="TV",price=1210.5,status=Availability.Available,pic_url="www.tv.com",short_desc="this is a test tv")
+      p_instance_3.create()
+      w_instance_1 = WishlistFactory()
+      w_instance_1.create()
+      w_instance_2 = WishlistFactory()
+      w_instance_2.create()
+      WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_1.id).create()
+      WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_2.id).create()
+      WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_3.id).create()
+      WishlistProduct(wishlist_id = w_instance_2.id, product_id = p_instance_3.id).create()
+      resp_body = {"id":[1,3]}
+      resp = self.app.delete("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+      wps = WishlistProduct.find_all()
+      self.assertEqual(len(wps),2)
+
+      resp = self.app.delete("/wishlists/1/delete-items",json=resp_body,content_type="multipart/form-data")
+      self.assertEqual(resp.status_code,415)
+
+      resp = self.app.delete("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,206)
+
+      resp = self.app.get("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,405)
