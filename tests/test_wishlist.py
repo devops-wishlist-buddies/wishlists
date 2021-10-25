@@ -108,6 +108,9 @@ class TestWishlistModel(unittest.TestCase):
         self.assertEqual(len(ws),1)
         self.assertEqual(ws[0].name,"something different")
 
+        w_instance.id = None
+        self.assertRaises(DataValidationError,w_instance.update)
+
     def test_delete_a_wishlist(self):
         """Test delete a wishlist and its corresponding wishlist products"""
         w_instance_1 = Wishlist(name="test wishlist",user_id = 11)
@@ -139,7 +142,11 @@ class TestWishlistModel(unittest.TestCase):
         self.assertEqual(wps[0].wishlist_id,2)
         self.assertEqual(len(Product.find_all()),2)
 
-        self.assertEqual(WishlistFactory().delete(),0)
+        w = WishlistFactory()
+        w.id = 20193
+        self.assertEqual(w.delete(),0)
+        w.id = None
+        self.assertEqual(w.delete(),0)
 
     def test_read_a_wishlist(self):
         """Test read information from a wishlist"""
@@ -191,6 +198,14 @@ class TestWishlistModel(unittest.TestCase):
         self.assertEqual(w_instance.id,None)
         self.assertEqual(w_instance.name, "Test wishlist")
         self.assertEqual(w_instance.user_id, 3)
+
+        data = {
+            'id':1,
+            'name':1,
+            'user_id':3
+        }
+        w_instance = Wishlist()
+        self.assertRaises(DataValidationError, w_instance.deserialize, data)
 
     def test_deserialize_missing_data(self):
         """Test deserialization of a WishlistProduct with missing data"""

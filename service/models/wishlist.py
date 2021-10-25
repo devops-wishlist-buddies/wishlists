@@ -12,6 +12,7 @@ TBD
 """
 
 from flask import Flask
+from sqlalchemy.orm import raiseload
 from service.models.product import Product
 from service.models.wishlist_product import WishlistProduct
 from .model_utils import EntityNotFoundError, db,logger,DataValidationError,asc
@@ -34,13 +35,15 @@ class Wishlist(db.Model):
 
   def deserialize(self,data):
     try:
-      self.name = data['name']
-      self.user_id = data['user_id']
-
+      if isinstance(data['name'],str) and isinstance(data['user_id'],int):
+        self.name = data['name']
+        self.user_id = data['user_id']
+      else:
+        raise TypeError("Invalid type of name or user_id, string expected for name and integer expected for user_id")
     except KeyError as error:
       raise DataValidationError("Invalid Wishlist: missing " + error.args[0])
     except TypeError as error:
-      raise DataValidationError("Invalid Wishlist: body of request contained bad or no data")
+      raise DataValidationError(error.args[0])
     return self
 
   def create(self):

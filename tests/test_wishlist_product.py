@@ -101,6 +101,9 @@ class TestWishlistProduct(unittest.TestCase):
         self.assertEqual(len(wps), 1)
         self.assertEqual(wps[0].id, 1)
 
+        wp_instance.id = None
+        self.assertRaises(DataValidationError,wp_instance.update)
+
     def test_delete_a_wishlist_product(self):
         """Delete a wishlist product"""
         w_instance = Wishlist(name="test wishlist",user_id = 11)
@@ -139,6 +142,16 @@ class TestWishlistProduct(unittest.TestCase):
         self.assertEqual(wp_instance.id,None)
         self.assertEqual(wp_instance.wishlist_id, 2)
         self.assertEqual(wp_instance.product_id, 3)
+
+        data = {
+            'id':1,
+            'wishlist_id':"fake id",
+            'product_id':3
+        }
+
+        wp_instance = WishlistProduct()
+        self.assertRaises(DataValidationError, wp_instance.deserialize,data)
+
 
     def test_deserialize_missing_data(self):
         """Test deserialization of a WishlistProduct with missing data"""

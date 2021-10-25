@@ -21,7 +21,7 @@ DATABASE_URI = os.getenv(
 )
 
 ######################################################################
-#  P E T   M O D E L   T E S T   C A S E S
+#  P R O D U C T   M O D E L   T E S T   C A S E S
 ######################################################################
 class TestProductModel(unittest.TestCase):
     """Test Cases for Product Model"""
@@ -98,6 +98,9 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].id, 1)
         self.assertEqual(products[0].name, "toy")
+
+        product_instance.id = None
+        self.assertRaises(DataValidationError, product_instance.update)
 
     def test_delete_a_Product(self):
         """Delete a Product"""
