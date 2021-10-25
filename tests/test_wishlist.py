@@ -86,7 +86,7 @@ class TestWishlistModel(unittest.TestCase):
     def test_add_wishlist(self):
         """Create a wishlist and add it to database"""
         ws = Wishlist.find_all()
-        self.assertEqual(ws,[])
+        self.assertEqual(len(ws),0)
         w_instance = Wishlist(name="test wishlist",user_id = 1)
         w_instance.create()
         ws = Wishlist.find_all()
