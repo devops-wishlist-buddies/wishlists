@@ -35,7 +35,7 @@ from flask_sqlalchemy import SQLAlchemy
 # Import Flask application
 from . import app
 
-from service.models.wishlist import Wishlist
+from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
 from service.models.wishlist_product import WishlistProduct
 from service.models.model_utils import db
@@ -87,6 +87,33 @@ def create_wishlists():
             message = "Wishlist Created!"
         ),
         status.HTTP_201_CREATED
+    )
+######################################################################
+# List ALL WISHLISTS
+######################################################################
+@app.route("/wishlists", methods=["GET"])
+def list_all_wishlists():
+    app.logger.info("Request for all wishlists")
+    query_res = Wishlist.find_all()
+
+    wishlists = [r for r in query_res]
+    res = []
+    for w in wishlists:
+        wishlist_products = WishlistProduct.find_all_by_wishlist_id(w.id)
+        products = []
+        if len(wishlist_products) != 0:
+          products = Product.find_all_by_id([wp.product_id for wp in wishlist_products])
+        res.append(WishlistVo(w,products))
+      
+    r = [vo.serialize() for vo in res]
+
+    if not r:
+        abort(
+            status.HTTP_404_NOT_FOUND, "No wishlists found!"
+        )
+    return make_response(
+        jsonify(data = r, message = "All the wishlists."),
+        status.HTTP_200_OK
     )
 
 ######################################################################
