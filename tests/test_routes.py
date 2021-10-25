@@ -134,7 +134,7 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(resp, None)
 
       resp = self.app.delete("{0}/{1}".format(BASE_URL, 20000), content_type="application/json")
-      self.assertEqual(resp.status_code,404)
+      self.assertEqual(resp.status_code,200)
 
       resp = self.app.get("{0}/{1}".format(BASE_URL, 1), content_type="application/json")
       self.assertEqual(resp.status_code, 405)
@@ -155,17 +155,17 @@ class TestWishlistsServer(unittest.TestCase):
       WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_2.id).create()
       WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_3.id).create()
       WishlistProduct(wishlist_id = w_instance_2.id, product_id = p_instance_3.id).create()
-      resp_body = {"id":[1,3]}
-      resp = self.app.delete("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
+      resp_body = {"product_id":[1,3]}
+      resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,200)
       wps = WishlistProduct.find_all()
       self.assertEqual(len(wps),2)
 
-      resp = self.app.delete("/wishlists/1/delete-items",json=resp_body,content_type="multipart/form-data")
+      resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="multipart/form-data")
       self.assertEqual(resp.status_code,415)
 
-      resp = self.app.delete("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
+      resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,206)
 
-      resp = self.app.get("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
+      resp = self.app.get("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,405)

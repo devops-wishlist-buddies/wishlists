@@ -127,14 +127,18 @@ def delete_wishlists(wishlist_id):
                 status.HTTP_200_OK
             )
     else:
-        abort (
-            status.HTTP_404_NOT_FOUND, "Wishlist with id '{}' not found!".format(wishlist_id)
-        )
+        return make_response(
+            jsonify(
+                data = [],
+                message = "Wishlist {} not found".format(wishlist_id)
+                ), 
+                status.HTTP_200_OK
+            )
 
 ######################################################################
 # Delete items from a wishlist
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/delete-items", methods=["DELETE"])
+@app.route("/wishlists/<int:wishlist_id>/items", methods=["DELETE"])
 def delete_items_from_wishlist(wishlist_id):
     """
     Delete items from wishlist
@@ -146,14 +150,18 @@ def delete_items_from_wishlist(wishlist_id):
         )
     else:   
         data = request.get_json()
-        product_id = data['id']
+        product_id = data['product_id']
         app.logger.info("Request to delete items with id %s from wishlist %s" % (product_id,wishlist_id))
         w = Wishlist.find_by_id(wishlist_id)
 
         if not w:
-            abort (
-                status.HTTP_404_NOT_FOUND, "Wishlist with id '{}' not found!".format(wishlist_id)
-            )
+            return make_response(
+                    jsonify(
+                            data = [],
+                            message = "Wishlist {} not found".format(wishlist_id)
+                        ),
+                        status.HTTP_200_OK
+                    )
         else:
             cnt = w.delete_items(product_id)
             if(cnt == len(product_id)):
