@@ -115,6 +115,7 @@ class TestWishlistsServer(unittest.TestCase):
         d = resp.get_json()["data"]
         self.assertEqual(len(d), 2)
         self.assertEqual(d, Wishlist.find_all_by_user_id(1))
+
         resp = self.app.get("/wishlists/user/2")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         d = resp.get_json()
@@ -161,13 +162,16 @@ class TestWishlistsServer(unittest.TestCase):
       wps = WishlistProduct.find_all()
       self.assertEqual(len(wps),2)
 
+      resp = self.app.delete("/wishlists/16359/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+
       resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="multipart/form-data")
       self.assertEqual(resp.status_code,415)
 
       resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,206)
 
-      resp = self.app.get("/wishlists/1/delete-items",json=resp_body,content_type="application/json")
+      resp = self.app.get("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,405)
     
     def test_add_items_to_wishlist(self):
@@ -183,17 +187,20 @@ class TestWishlistsServer(unittest.TestCase):
       w_instance_2 = WishlistFactory()
       w_instance_2.create()
 
-      resp_body = {"id":[1,2,3]}
-      resp = self.app.post("/wishlists/1/add-items",json=resp_body,content_type="application/json")
+      resp_body = {"product_id":[1,2,3]}
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,200)
       wps = WishlistProduct.find_all()
       self.assertEqual(len(wps),3)
 
-      resp = self.app.post("/wishlists/1/add-items",json=resp_body,content_type="multipart/form-data")
+      resp = self.app.put("/wishlists/26504/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="multipart/form-data")
       self.assertEqual(resp.status_code,415)
 
-      resp = self.app.post("/wishlists/1/add-items",json=resp_body,content_type="application/json")
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,206)
 
-      resp = self.app.get("/wishlists/1/add-items",json=resp_body,content_type="application/json")
+      resp = self.app.get("/wishlists/1/items",json=resp_body,content_type="application/json")
       self.assertEqual(resp.status_code,405)
