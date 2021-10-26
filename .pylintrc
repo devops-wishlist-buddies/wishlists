@@ -1,0 +1,5 @@
+[FORMAT]
+indent-string='  '
+
+[MESSAGES CONTROL]
+disable=E1101,W0212,W0603

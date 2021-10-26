@@ -56,22 +56,22 @@ class TestProductModel(unittest.TestCase):
 
     def test_create_a_Product(self):
         """Create a Product and assert that it exists"""
-        product_instance = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test")
+        product_instance = Product(name="book",price=12.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test")
         self.assertTrue(product_instance != None)
         self.assertEqual(product_instance.id, None)
         self.assertEqual(product_instance.name, "book")
         self.assertEqual(product_instance.price, 12.5)
-        self.assertEqual(product_instance.status, Availability.Available)
+        self.assertEqual(product_instance.status, Availability.AVAILABLE)
         self.assertEqual(product_instance.pic_url,"www.google.com")
         self.assertEqual(product_instance.short_desc,"this is a test")
-        product_instance = Product(name="book",price=12.5,status=Availability.Unavailable,pic_url="www.google.com",short_desc="this is a test")
-        self.assertEqual(product_instance.status, Availability.Unavailable)
+        product_instance = Product(name="book",price=12.5,status=Availability.UNAVAILABLE,pic_url="www.google.com",short_desc="this is a test")
+        self.assertEqual(product_instance.status, Availability.UNAVAILABLE)
 
     def test_add_a_Product(self):
         """Create a Product and add it to the database"""
         products = Product.find_all()
         self.assertEqual(products, [])
-        product_instance = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test")
+        product_instance = Product(name="book",price=12.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test")
         self.assertTrue(product_instance != None)
         self.assertEqual(product_instance.id, None)
         product_instance.create()
@@ -135,7 +135,7 @@ class TestProductModel(unittest.TestCase):
             'id': 1,
             'name': "piggy",
             'price': 100.5,
-            'status': Availability.Unavailable,
+            'status': Availability.UNAVAILABLE,
             'pic_url': "www.piggy.com/1.png",
             'short_desc': "this is a piggy"
         }
@@ -144,14 +144,14 @@ class TestProductModel(unittest.TestCase):
         self.assertNotEqual(product_instance, None)
         self.assertEqual(product_instance.id, None)
         self.assertEqual(product_instance.name, "piggy")
-        self.assertEqual(product_instance.status, Availability.Unavailable)
+        self.assertEqual(product_instance.status, Availability.UNAVAILABLE)
         self.assertEqual(product_instance.price, 100.5)
         self.assertEqual(product_instance.pic_url, "www.piggy.com/1.png")
         self.assertEqual(product_instance.short_desc,"this is a piggy")
 
     def test_deserialize_missing_data(self):
         """Test deserialization of a Product with missing data"""
-        data = {"id": 1, "name": "kitty", "status": Availability.Unavailable}
+        data = {"id": 1, "name": "kitty", "status": Availability.UNAVAILABLE}
         product_instance = Product()
         self.assertRaises(DataValidationError, product_instance.deserialize, data)
 
@@ -183,42 +183,42 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(product_instance.id, Products[1].id)
         self.assertEqual(product_instance.name, Products[1].name)
         self.assertEqual(product_instance.status, Products[1].status)
-    
+
     def test_find_all_by_id(self):
-        Product(name="toy", status=Availability.Available, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
-        Product(name="book", status=Availability.Available, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
-        Product(name="table", status=Availability.Unavailable, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
+        Product(name="toy", status=Availability.AVAILABLE, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
+        Product(name="book", status=Availability.AVAILABLE, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
+        Product(name="table", status=Availability.UNAVAILABLE, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
         products = Product.find_all_by_id([1,2,3])
         self.assertEqual(len(products),3)
         self.assertEqual(products[1].name, "book")
         self.assertEqual(products[1].price, 13.5)
-        self.assertEqual(products[1].status, Availability.Available)
+        self.assertEqual(products[1].status, Availability.AVAILABLE)
 
     def test_find_all_by_id_and_status(self):
         """Find products by id and status"""
-        Product(name="toy", status=Availability.Available, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
-        Product(name="book", status=Availability.Available, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
-        Product(name="table", status=Availability.Unavailable, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
-        
-        products = Product.find_all_by_id_and_status([1,2,3],Availability.Available)
+        Product(name="toy", status=Availability.AVAILABLE, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
+        Product(name="book", status=Availability.AVAILABLE, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
+        Product(name="table", status=Availability.UNAVAILABLE, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
+
+        products = Product.find_all_by_id_and_status([1,2,3],Availability.AVAILABLE)
         self.assertEqual(len(products),2)
         self.assertEqual(products[1].name, "book")
         self.assertEqual(products[1].price, 13.5)
-        self.assertEqual(products[1].status, Availability.Available)
+        self.assertEqual(products[1].status, Availability.AVAILABLE)
 
     def test_find_by_id_and_status(self):
         """Find product by id and status"""
-        Product(name="toy", status=Availability.Available, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
-        Product(name="book", status=Availability.Available, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
-        Product(name="table", status=Availability.Unavailable, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
+        Product(name="toy", status=Availability.AVAILABLE, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
+        Product(name="book", status=Availability.AVAILABLE, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
+        Product(name="table", status=Availability.UNAVAILABLE, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
 
-        product_instance = Product.find_by_id_and_status(2,Availability.Available)
+        product_instance = Product.find_by_id_and_status(2,Availability.AVAILABLE)
         self.assertIsNotNone(product_instance)
         self.assertEqual(product_instance.name,"book")
         self.assertEqual(product_instance.price,13.5)
-        self.assertEqual(product_instance.status,Availability.Available)
+        self.assertEqual(product_instance.status,Availability.AVAILABLE)
 
-        product_instance = Product.find_by_id_and_status(1,Availability.Unavailable)
+        product_instance = Product.find_by_id_and_status(1,Availability.UNAVAILABLE)
         self.assertIsNone(product_instance)
 
     def test_find_or_404_found(self):
@@ -236,13 +236,13 @@ class TestProductModel(unittest.TestCase):
     def test_find_or_404_not_found(self):
         """Find or return 404 NOT found"""
         self.assertRaises(NotFound, Product.find_or_404, 0)
-    
+
     def test_find_by_name(self):
         """Find a product by its name"""
-        Product(name="toy", status=Availability.Available, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
-        Product(name="toy", status=Availability.Available, price = 22.5, pic_url="www.toy.com/2.png", short_desc = "this is another toy").create()
-        Product(name="book", status=Availability.Available, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
-        Product(name="table", status=Availability.Unavailable, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
+        Product(name="toy", status=Availability.AVAILABLE, price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy").create()
+        Product(name="toy", status=Availability.AVAILABLE, price = 22.5, pic_url="www.toy.com/2.png", short_desc = "this is another toy").create()
+        Product(name="book", status=Availability.AVAILABLE, price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book").create()
+        Product(name="table", status=Availability.UNAVAILABLE, price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table").create()
 
         self.assertEqual(len(Product.find_by_name("book")),1)
         self.assertEqual(len(Product.find_by_name("toy")),2)
