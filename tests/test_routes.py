@@ -25,8 +25,6 @@ Test cases can be run with the following:
 import os
 import logging
 import unittest
-import decimal
-from flask.json import JSONEncoder
 from urllib.parse import quote_plus
 from service import status  # HTTP Status Codes
 from service.models.model_utils import db, Availability
@@ -34,23 +32,14 @@ from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.models.wishlist_product import WishlistProduct
 from service.routes import app, init_db
-from .factories import WishlistFactory, ProductFactory
+from .factories import WishlistFactory
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
-CONTENT_TYPE_JSON = "application/json"
+
 BASE_URL = "/wishlists"
-
-class JsonEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, decimal.Decimal):
-            return float(obj)
-        if isinstance(obj, Availability):
-            return obj.name
-        return JSONEncoder.default(self, obj)
-
 
 ######################################################################
 #  T E S T   C A S E S
@@ -64,7 +53,6 @@ class TestWishlistsServer(unittest.TestCase):
         app.config["TESTING"] = True
         app.config["DEBUG"] = False
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.json_encoder = JsonEncoder
         app.logger.setLevel(logging.CRITICAL)
         Product.init_db(app)
         Wishlist.init_db(app)
@@ -84,42 +72,6 @@ class TestWishlistsServer(unittest.TestCase):
         db.session.remove()
         db.drop_all()
 
-######################################################################
-#  H E L P E R   M E T H O D S
-######################################################################
-
-    def _create_products(self, count):
-        products = []
-        for _ in range(count):
-            test_product = ProductFactory()
-            resp = self.app.post( 
-                "/products", 
-                json = test_product.serialize(),
-                content_type = CONTENT_TYPE_JSON )
-            self.assertEqual( resp.status_code, status.HTTP_201_CREATED, "Could not create test product" )
-            new_product = resp.get_json()
-            test_product.id = new_product["id"]
-            products.append(test_product)
-        return products
-
-    def _create_wishlists(self, count):
-        wishlists = []
-        for _ in range(count):
-            test_wishlist = WishlistFactory()
-            resp = self.app.post( 
-                "/wishlists", 
-                json = test_wishlist.serialize(),
-                content_type = CONTENT_TYPE_JSON )
-            self.assertEqual( resp.status_code, status.HTTP_201_CREATED, "Could not create test wishlist" )
-            new_wishlist = resp.get_json()
-            test_wishlist.id = new_wishlist["data"]
-            wishlists.append(test_wishlist)
-        return wishlists
-
-
-######################################################################
-# #  T E S T   C A S E S
-######################################################################
     def test_index(self):
       """Test the index page"""
       resp = self.app.get("/")
@@ -137,75 +89,213 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(wl.name, "test")
       self.assertEqual(wl.user_id, 1)
 
-    def test_get_wishlists(self):
-        """Get a single Wishlist"""
-        test_wishlist = self._create_wishlists(1)[0]
-        resp = self.app.get("/wishlists/{}".format(test_wishlist.id))
+      resp = self.app.post("/wishlists", content_type="multipart/form-data")
+      self.assertEqual(resp.status_code, 415)
+
+      new_wl = {"user_id": 1}
+      resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
+      self.assertEqual(resp.status_code, 400)
+
+      new_wl = {"name": "test", "user_id": 1}
+      resp = self.app.get("/wishlists", json=new_wl, content_type="application/json")
+      self.assertEqual(resp.status_code,405)
+
+    def test_list_wishlists_by_userid(self):
+        t1 = {"name": "test 1", "user_id": 1}
+        t2 = {"name": "test 2", "user_id": 1}
+        wishlist1 = Wishlist()
+        wishlist1.deserialize(t1)
+        wishlist1.create()
+        wishlist2 = Wishlist()
+        wishlist2.deserialize(t2)
+        wishlist2.create()
+
+        resp = self.app.get("/wishlists/user/1")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["id"], test_wishlist.id)
+        d = resp.get_json()["data"]
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d, Wishlist.find_all_by_user_id(1))
 
-    def test_create_product(self):
-        """Create a product"""
-        new_product = ProductFactory()
-        resp = self.app.post("/products", json=new_product.serialize(), content_type="application/json")
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        product = resp.get_json()
-        self.assertEqual(product["name"], new_product.name)
-        self.assertEqual(product["price"], new_product.price)
-        self.assertEqual(product["status"], new_product.status.name)
-        self.assertEqual(product["pic_url"], new_product.pic_url)
-        self.assertEqual(product["short_desc"], new_product.short_desc)
+        resp = self.app.get("/wishlists/user/2")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        d = resp.get_json()
+        self.assertEqual(d["message"],"404 Not Found: wishlists with user_id '2' not found!")
+        resp = self.app.post("/wishlists/user/1")
+        self.assertEqual(resp.status_code,405)
 
-    def test_get_product(self):
-        """Get a single product"""
-        test_product = self._create_products(1)[0]
-        resp = self.app.get("/products/{}".format(test_product.id))
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = resp.get_json()
-        self.assertEqual(data["id"], test_product.id) 
+    def test_delete_wishlist(self):
+      """ Delete a Wishlist """
+      w = WishlistFactory()
+      w.create()
+      resp = self.app.delete("{0}/{1}".format(BASE_URL, w.id), content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      self.assertEqual(resp.get_json()['message'],"Wishlist Deleted!")
+      # make sure they are deleted
+      resp = Wishlist.find_by_id(w.id)
+      self.assertEqual(resp, None)
 
-    def test_add_product_into_wishlist(self):
-        """Add a product into a wishlist"""
-        wishlist = self._create_wishlists(1)[0]
-        new_product = self._create_products(1)[0]
-        data_posted = { "id": new_product.id }
-        resp = self.app.post(
-            "/wishlists/{}/products".format(wishlist.id),
-            json = data_posted,
-            content_type = "application/json"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        wishlistproduct = resp.get_json()
-        logging.debug(wishlistproduct)
-        self.assertEqual(wishlistproduct["product_id"], new_product.id)
-        self.assertEqual(wishlistproduct["wishlist_id"], wishlist.id)
+      resp = self.app.delete("{0}/{1}".format(BASE_URL, 20000), content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+
+      resp = self.app.get("{0}/{1}".format(BASE_URL, 1), content_type="application/json")
+      self.assertEqual(resp.status_code, 405)
+    
+    def test_delete_items_from_wishlist(self):
+      """delete items from wishlist"""
+      p_instance_1 = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test book")
+      p_instance_1.create()
+      p_instance_2 = Product(name="toy",price=121.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test toy")
+      p_instance_2.create()
+      p_instance_3 = Product(name="TV",price=1210.5,status=Availability.Available,pic_url="www.tv.com",short_desc="this is a test tv")
+      p_instance_3.create()
+      w_instance_1 = WishlistFactory()
+      w_instance_1.create()
+      w_instance_2 = WishlistFactory()
+      w_instance_2.create()
+      WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_1.id).create()
+      WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_2.id).create()
+      WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_3.id).create()
+      WishlistProduct(wishlist_id = w_instance_2.id, product_id = p_instance_3.id).create()
+      resp_body = {"product_id":[1,3]}
+      resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+      wps = WishlistProduct.find_all()
+      self.assertEqual(len(wps),2)
+
+      resp = self.app.delete("/wishlists/16359/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+
+      resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="multipart/form-data")
+      self.assertEqual(resp.status_code,415)
+
+      resp = self.app.delete("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,206)
+
+      resp = self.app.get("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,405)
+    
+    def test_add_items_to_wishlist(self):
+      """add items to wishlist"""
+      p_instance_1 = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test book")
+      p_instance_1.create()
+      p_instance_2 = Product(name="toy",price=121.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test toy")
+      p_instance_2.create()
+      p_instance_3 = Product(name="TV",price=1210.5,status=Availability.Available,pic_url="www.tv.com",short_desc="this is a test tv")
+      p_instance_3.create()
+      w_instance_1 = WishlistFactory()
+      w_instance_1.create()
+      w_instance_2 = WishlistFactory()
+      w_instance_2.create()
+
+      resp_body = {"product_id":[1,2,3]}
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+      wps = WishlistProduct.find_all()
+      self.assertEqual(len(wps),3)
+
+      resp = self.app.put("/wishlists/26504/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,404)
+
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="multipart/form-data")
+      self.assertEqual(resp.status_code,415)
+
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,206)
+
+      resp = self.app.get("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,405)
 
     def test_list_products_in_wishlist(self):
-        """List products in a wishlist"""
-        test_wishlist = self._create_wishlists(1)[0]
-        products = self._create_products(2)
-        
-        resp = self.app.post(
-            "/wishlists/{}/products".format(test_wishlist.id),
-            json = products[0].serialize(),
+      """list products in a wishlist"""
+      p_instance_1 = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test book")
+      p_instance_1.create()
+      p_instance_2 = Product(name="toy",price=121.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test toy")
+      p_instance_2.create()
+      p_instance_3 = Product(name="TV",price=1210.5,status=Availability.Available,pic_url="www.tv.com",short_desc="this is a test tv")
+      p_instance_3.create()
+      w_instance_1 = WishlistFactory()
+      w_instance_1.create()
+      w_instance_2 = WishlistFactory()
+      w_instance_2.create()
+
+      resp_body = {"product_id":[1,2,3]}
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+      wps = WishlistProduct.find_all()
+      self.assertEqual(len(wps),3)
+
+      resp = resp = self.app.get(
+            "/wishlists/1/products",
             content_type = "application/json"
         )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      data = resp.get_json()["data"]
+      self.assertEqual(len(data), 3)
 
-        resp = self.app.post(
-            "/wishlists/{}/products".format(test_wishlist.id),
-            json = products[1].serialize(),
+    def test_get_a_product_in_a_wishlist(self):
+      """get a product in a wishlist"""
+      p_instance_1 = Product(name="book",price=12.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test book")
+      p_instance_1.create()
+      p_instance_2 = Product(name="toy",price=121.5,status=Availability.Available,pic_url="www.google.com",short_desc="this is a test toy")
+      p_instance_2.create()
+      p_instance_3 = Product(name="TV",price=1210.5,status=Availability.Available,pic_url="www.tv.com",short_desc="this is a test tv")
+      p_instance_3.create()
+      w_instance_1 = WishlistFactory()
+      w_instance_1.create()
+      w_instance_2 = WishlistFactory()
+      w_instance_2.create()
+
+      resp_body = {"product_id":[1,2,3]}
+      resp = self.app.put("/wishlists/1/items",json=resp_body,content_type="application/json")
+      self.assertEqual(resp.status_code,200)
+      wps = WishlistProduct.find_all()
+      self.assertEqual(len(wps),3)
+
+      resp = resp = self.app.get(
+            "/wishlists/1/products/2",
             content_type = "application/json"
         )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        resp = self.app.get(
-            "/wishlists/{}/products".format(test_wishlist.id),
-            content_type = "applicationn/json"
+      data = resp.get_json()["data"]
+      self.assertEqual(data["name"], "toy")
+      self.assertEqual(data["price"], 121.5)
+      self.assertEqual(data["status"], Availability.Available.name)
+      self.assertEqual(data["pic_url"], "www.google.com")
+      self.assertEqual(data["short_desc"], "this is a test toy")
+
+      resp = resp = self.app.get(
+            "/wishlists/1/products/4",
+            content_type = "application/json"
         )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-        data = resp.get_json()
-        self.assertEqual(len(data), 2)
+    def test_create_products(self):
+      """create product"""
+      p_instance_1 = {
+        'name': "piggy", 
+        'price': 100.5, 
+        'status': Availability.Unavailable, 
+        'pic_url': "www.piggy.com/1.png", 
+        'short_desc': "this is a piggy" 
+        }
+      resp = self.app.post("/products", json=p_instance_1, content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+      new_json = resp.get_json()
+      product = Product.find_by_id(new_json['data'])
+      self.assertEqual(product.name, "piggy")
+      self.assertEqual(product.price, 100.5)
+      self.assertEqual(product.status, Availability.Unavailable)
+      self.assertEqual(product.pic_url, "www.piggy.com/1.png")
+      self.assertEqual(product.short_desc, "this is a piggy")
 
+      p_instance_2 = {
+        'name': "piggy", 
+        'price': 100.5, 
+        'status': "Wrong Status", 
+        'pic_url': "www.piggy.com/1.png", 
+        'short_desc': "this is a piggy" 
+        }
+      resp = self.app.post("/products", json=p_instance_2, content_type="application/json")
+      self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+      

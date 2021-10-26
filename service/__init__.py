@@ -23,10 +23,12 @@ import sys
 import logging
 from flask import Flask
 
+from service.models.model_utils import JsonEncoder
+
 # Create Flask application
 app = Flask(__name__)
 app.config.from_object("config")
-
+app.json_encoder = JsonEncoder
 # Import the rutes After the Flask app is created
 from service import routes, models, error_handlers
 
