@@ -295,17 +295,17 @@ class TestWishlistsServer(unittest.TestCase):
       p_instance_1 = {
         'name': "piggy",
         'price': 100.5,
-        'status': Availability.Unavailable,
+        'status': Availability.UNAVAILABLE,
         'pic_url': "www.piggy.com/1.png",
         'short_desc': "this is a piggy"
-        }
+      }
       resp = self.app.post("/products", json=p_instance_1, content_type="application/json")
       self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
       new_json = resp.get_json()
       product = Product.find_by_id(new_json['data'])
       self.assertEqual(product.name, "piggy")
       self.assertEqual(product.price, 100.5)
-      self.assertEqual(product.status, Availability.Unavailable)
+      self.assertEqual(product.status, Availability.UNAVAILABLE)
       self.assertEqual(product.pic_url, "www.piggy.com/1.png")
       self.assertEqual(product.short_desc, "this is a piggy")
 
