@@ -54,11 +54,11 @@ class WishlistProduct(db.Model):
                 self.product_id = data['product_id']
                 self.wishlist_id = data['wishlist_id']
             else:
-                raise DataValidationError("Invalid type for field product_id or wishlist_id, integer expected")
+                raise TypeError("Invalid type of field product_id or wishlist_id, integer expected")
         except KeyError as error:
             raise DataValidationError("Invalid WishlistProduct: missing " + error.args[0])
         except TypeError as error:
-            raise DataValidationError("Invalud WishlistProduct: body of request contained bad or no data")
+            raise DataValidationError(error.args[0])
         return self
 
     @classmethod
@@ -68,6 +68,7 @@ class WishlistProduct(db.Model):
 
         db.init_app(app)
         app.app_context().push()
+        db.drop_all()
         db.create_all()
     
     @classmethod
