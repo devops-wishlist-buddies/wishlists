@@ -24,10 +24,10 @@ from service.models.model_utils import Availability
 class ProductFactory(factory.Factory):
     class Meta:
         model = Product
-    
+
     name = factory.Sequence(lambda n : "Product_%d"% n)
     price = random.random() * 100
-    status = FuzzyChoice(choices=[Availability.Available, Availability.Unavailable])
+    status = FuzzyChoice(choices=[Availability.AVAILABLE, Availability.UNAVAILABLE])
     pic_url = factory.LazyAttribute(lambda obj : 'www.%s.com/sth/1/png' % obj.name)
     short_desc = factory.lazy_attribute(lambda obj : 'this is a %s with price %s and status %s' % (obj.name , obj.price , obj.status))
 
@@ -36,7 +36,7 @@ class WishlistFactory(factory.Factory):
 
     class Meta:
         model = Wishlist
-    
+
     name = factory.Sequence(lambda n : "Wishlist_%d"% n)
     user_id = random.randint(0,100)
 

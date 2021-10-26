@@ -7,13 +7,18 @@ Product - A product used in wishlists on an e-commerce site
 
 Attributes:
 -----------
-TBD
+id
+name
+price
+status
+pic_url
+short_desc
 
 """
 
-import logging
 from flask import Flask
-from .model_utils import db,logger,Availability,DataValidationError,asc
+from sqlalchemy import asc
+from .model_utils import db, logger, Availability, DataValidationError
 
 class Product(db.Model):
 
@@ -27,7 +32,7 @@ class Product(db.Model):
   status = db.Column(db.Enum(Availability),nullable=False,default=1)
   pic_url = db.Column(db.Text,nullable=True)
   short_desc = db.Column(db.Text,nullable=True)
-  
+
   def create(self):
     logger.info("Creating %s ...", self.name)
     self.id = None
@@ -39,7 +44,7 @@ class Product(db.Model):
     if not self.id:
       raise DataValidationError("Update called with empty ID field")
     db.session.commit()
-  
+
   def delete(self):
     logger.info("Deleting %s ...", self.name)
     db.session.delete(self)
@@ -60,7 +65,8 @@ class Product(db.Model):
     try:
       self.name = data['name']
       self.price = data['price']
-      if isinstance(data["status"],Availability) and data['status'] in [Availability.Available, Availability.Unavailable]:
+      if isinstance(data["status"],Availability) and data['status'] \
+          in [Availability.AVAILABLE, Availability.UNAVAILABLE]:
         self.status = data['status']
       else:
         raise DataValidationError("Invalid type for field status, integer expected")
@@ -72,7 +78,7 @@ class Product(db.Model):
     except TypeError as error:
       raise DataValidationError("Invalud Product: body of request contained bad or no data")
     return self
-  
+
   @classmethod
   def init_db(cls, app:Flask):
     logger.info("Product: initializing database")
@@ -96,12 +102,14 @@ class Product(db.Model):
 
   @classmethod
   def find_by_id_and_status(cls, product_id:int, status:Availability):
-    logger.info('Products: processing product lookup for id %s and status %s ...' % (product_id, status))
-    res = [r for r in cls.query.filter(cls.id == product_id, cls.status == status).order_by(asc(Product.id))]
+    logger.info('Products: processing product lookup for id' \
+      '%s and status %s ...', product_id, status.value)
+    res = [r for r in cls.query.filter(cls.id == product_id, cls.status == status)\
+      .order_by(asc(Product.id))]
     if len(res) == 0:
       return None
-    else:
-      return res[0]
+
+    return res[0]
 
   @classmethod
   def find_or_404(cls,product_id:int):
@@ -114,14 +122,16 @@ class Product(db.Model):
     logger.info("Products: processing lookup for ids in %s ...", product_ids)
     res = cls.query.filter(cls.id.in_(product_ids)).order_by(asc(Product.id))
     return [r for r in res]
-  
+
   @classmethod
-  def find_all_by_id_and_status(cls, product_ids:list, status:Availability=Availability.Available) -> list:
+  def find_all_by_id_and_status \
+    (cls, product_ids:list, status:Availability=Availability.AVAILABLE) -> list:
     """Find products by id and its status"""
-    logger.info("Products: processing lookup for ids in %s and status %s ...", product_ids, status)
+    logger.info("Products: processing lookup for ids in %s and status %s ...",\
+      product_ids, status)
     res = cls.query.filter(cls.id.in_(product_ids), cls.status == status).order_by(asc(Product.id))
     return [r for r in res]
-  
+
   @classmethod
   def find_by_name(cls,name:str)->list:
     """Find a product by its name"""
