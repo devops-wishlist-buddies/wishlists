@@ -16,7 +16,7 @@ def request_validation_error(error):
 def bad_request(error):
   """ Handles bad reuests with 400_BAD_REQUEST """
   msg = str(error)
-  app.logger.info(msg)
+  app.logger.warning(msg)
   return (
       jsonify(
           data = [],
@@ -30,7 +30,7 @@ def bad_request(error):
 def not_found(error):
   """ Handles resources not found with 404_NOT_FOUND """
   msg = str(error)
-  app.logger.info(msg)
+  app.logger.warning(msg)
   return (
     jsonify(
       data = [],
@@ -44,7 +44,7 @@ def not_found(error):
 def method_not_supported(error):
   """ Handles unsuppoted HTTP methods with 405_METHOD_NOT_SUPPORTED """
   msg = str(error)
-  app.logger.info(msg)
+  app.logger.warning(msg)
   return (
     jsonify(
       data = [],
@@ -58,7 +58,7 @@ def method_not_supported(error):
 def mediatype_not_supported(error):
   """ Handles unsuppoted media requests with 415_UNSUPPORTED_MEDIA_TYPE """
   msg = str(error)
-  app.logger.info(msg)
+  app.logger.warning(msg)
   return (
     jsonify(
       data = [],
