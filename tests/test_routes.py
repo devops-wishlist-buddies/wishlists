@@ -97,9 +97,34 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(resp.status_code, 400)
 
       new_wl = {"name": "test", "user_id": 1}
+<<<<<<< HEAD
       resp = self.app.get("/wishlists", json=new_wl, content_type="application/json")
       self.assertEqual(resp.status_code,405)
 
+=======
+      resp = self.app.delete("/wishlists", json=new_wl, content_type="application/json")
+      self.assertEqual(resp.status_code,405)
+
+    def test_list_all_wishlists(self):
+      resp = self.app.get("/wishlists")
+      self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+      d = resp.get_json()
+      self.assertEqual(d["message"],"404 Not Found: No wishlists found!")
+
+      t1 = {"name": "test 1", "user_id": 1}
+      t2 = {"name": "test 2", "user_id": 1}
+      wishlist1 = Wishlist()
+      wishlist1.deserialize(t1)
+      wishlist1.create()
+      wishlist2 = Wishlist()
+      wishlist2.deserialize(t2)
+      wishlist2.create()
+      resp = self.app.get("/wishlists")
+      self.assertEqual(resp.status_code, status.HTTP_200_OK)
+      d = resp.get_json()['data']
+      self.assertEqual(len(d), 2)
+
+>>>>>>> main
     def test_list_wishlists_by_userid(self):
         t1 = {"name": "test 1", "user_id": 1}
         t2 = {"name": "test 2", "user_id": 1}
@@ -203,6 +228,7 @@ class TestWishlistsServer(unittest.TestCase):
       self.assertEqual(resp.status_code,206)
 
       resp = self.app.get("/wishlists/1/items",json=resp_body,content_type="application/json")
+<<<<<<< HEAD
       self.assertEqual(resp.status_code,405)
 
     def test_list_products_in_wishlist(self):
@@ -299,3 +325,6 @@ class TestWishlistsServer(unittest.TestCase):
       resp = self.app.post("/products", json=p_instance_2, content_type="application/json")
       self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
       
+=======
+      self.assertEqual(resp.status_code,405)
+>>>>>>> main

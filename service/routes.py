@@ -35,7 +35,7 @@ from flask_sqlalchemy import SQLAlchemy
 # Import Flask application
 from . import app
 
-from service.models.wishlist import Wishlist
+from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
 from service.models.wishlist_product import WishlistProduct
 from service.models.model_utils import db
@@ -88,6 +88,167 @@ def create_wishlists():
         ),
         status.HTTP_201_CREATED
     )
+######################################################################
+# List ALL WISHLISTS
+######################################################################
+@app.route("/wishlists", methods=["GET"])
+def list_all_wishlists():
+    app.logger.info("Request for all wishlists")
+    query_res = Wishlist.find_all()
+
+    wishlists = [r for r in query_res]
+    res = []
+    for w in wishlists:
+        wishlist_products = WishlistProduct.find_all_by_wishlist_id(w.id)
+        products = []
+        if len(wishlist_products) != 0:
+          products = Product.find_all_by_id([wp.product_id for wp in wishlist_products])
+        res.append(WishlistVo(w,products))
+      
+    r = [vo.serialize() for vo in res]
+
+    if not r:
+        abort(
+            status.HTTP_404_NOT_FOUND, "No wishlists found!"
+        )
+    return make_response(
+        jsonify(data = r, message = "All the wishlists."),
+        status.HTTP_200_OK
+    )
+
+######################################################################
+# List ALL WISHLISTS FOR A USER
+######################################################################
+@app.route("/wishlists/user/<int:user_id>", methods=["GET"])
+def list_wishlists_by_userid(user_id):
+    app.logger.info("Request for wishlists with user_id: %s", user_id)
+    res = Wishlist.find_all_by_user_id(user_id)
+    if not res:
+        abort(
+            status.HTTP_404_NOT_FOUND, "wishlists with user_id '{}' not found!".format(user_id)
+        )
+    return make_response(
+        jsonify(data = res, message = "wishlists for user_id '{}'.".format(user_id)),
+        status.HTTP_200_OK
+    )
+
+######################################################################
+# DELETE A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
+def delete_wishlists(wishlist_id):
+    """
+    Delete a wishlist
+    This endpoint will delete a wishlist based the id specified in the path
+    """
+    app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
+    wishlist = Wishlist.find_by_id(wishlist_id)
+
+    if wishlist:
+        wishlist.delete()
+        return make_response(
+            jsonify(
+                data = [],
+                message = "Wishlist Deleted!"
+                ), 
+                status.HTTP_200_OK
+            )
+    else:
+        return make_response(
+            jsonify(
+                data = [],
+                message = "Wishlist {} not found".format(wishlist_id)
+                ), 
+                status.HTTP_200_OK
+            )
+
+######################################################################
+# Delete items from a wishlist
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items", methods=["DELETE"])
+def delete_items_from_wishlist(wishlist_id):
+    """
+    Delete items from wishlist
+    This endpoint will delete items from a wishlist based on the ids 
+    """
+    if request.headers.get("Content-Type") != "application/json":
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Unsupported media type : application/json expected"   
+        )
+    else:   
+        data = request.get_json()
+        product_id = data['product_id']
+        app.logger.info("Request to delete items with id %s from wishlist %s" % (product_id,wishlist_id))
+        w = Wishlist.find_by_id(wishlist_id)
+
+        if not w:
+            return make_response(
+                    jsonify(
+                            data = [],
+                            message = "Wishlist {} not found".format(wishlist_id)
+                        ),
+                        status.HTTP_200_OK
+                    )
+        else:
+            cnt = w.delete_items(product_id)
+            if(cnt == len(product_id)):
+                return make_response(
+                    jsonify(
+                            data = [],
+                            message = "All items are deleted"
+                        ),
+                        status.HTTP_200_OK
+                    )
+            else:
+                return make_response(
+                    jsonify(
+                        data = [],
+                        message = "{} items are deleted".format(cnt)
+                    ),
+                    status.HTTP_206_PARTIAL_CONTENT
+                )
+
+######################################################################
+# Add items to a wishlist
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/items", methods=["PUT"])
+def add_items_to_wishlist(wishlist_id):
+    """
+    Add items to wishlist
+    This endpoint will add items to a wishlist based on the ids 
+    """
+    if request.headers.get("Content-Type") != "application/json":
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Unsupported media type : application/json expected"   
+        )
+    else:   
+        data = request.get_json()
+        product_id = data['product_id']
+        app.logger.info("Request to add items with id %s to wishlist %s" % (product_id,wishlist_id))
+        w = Wishlist.find_by_id(wishlist_id)
+
+        if not w:
+            abort(
+            status.HTTP_404_NOT_FOUND, "Wishlist with id %s not found!".format(wishlist_id)   
+        )
+        else:
+            cnt = w.add_items(product_id)
+            if(cnt == len(product_id)):
+                return make_response(
+                    jsonify(
+                            data = [],
+                            message = "All items are added"
+                        ),
+                        status.HTTP_200_OK
+                    )
+            else:
+                return make_response(
+                    jsonify(
+                        data = [],
+                        message = "{} items are added".format(cnt)
+                    ),
+                    status.HTTP_206_PARTIAL_CONTENT
+                )
 
 ######################################################################
 # List ALL WISHLISTS FOR A USER
