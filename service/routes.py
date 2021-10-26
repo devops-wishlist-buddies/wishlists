@@ -115,7 +115,7 @@ def list_all_wishlists():
         jsonify(data = r, message = "All the wishlists."),
         status.HTTP_200_OK
     )
-    
+
 ######################################################################
 # List ALL WISHLISTS FOR A USER
 ######################################################################
@@ -253,7 +253,7 @@ def add_items_to_wishlist(wishlist_id):
 ######################################################################
 # LIST PRODUCTS IN A WISHLIST
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products", methods=["GET"])
+@app.route("/wishlists/<int:wishlist_id>", methods=["GET"])
 def list_products_in_wishlist(wishlist_id):
     """
     List all products in a wishlist based on a wishlist_id
@@ -273,9 +273,21 @@ def list_products_in_wishlist(wishlist_id):
                     status.HTTP_404_NOT_FOUND
                 )
         res.append( product.serialize() )
+    wishlist = Wishlist.find_by_id(wishlist_id)
+    if not wishlist:
+        return make_response(
+                    jsonify(
+                        data = [],
+                        message = "Wishlist with id {} was not found".format(wishlist_id)
+                    ),
+                    status.HTTP_404_NOT_FOUND
+                )
     return make_response(
         jsonify(
-            data = res,
+            wishlist_id = wishlist.id,
+            wishlist_user_id = wishlist.user_id,
+            wishlist_name = wishlist.name,
+            product_list = res,
             message = "Getting Products from wishlists with id {} success".format(wishlist_id)
             ), 
         status.HTTP_200_OK
