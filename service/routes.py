@@ -251,6 +251,132 @@ def add_items_to_wishlist(wishlist_id):
                 )
 
 ######################################################################
+# LIST PRODUCTS IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>", methods=["GET"])
+def list_products_in_wishlist(wishlist_id):
+    """
+    List all products in a wishlist based on a wishlist_id
+    """
+    app.logger.info("Request to list products in a wishlist")
+    wishlist_products= WishlistProduct.find_all_by_wishlist_id(wishlist_id)
+    products_id_list = [ wishlist_product.product_id for wishlist_product in wishlist_products ]
+    res = []
+    for product_id in products_id_list:
+        product = Product.find_by_id( product_id )
+        if not product:
+            return make_response(
+                    jsonify(
+                        data = [],
+                        message = "Product with id {} was not found".format(product_id)
+                    ),
+                    status.HTTP_404_NOT_FOUND
+                )
+        res.append( product.serialize() )
+    wishlist = Wishlist.find_by_id(wishlist_id)
+    if not wishlist:
+        return make_response(
+                    jsonify(
+                        data = [],
+                        message = "Wishlist with id {} was not found".format(wishlist_id)
+                    ),
+                    status.HTTP_404_NOT_FOUND
+                )
+    return make_response(
+        jsonify(
+            wishlist_id = wishlist.id,
+            wishlist_user_id = wishlist.user_id,
+            wishlist_name = wishlist.name,
+            product_list = res,
+            message = "Getting Products from wishlists with id {} success".format(wishlist_id)
+            ), 
+        status.HTTP_200_OK
+    )
+
+######################################################################
+# GET A PRODUCT IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["GET"])
+def get_a_product_in_a_wishlist(wishlist_id, product_id):
+    """
+    Get a product in a wishlist based on a wishlist_id
+    This endpoint will firstly look for a wishlist based on a wishlist_id
+    Then look for a product based on a product_id
+    """
+    app.logger.info("Request to get a specific product in a wishlist")
+    wishlist_product= WishlistProduct.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
+
+    if not wishlist_product:
+        return(
+            jsonify(
+                data = [],
+                message = "Wishlist with id {wishlist_id} and Product with id {product_id} was not found in Wishlist_Product db"
+                ),
+                status.HTTP_404_NOT_FOUND
+            )
+    product = Product.find_by_id(product_id)
+    if not product:
+        return(
+            jsonify(
+                data = [],
+                message = "Product with id {product_id} was not found in Product db"
+                ),
+                status.HTTP_404_NOT_FOUND
+            )
+    
+    return make_response(
+        jsonify(
+            data = product.serialize(),
+            message = "Successfully get Product with id {product_id} in wishlist with id {wishlist_id}"
+            ), 
+        status.HTTP_200_OK
+    )
+
+######################################################################
+# CREATE A NEW PRODUCT
+######################################################################
+@app.route("/products", methods=["POST"])
+def create_products():
+    """
+    Creates a product
+    This endpoint will create a product based the data in the body that is posted
+    """
+    app.logger.info("Request to create a product")
+    data = {}
+    if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+        app.logger.info("Processing FORM data")
+        data = {
+            "name": request.form.get("name"),
+            "price": request.form.get("price"),
+            "status": request.form.get("status"),
+            "pic_url": request.form.get("pic_url"),
+            "short_desc": request.form.get("short_desc"),
+        }
+    else:
+        app.logger.info("Processing JSON data")
+        data = request.get_json()
+        if isinstance(data["status"], str):
+            if not hasattr(Availability, data["status"]):
+                return make_response(
+                    jsonify( 
+                        data = [],
+                        message = "Input Product raw data got wrong status"
+                        ),
+                    status.HTTP_400_BAD_REQUEST
+                )
+            data["status"] = getattr(Availability, data["status"])
+    product= Product()
+    product.deserialize(data)
+    product.create()
+    return make_response(
+        jsonify( 
+            data = product.id,
+            message = "Product Created"
+            ),
+        status.HTTP_201_CREATED
+    )
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 
