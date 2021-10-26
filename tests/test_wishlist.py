@@ -217,15 +217,15 @@ class TestWishlistModel(unittest.TestCase):
         w_instance = Wishlist()
         self.assertRaises(DataValidationError, w_instance.deserialize, data)
 
-    def test_add_items(self):
-        """Test adding items to a wishlist"""
+    def test_add_products(self):
+        """Test adding products to a wishlist"""
         products = ProductFactory.create_batch(6)
         for p in products:
             p.create()
 
         w_instance = WishlistFactory()
         w_instance.create()
-        cnt = w_instance.add_items([p.id for p in products])
+        cnt = w_instance.add_products([p.id for p in products])
         self.assertEqual(cnt,6)
         wps = WishlistProduct.find_all_by_wishlist_id(w_instance.id)
         self.assertEqual(len(wps),6)
@@ -233,8 +233,8 @@ class TestWishlistModel(unittest.TestCase):
         self.assertEqual(wps[3].product_id, products[3].id)
         self.assertNotEqual(wps[5].product_id, products[4].id)
 
-    def test_add_items_with_duplicates(self):
-        """Test adding duplicated items to a wishlist"""
+    def test_add_products_with_duplicates(self):
+        """Test adding duplicated products to a wishlist"""
         p_instance_1 = Product(name="book",price=12.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test book")
         p_instance_1.create()
         p_instance_2 = Product(name="toy",price=121.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test toy")
@@ -244,14 +244,14 @@ class TestWishlistModel(unittest.TestCase):
 
         w_instance = WishlistFactory()
         w_instance.create()
-        cnt = w_instance.add_items([p.id for p in products])
+        cnt = w_instance.add_products([p.id for p in products])
         self.assertEqual(cnt,2)
         wps = WishlistProduct.find_all_by_wishlist_id(w_instance.id)
         self.assertEqual(len(wps),2)
         self.assertEqual(wps[0].product_id, products[0].id)
 
-    def test_add_existing_items(self):
-        """Test adding existing items to a wishlist"""
+    def test_add_existing_products(self):
+        """Test adding existing products to a wishlist"""
         p_instance_1 = Product(name="book",price=12.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test book")
         p_instance_1.create()
         p_instance_2 = Product(name="toy",price=121.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test toy")
@@ -264,15 +264,15 @@ class TestWishlistModel(unittest.TestCase):
         products = [p_instance_1,p_instance_2]
 
 
-        cnt = w_instance.add_items([p.id for p in products])
+        cnt = w_instance.add_products([p.id for p in products])
         self.assertEqual(cnt,1)
         wps = WishlistProduct.find_all_by_wishlist_id(w_instance.id)
         self.assertEqual(len(wps),2)
         self.assertEqual(wps[0].product_id, products[0].id)
         self.assertEqual(wps[1].product_id, products[1].id)
 
-    def test_delete_items(self):
-        """Test deleting items from a wishlist"""
+    def test_delete_products(self):
+        """Test deleting products from a wishlist"""
         p_instance_1 = Product(name="book",price=12.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test book")
         p_instance_1.create()
         p_instance_2 = Product(name="toy",price=121.5,status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test toy")
@@ -288,7 +288,7 @@ class TestWishlistModel(unittest.TestCase):
         WishlistProduct(wishlist_id = w_instance_1.id, product_id = p_instance_3.id).create()
         WishlistProduct(wishlist_id = w_instance_2.id, product_id = p_instance_3.id).create()
 
-        cnt = w_instance_1.delete_items([1,3])
+        cnt = w_instance_1.delete_products([1,3])
         self.assertEqual(cnt, 2)
         wps = WishlistProduct.find_all()
         self.assertEqual(len(wps),2)

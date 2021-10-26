@@ -75,8 +75,8 @@ class Wishlist(db.Model):
       products = Product.find_all_by_id(product_ids)
     return WishlistVo(self,products).serialize()
 
-  def add_items(self,product_ids:list):
-    logger.info("Wishlist: adding items to wishlist with id %s. Items are %s ...",\
+  def add_products(self,product_ids:list):
+    logger.info("Wishlist: adding products to wishlist with id %s. products are %s ...",\
       self.id, product_ids)
     cnt = 0
     for pid in product_ids:
@@ -85,8 +85,8 @@ class Wishlist(db.Model):
         WishlistProduct(wishlist_id=self.id,product_id=pid).create()
     return cnt
 
-  def delete_items(self, product_ids:list):
-    logger.info("Wishlist: deleting items from wishlist with id %s. Items are %s ...",\
+  def delete_products(self, product_ids:list):
+    logger.info("Wishlist: deleting products from wishlist with id %s. products are %s ...",\
       self.id,product_ids)
     cnt = 0
     for pid in product_ids:

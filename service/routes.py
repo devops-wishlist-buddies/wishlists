@@ -167,22 +167,22 @@ def delete_wishlists(wishlist_id):
   )
 
 ######################################################################
-# Delete items from a wishlist
+# Delete products from a wishlist
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/items", methods=["DELETE"])
-def delete_items_from_wishlist(wishlist_id):
+@app.route("/wishlists/<int:wishlist_id>/products", methods=["DELETE"])
+def delete_products_from_wishlist(wishlist_id):
   """
-  Delete items from wishlist
-  This endpoint will delete items from the wishlist with id specified in the URL.
-  The endpoint will remove items that are provided in the body as a list of item ids.
+  Delete products from wishlist
+  This endpoint will delete products from the wishlist with id specified in the URL.
+  The endpoint will remove products that are provided in the body as a list of product ids.
   """
   if request.headers.get("Content-Type") != "application/json":
     return abort(
       status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Unsupported media type : application/json expected"
     )
   data = request.get_json()
-  product_id = data['product_id']
-  app.logger.info("Request to delete items with id %s from wishlist %s" % (product_id,wishlist_id))
+  product_ids_list = data['product_ids_list']
+  app.logger.info("Request to delete products with id %s from wishlist %s" % (product_ids_list,wishlist_id))
   wishlist = Wishlist.find_by_id(wishlist_id)
 
   if not wishlist:
@@ -193,13 +193,13 @@ def delete_items_from_wishlist(wishlist_id):
         ),
         status.HTTP_200_OK
       )
-  cnt = wishlist.delete_items(product_id)
+  cnt = wishlist.delete_products(product_ids_list)
 
-  if cnt == len(product_id):
+  if cnt == len(product_ids_list):
     return make_response(
       jsonify(
         data = [],
-        message = "All items are deleted"
+        message = "All products are deleted"
       ),
       status.HTTP_200_OK
     )
@@ -207,20 +207,20 @@ def delete_items_from_wishlist(wishlist_id):
   return make_response(
     jsonify(
       data = [],
-      message = "{} items are deleted".format(cnt)
+      message = "{} products are deleted".format(cnt)
     ),
     status.HTTP_206_PARTIAL_CONTENT
   )
 
 ######################################################################
-# Add items to a wishlist
+# Add products to a wishlist
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/items", methods=["PUT"])
-def add_items_to_wishlist(wishlist_id):
+@app.route("/wishlists/<int:wishlist_id>/products", methods=["PUT"])
+def add_products_to_wishlist(wishlist_id):
   """
-  Add items to wishlist
-  This endpoint will add items to the wishlist with id specified in the URL.
-  The endpoint will add items that are provided in the body as a list of item ids.
+  Add products to wishlist
+  This endpoint will add products to the wishlist with id specified in the URL.
+  The endpoint will add products that are provided in the body as a list of product ids.
   """
   if request.headers.get("Content-Type") != "application/json":
     return abort(
@@ -228,8 +228,12 @@ def add_items_to_wishlist(wishlist_id):
     )
 
   data = request.get_json()
-  product_id = data['product_id']
-  app.logger.info("Request to add items with id %s to wishlist %s" % (product_id, wishlist_id))
+  product_ids_list = data['product_ids_list']
+  if not isinstance(product_ids_list, list):
+    return abort(
+      status.HTTP_400_BAD_REQUEST, "product_ids_list argument sohuld be an array"
+    )
+  app.logger.info("Request to add products with id %s to wishlist %s" % (product_ids_list, wishlist_id))
   wishlist = Wishlist.find_by_id(wishlist_id)
 
   if not wishlist:
@@ -237,12 +241,12 @@ def add_items_to_wishlist(wishlist_id):
       status.HTTP_404_NOT_FOUND, "Wishlist with id {} not found!".format(wishlist_id)
     )
 
-  cnt = wishlist.add_items(product_id)
-  if cnt == len(product_id):
+  cnt = wishlist.add_products(product_ids_list)
+  if cnt == len(product_ids_list):
     return make_response(
       jsonify(
         data = [],
-        message = "All items are added"
+        message = "All products are added"
       ),
       status.HTTP_200_OK
     )
@@ -250,7 +254,7 @@ def add_items_to_wishlist(wishlist_id):
   return make_response(
     jsonify(
       data = [],
-      message = "{} items are added".format(cnt)
+      message = "{} products are added".format(cnt)
     ),
     status.HTTP_206_PARTIAL_CONTENT
   )
@@ -265,10 +269,10 @@ def list_products_in_wishlist(wishlist_id):
   """
   app.logger.info("Request to list products in a wishlist")
   wishlist_products= WishlistProduct.find_all_by_wishlist_id(wishlist_id)
-  products_id_list = [ wishlist_product.product_id for wishlist_product in wishlist_products ]
+  products_id_list = [wishlist_product.product_id for wishlist_product in wishlist_products]
   res = []
   for product_id in products_id_list:
-    product = Product.find_by_id( product_id )
+    product = Product.find_by_id(product_id)
     if not product:
       return make_response(
         jsonify(
@@ -277,7 +281,7 @@ def list_products_in_wishlist(wishlist_id):
         ),
         status.HTTP_404_NOT_FOUND
       )
-    res.append( product.serialize() )
+    res.append(product.serialize())
   wishlist = Wishlist.find_by_id(wishlist_id)
   if not wishlist:
     return make_response(
@@ -315,17 +319,18 @@ def get_a_product_in_a_wishlist(wishlist_id, product_id):
     return(
       jsonify(
         data = [],
-        message = "Wishlist with id {wishlist_id} and Product with" \
-          "id {product_id} was not found in Wishlist_Product db"
+        message = f"Wishlist with id {wishlist_id} and Product with" \
+          f"id {product_id} was not found in Wishlist_Product db"
       ),
       status.HTTP_404_NOT_FOUND
     )
+
   product = Product.find_by_id(product_id)
   if not product:
     return(
       jsonify(
         data = [],
-        message = "Product with id {product_id} was not found in Product db"
+        message = f"Product with id {product_id} was not found in Product db"
       ),
       status.HTTP_404_NOT_FOUND
     )
@@ -352,11 +357,11 @@ def create_products():
   if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
     app.logger.info("Processing FORM data")
     data = {
-      "name": request.form.get("name"),
-      "price": request.form.get("price"),
-      "status": request.form.get("status"),
-      "pic_url": request.form.get("pic_url"),
-      "short_desc": request.form.get("short_desc"),
+      "name": request.args.get("name"),
+      "price": request.args.get("price"),
+      "status": Availability.AVAILABLE if request.args.get("status") == '1' else Availability.UNAVAILABLE,
+      "pic_url": request.args.get("pic_url"),
+      "short_desc": request.args.get("short_desc"),
     }
   else:
     app.logger.info("Processing JSON data")
@@ -417,5 +422,5 @@ def init_db():
   for product in products:
     product.create()
 
-  w_1.add_items([1,2,3,4,5,6])
-  w_2.add_items([1,5,6])
+  w_1.add_products([1,2,3,4,5,6])
+  w_2.add_products([1,5,6])
