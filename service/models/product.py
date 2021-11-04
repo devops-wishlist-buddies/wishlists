@@ -13,7 +13,8 @@ price
 status
 pic_url
 short_desc
-
+inventory_product_id
+wishlist_id
 """
 
 from flask import Flask
@@ -32,6 +33,9 @@ class Product(db.Model):
   status = db.Column(db.Enum(Availability),nullable=False,default=1)
   pic_url = db.Column(db.Text,nullable=True)
   short_desc = db.Column(db.Text,nullable=True)
+  # corresponds to real product in inventory
+  inventory_product_id = db.Column(db.Integer,nullable=False)
+  wishlist_id = db.Column(db.Integer,nullable=False) # wishlist id it belongs to
 
   def create(self):
     logger.info("Creating %s ...", self.name)
@@ -58,7 +62,9 @@ class Product(db.Model):
       "price":self.price,
       "status":self.status,
       "pic_url":self.pic_url,
-      "short_desc":self.short_desc
+      "short_desc":self.short_desc,
+      "inventory_product_id":self.inventory_product_id,
+      "wishlist_id":self.wishlist_id
     }
 
   def deserialize(self, data:dict):
@@ -72,6 +78,8 @@ class Product(db.Model):
         raise DataValidationError("Invalid type for field status, integer expected")
       self.pic_url = data['pic_url']
       self.short_desc = data['short_desc']
+      self.inventory_product_id = data['inventory_product_id']
+      self.wishlist_id = data['wishlist_id']
 
     except KeyError as error:
       raise DataValidationError("Invalid Product: missing " + error.args[0])
@@ -137,3 +145,46 @@ class Product(db.Model):
     """Find a product by its name"""
     logger.info("Products: processing name query for %s ...", name)
     return [p for p in cls.query.filter(cls.name == name).order_by(asc(Product.id))]
+
+  @classmethod
+  def find_all_by_wishlist_id(cls,wishlist_id:int)->list:
+    """Find products by wishlist id they belong to"""
+    logger.info("Products: processing name query for %s ...", wishlist_id)
+    return [p for p in cls.query.filter(cls.wishlist_id == wishlist_id).order_by(asc(Product.id))]
+
+  @classmethod
+  def find_by_wishlist_id_and_product_id(cls,wishlist_id:int,product_id:int)->list:
+    """Find products by wishlist id they belong to and product id"""
+    logger.info("Products: processing name query for wishlist %s and product %s...",\
+      wishlist_id, product_id)
+    res = cls.query.filter(cls.wishlist_id == wishlist_id, cls.id == product_id)\
+      .order_by(asc(Product.id))
+    if res.count() == 0:
+      return None
+
+    return res[0]
+
+  @classmethod
+  def delete_all_by_wishlist_id_and_product_id(cls, wishlist_id:int, product_ids:list) -> int:
+    """Delete products by wishlist id they belong to and product id"""
+    logger.info("Products: processing deletion for wishlist_id %s"\
+      "and product_id in %s ...", wishlist_id, product_ids)
+    cnt = 0
+    for pid in product_ids:
+      entity = Product.find_by_wishlist_id_and_product_id(wishlist_id, pid)
+      if entity is not None:
+        cnt += 1
+        entity.delete()
+    return cnt
+
+  @classmethod
+  def delete_all_by_wishlist_id(cls, wishlist_id:int):
+    """Delete all products by wishlist id they belong to"""
+    logger.info("Product: processing deletion for wishlist_id %s ...", wishlist_id)
+    entities = Product.find_all_by_wishlist_id(wishlist_id)
+    cnt = 0
+    if len(entities) != 0:
+      for entity in entities:
+        cnt += 1
+        entity.delete()
+    return cnt

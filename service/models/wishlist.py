@@ -17,8 +17,7 @@ from flask import Flask
 from sqlalchemy import asc
 
 from service.models.product import Product
-from service.models.wishlist_product import WishlistProduct
-from .model_utils import EntityNotFoundError, db,logger,DataValidationError
+from service.models.model_utils import EntityNotFoundError, db,logger,DataValidationError
 
 class Wishlist(db.Model):
   __tablename__ = 'wishlist'
@@ -69,10 +68,7 @@ class Wishlist(db.Model):
     if wishlist is None:
       raise EntityNotFoundError("Cannot find wishlist with id {}".format(self.id))
 
-    product_ids = [wp.product_id for wp in WishlistProduct.find_all_by_wishlist_id(self.id)]
-    products = []
-    if len(product_ids) != 0:
-      products = Product.find_all_by_id(product_ids)
+    products = Product.find_all_by_wishlist_id(self.id)
     return WishlistVo(self,products).serialize()
 
   def add_products(self,product_ids:list):
@@ -80,9 +76,9 @@ class Wishlist(db.Model):
       self.id, product_ids)
     cnt = 0
     for pid in product_ids:
-      if WishlistProduct.find_by_wishlist_id_and_product_id(self.id,pid) is None:
+      if Product.find_by_wishlist_id_and_product_id(self.id,pid) is None:
         cnt += 1
-        WishlistProduct(wishlist_id=self.id,product_id=pid).create()
+        Product(wishlist_id=self.id).create()
     return cnt
 
   def delete_products(self, product_ids:list):
@@ -90,7 +86,7 @@ class Wishlist(db.Model):
       self.id,product_ids)
     cnt = 0
     for pid in product_ids:
-      entity = WishlistProduct.find_by_wishlist_id_and_product_id(self.id, pid)
+      entity = Product.find_by_wishlist_id_and_product_id(self.id, pid)
       if entity is not None:
         cnt += 1
         entity.delete()
@@ -106,7 +102,7 @@ class Wishlist(db.Model):
       logger.info("Wishlist: cannot find wishlist with id %s ...", self.id)
       return 0
 
-    WishlistProduct.delete_all_by_wishlist_id(self.id)
+    Product.delete_all_by_wishlist_id(self.id)
     logger.info("Deleting wishlist %s", self.name)
     db.session.delete(self)
     db.session.commit()
@@ -143,11 +139,8 @@ class Wishlist(db.Model):
     wishlists = [r for r in query_res]
     res = []
     for wishlist in wishlists:
-      wishlist_products = WishlistProduct.find_all_by_wishlist_id(wishlist.id)
-      products = []
-      if len(wishlist_products) != 0:
-        products = Product.find_all_by_id([wp.product_id for wp in wishlist_products])
-      res.append(WishlistVo(wishlist,products))
+      wishlist_products = Product.find_all_by_wishlist_id(wishlist.id)
+      res.append(WishlistVo(wishlist,wishlist_products))
 
     return [vo.serialize() for vo in res]
 
