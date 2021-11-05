@@ -35,21 +35,25 @@ class Product(db.Model):
   short_desc = db.Column(db.Text,nullable=True)
   # corresponds to real product in inventory
   inventory_product_id = db.Column(db.Integer,nullable=False)
-  wishlist_id = db.Column(db.Integer,nullable=False) # wishlist id it belongs to
+  # wishlist id it belongs to
+  wishlist_id = db.Column(db.Integer,db.ForeignKey("wishlist.id"),nullable=False)
 
   def create(self):
+    """Create Product instance in database"""
     logger.info("Creating %s ...", self.name)
     self.id = None
     db.session.add(self)
     db.session.commit()
 
   def update(self):
+    """Update Product instance in database"""
     logger.info("Updating %s ...", self.name)
     if not self.id:
       raise DataValidationError("Update called with empty ID field")
     db.session.commit()
 
   def delete(self):
+    """Delete Product instance in database"""
     logger.info("Deleting %s ...", self.name)
     db.session.delete(self)
     db.session.commit()
@@ -68,6 +72,7 @@ class Product(db.Model):
     }
 
   def deserialize(self, data:dict):
+    """Deserialize a Product from dictionary"""
     try:
       self.name = data['name']
       self.price = data['price']
@@ -89,6 +94,7 @@ class Product(db.Model):
 
   @classmethod
   def init_db(cls, app:Flask):
+    """ Initializes the database session """
     logger.info("Product: initializing database")
     cls.app = app
 
@@ -99,21 +105,23 @@ class Product(db.Model):
 
   @classmethod
   def find_all(cls)->list:
+    """ Finds all Products in database """
     logger.info("Products: processing all products")
-    return cls.query.all()
+    return list(cls.query.all())
 
   @classmethod
   def find_by_id(cls, product_id:int):
-    """ Find a Product by it's id """
+    """ Find a Product by its id """
     logger.info('Products: processing product lookup for id %s ...', product_id)
     return cls.query.get(product_id)
 
   @classmethod
   def find_by_id_and_status(cls, product_id:int, status:Availability):
+    """ Find a Product by its id and availability status"""
     logger.info('Products: processing product lookup for id' \
       '%s and status %s ...', product_id, status.value)
-    res = [r for r in cls.query.filter(cls.id == product_id, cls.status == status)\
-      .order_by(asc(Product.id))]
+    res = list(cls.query.filter(cls.id == product_id, cls.status == status)\
+      .order_by(asc(Product.id)))
     if len(res) == 0:
       return None
 
@@ -121,36 +129,37 @@ class Product(db.Model):
 
   @classmethod
   def find_or_404(cls,product_id:int):
+    """ Find a Product by its id. Returns a product or a 404"""
     logger.info("Products: processing lookup or 404 for id %s ...", product_id)
     return cls.query.get_or_404(product_id)
 
   @classmethod
   def find_all_by_id(cls, product_ids:list) -> list:
-    """Find a product by id and its status"""
+    """Find a product by id"""
     logger.info("Products: processing lookup for ids in %s ...", product_ids)
     res = cls.query.filter(cls.id.in_(product_ids)).order_by(asc(Product.id))
-    return [r for r in res]
+    return list(res)
 
   @classmethod
-  def find_all_by_id_and_status \
+  def find_all_by_ids_and_status \
     (cls, product_ids:list, status:Availability=Availability.AVAILABLE) -> list:
     """Find products by id and its status"""
     logger.info("Products: processing lookup for ids in %s and status %s ...",\
       product_ids, status)
     res = cls.query.filter(cls.id.in_(product_ids), cls.status == status).order_by(asc(Product.id))
-    return [r for r in res]
+    return list(res)
 
   @classmethod
   def find_by_name(cls,name:str)->list:
     """Find a product by its name"""
     logger.info("Products: processing name query for %s ...", name)
-    return [p for p in cls.query.filter(cls.name == name).order_by(asc(Product.id))]
+    return list(cls.query.filter(cls.name == name).order_by(asc(Product.id)))
 
   @classmethod
   def find_all_by_wishlist_id(cls,wishlist_id:int)->list:
     """Find products by wishlist id they belong to"""
     logger.info("Products: processing name query for %s ...", wishlist_id)
-    return [p for p in cls.query.filter(cls.wishlist_id == wishlist_id).order_by(asc(Product.id))]
+    return list(cls.query.filter(cls.wishlist_id == wishlist_id).order_by(asc(Product.id)))
 
   @classmethod
   def find_by_wishlist_id_and_product_id(cls,wishlist_id:int,product_id:int)->list:
@@ -165,17 +174,13 @@ class Product(db.Model):
     return res[0]
 
   @classmethod
-  def delete_all_by_wishlist_id_and_product_id(cls, wishlist_id:int, product_ids:list) -> int:
+  def delete_by_wishlist_id_and_product_id(cls, wishlist_id:int, pid:int) -> int:
     """Delete products by wishlist id they belong to and product id"""
     logger.info("Products: processing deletion for wishlist_id %s"\
-      "and product_id in %s ...", wishlist_id, product_ids)
-    cnt = 0
-    for pid in product_ids:
-      entity = Product.find_by_wishlist_id_and_product_id(wishlist_id, pid)
-      if entity is not None:
-        cnt += 1
-        entity.delete()
-    return cnt
+      "and product_id %s ...", wishlist_id, pid)
+    entity = Product.find_by_wishlist_id_and_product_id(wishlist_id, pid)
+    if entity is not None:
+      entity.delete()
 
   @classmethod
   def delete_all_by_wishlist_id(cls, wishlist_id:int):

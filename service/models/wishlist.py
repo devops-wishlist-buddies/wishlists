@@ -50,6 +50,7 @@ class Wishlist(db.Model):
     return self
 
   def create(self):
+    """Create Wishlist instance in database"""
     logger.info("Creating %s ...", self.name)
     self.id = None
     db.session.add(self)
@@ -57,12 +58,14 @@ class Wishlist(db.Model):
     return self.id
 
   def update(self):
+    """Update Wishlist instance in database"""
     logger.info("Updating wishlist %s ...", self.name)
     if not self.id:
       raise DataValidationError("Update called with empty ID field")
     db.session.commit()
 
   def read(self):
+    """Read Wishlist instance from database"""
     logger.info("Wishlist: reading content from wishlist with id %s ...", self.id)
     wishlist = Wishlist.find_by_id(self.id)
     if wishlist is None:
@@ -82,6 +85,7 @@ class Wishlist(db.Model):
     return cnt
 
   def delete_products(self, product_ids:list):
+    """Delete products with product_ids from wishlist"""
     logger.info("Wishlist: deleting products from wishlist with id %s. products are %s ...",\
       self.id,product_ids)
     cnt = 0
@@ -93,6 +97,7 @@ class Wishlist(db.Model):
     return cnt
 
   def delete(self):
+    """Delete a wishlist from database"""
     if self.id is None:
       logger.info("Wishlist: delete a wishlist with id None")
       return 0
@@ -110,6 +115,7 @@ class Wishlist(db.Model):
 
   @classmethod
   def init_db(cls, app:Flask):
+    """Initialize database Wishlists table"""
     logger.info("Wishlist: Initializing database")
     cls.app = app
 
@@ -120,23 +126,26 @@ class Wishlist(db.Model):
 
   @classmethod
   def find_all(cls):
+    """ Finds all Wishlists in database """
     logger.info("Wishlist: processing lookup for all wishlists")
     return cls.query.all()
 
   @classmethod
   def find_by_id(cls, wishlist_id:int):
+    """ Finds a Wishlist by id in database """
     logger.info("Wishlist: processing deletion for id %s ...", wishlist_id)
     return cls.query.get(wishlist_id)
 
   @classmethod
   def find_all_by_user_id(cls,user_id:int)->list:
+    """ Finds all Wishlist that belong to user_id in database """
     logger.info("Wishlist: porcessing lookup for user id: %s ...",\
       user_id)
     query_res = cls.query.filter(cls.user_id == user_id).order_by(asc(Wishlist.id))
     if query_res.count() == 0:
       return []
 
-    wishlists = [r for r in query_res]
+    wishlists = list(query_res)
     res = []
     for wishlist in wishlists:
       wishlist_products = Product.find_all_by_wishlist_id(wishlist.id)
@@ -152,6 +161,7 @@ class WishlistVo:
     self.products = products
 
   def serialize(self)->dict:
+    """ Serialize a Wishlist instance with its products to dictionary """
     return {
       'id': self.id,
       'name':self.name,

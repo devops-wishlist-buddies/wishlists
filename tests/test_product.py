@@ -135,6 +135,33 @@ class TestProductModel(unittest.TestCase):
     product_instance.delete()
     self.assertEqual(len(Product.find_all()), 0)
 
+  def test_delete_all_products_by_wishlist_id(self):
+    """Delete all products that belong to wishlist_id"""
+    products = ProductFactory.create_batch(5)
+    for product in products:
+      product.wishlist_id = self.w_1.id
+      product.create()
+
+    self.assertEqual(len(Product.find_all()), 5)
+    self.assertEqual(len(Product.find_all_by_wishlist_id(self.w_1.id)), 5)
+    print(Product.find_all_by_wishlist_id(self.w_1.id))
+    Product.delete_all_by_wishlist_id(self.w_1.id)
+
+    self.assertEqual(len(Product.find_all_by_wishlist_id(self.w_1.id)), 0)
+
+  def test_delete_by_wishlist_id_and_product_id(self):
+    """Delete a product with product_id that belong to wishlist_id"""
+    products = ProductFactory.create_batch(3)
+    for product in products:
+      product.wishlist_id = self.w_1.id
+      product.create()
+
+    self.assertEqual(len(Product.find_all_by_wishlist_id(self.w_1.id)), 3)
+    Product.delete_by_wishlist_id_and_product_id(self.w_1.id, products[0].id)
+
+    self.assertEqual(len(Product.find_all_by_wishlist_id(self.w_1.id)), 2)
+    self.assertEqual(Product.find_by_id(products[0].id), None)
+
   def test_serialize_a_product(self):
     """Test serialization of a Product"""
     product_instance = ProductFactory()
@@ -234,7 +261,7 @@ class TestProductModel(unittest.TestCase):
     self.assertEqual(products[2].wishlist_id, self.w_2.id)
 
 
-  def test_find_all_by_id_and_status(self):
+  def test_find_all_by_ids_and_status(self):
     """Find products by id and status"""
     Product(wishlist_id=self.w_1.id,name="toy", status=Availability.AVAILABLE, price = 12.5,\
       pic_url="www.toy.com/1.png", short_desc = "this is a toy",inventory_product_id=3).create()
@@ -243,7 +270,7 @@ class TestProductModel(unittest.TestCase):
     Product(wishlist_id=self.w_1.id,name="table", status=Availability.UNAVAILABLE, price=103.5,\
       pic_url="www.table.com/1.png", short_desc = "this is a table",inventory_product_id=12).create()
 
-    products = Product.find_all_by_id_and_status([1,2,3],Availability.AVAILABLE)
+    products = Product.find_all_by_ids_and_status([1,2,3],Availability.AVAILABLE)
     self.assertEqual(len(products),2)
     self.assertEqual(products[1].name, "book")
     self.assertEqual(products[1].price, 13.5)
