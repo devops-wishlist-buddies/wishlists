@@ -245,14 +245,16 @@ class TestProductModel(unittest.TestCase):
     self.assertEqual(product_instance.wishlist_id, wishlist_ids[1])
 
 
-  def test_find_all_by_id(self):
+  def test_find_all_by_ids(self):
+    """Find products by ids list"""
+
     Product(wishlist_id=self.w_1.id, name="toy", status=Availability.AVAILABLE,\
       price = 12.5, pic_url="www.toy.com/1.png", short_desc = "this is a toy",inventory_product_id=3).create()
     Product(wishlist_id=self.w_1.id,name="book", status=Availability.AVAILABLE,\
       price=13.5, pic_url="www.book.com/1.png", short_desc = "this is a book",inventory_product_id=4).create()
     Product(wishlist_id=self.w_2.id,name="table", status=Availability.UNAVAILABLE,\
       price=103.5, pic_url="www.table.com/1.png", short_desc = "this is a table",inventory_product_id=12).create()
-    products = Product.find_all_by_id([1,2,3])
+    products = Product.find_all_by_ids([1,2,3])
     self.assertEqual(len(products),3)
     self.assertEqual(products[1].name, "book")
     self.assertEqual(products[1].price, 13.5)
@@ -262,7 +264,7 @@ class TestProductModel(unittest.TestCase):
 
 
   def test_find_all_by_ids_and_status(self):
-    """Find products by id and status"""
+    """Find products by ids list and status"""
     Product(wishlist_id=self.w_1.id,name="toy", status=Availability.AVAILABLE, price = 12.5,\
       pic_url="www.toy.com/1.png", short_desc = "this is a toy",inventory_product_id=3).create()
     Product(wishlist_id=self.w_1.id,name="book", status=Availability.AVAILABLE, price=13.5,\

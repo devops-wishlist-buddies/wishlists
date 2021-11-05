@@ -134,7 +134,7 @@ class Product(db.Model):
     return cls.query.get_or_404(product_id)
 
   @classmethod
-  def find_all_by_id(cls, product_ids:list) -> list:
+  def find_all_by_ids(cls, product_ids:list) -> list:
     """Find a product by id"""
     logger.info("Products: processing lookup for ids in %s ...", product_ids)
     res = cls.query.filter(cls.id.in_(product_ids)).order_by(asc(Product.id))
