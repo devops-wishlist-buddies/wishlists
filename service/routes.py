@@ -30,7 +30,6 @@ from . import status  # HTTP Status Codes
 # Import Flask application
 from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
-from service.models.wishlist_product import WishlistProduct
 from service.models.model_utils import Availability
 
 DATABASE_URI = os.getenv(
@@ -98,11 +97,8 @@ def list_all_wishlists():
   wishlists = [r for r in query_res]
   res = []
   for wishlist in wishlists:
-    wishlist_products = WishlistProduct.find_all_by_wishlist_id(wishlist.id)
-    products = []
-    if len(wishlist_products) != 0:
-      products = Product.find_all_by_id([wp.product_id for wp in wishlist_products])
-    res.append(WishlistVo(wishlist,products))
+    wishlist_products = Product.find_all_by_wishlist_id(wishlist.id)
+    res.append(WishlistVo(wishlist,wishlist_products))
 
   result_ser = [vo.serialize() for vo in res]
 
@@ -182,7 +178,8 @@ def delete_products_from_wishlist(wishlist_id):
     )
   data = request.get_json()
   product_ids_list = data['product_ids_list']
-  app.logger.info("Request to delete products with id %s from wishlist %s" % (product_ids_list,wishlist_id))
+  app.logger.info("Request to delete products with id %s from wishlist %s"\
+    % (product_ids_list,wishlist_id))
   wishlist = Wishlist.find_by_id(wishlist_id)
 
   if not wishlist:
@@ -268,10 +265,9 @@ def list_products_in_wishlist(wishlist_id):
   List all products in a wishlist based on a wishlist_id
   """
   app.logger.info("Request to list products in a wishlist")
-  wishlist_products= WishlistProduct.find_all_by_wishlist_id(wishlist_id)
-  products_id_list = [wishlist_product.product_id for wishlist_product in wishlist_products]
+  wishlist_products = Product.find_all_by_wishlist_id(wishlist_id)
   res = []
-  for product_id in products_id_list:
+  for product_id in wishlist_products:
     product = Product.find_by_id(product_id)
     if not product:
       return make_response(
@@ -313,7 +309,7 @@ def get_a_product_in_a_wishlist(wishlist_id, product_id):
   Then look for a product based on a product_id
   """
   app.logger.info("Request to get a specific product in a wishlist")
-  wishlist_product= WishlistProduct.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
+  wishlist_product= Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
   if not wishlist_product:
     return(
@@ -359,7 +355,8 @@ def create_products():
     data = {
       "name": request.args.get("name"),
       "price": request.args.get("price"),
-      "status": Availability.AVAILABLE if request.args.get("status") == '1' else Availability.UNAVAILABLE,
+      "status": Availability.AVAILABLE \
+        if request.args.get("status") == '1' else Availability.UNAVAILABLE,
       "pic_url": request.args.get("pic_url"),
       "short_desc": request.args.get("short_desc"),
     }
@@ -390,13 +387,17 @@ def create_products():
 
 def init_db():
   """Initlaize the model"""
+
   app.config["TESTING"] = True
   app.config["DEBUG"] = False
   app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
   app.logger.setLevel(logging.CRITICAL)
+  app.app_context().push()
+
   Product.init_db(app)
   Wishlist.init_db(app)
-  WishlistProduct.init_db(app)
+
+  logging.info('Creating dummy data')
 
   w_1 = Wishlist(name = "User 1 first wishlist", user_id = 1)
   w_1.create()
@@ -405,22 +406,25 @@ def init_db():
   w_3 = Wishlist(name = "User 2 first wishlist", user_id = 2)
   w_3.create()
 
-  p_1 = Product(name = "toy",price=11.5,status=Availability.AVAILABLE, \
-    pic_url="www.toy.com/1.png",short_desc="this is a toy")
-  p_2 = Product(name = "book",price=20.5,status=Availability.AVAILABLE, \
-    pic_url="www.book.com/1.png",short_desc="this is a book")
-  p_3 = Product(name = "tv",price=1001.5,status=Availability.AVAILABLE,\
-    pic_url="www.tv.com/1.png",short_desc="this is a tv")
-  p_4 = Product(name = "pepsi",price=7.5,status=Availability.AVAILABLE,\
-    pic_url="www.drinks.com/pepsi.png",short_desc="this is pepsi coke")
-  p_5 = Product(name = "bread",price=3.5,status=Availability.AVAILABLE,\
-    pic_url="www.bakery.com/1.png",short_desc="this is a bread")
-  p_6 = Product(name = "soccer",price=23.5,status=Availability.AVAILABLE,\
-    pic_url="www.soccer.com/1.png",short_desc="this is a soccer")
+  p_1 = Product(wishlist_id=w_1.id,name = "toy",price=11.5,status=Availability.AVAILABLE, \
+    pic_url="www.toy.com/1.png",short_desc="this is a toy",inventory_product_id=3)
+  p_2 = Product(wishlist_id=w_1.id,name = "book",price=20.5,status=Availability.AVAILABLE, \
+    pic_url="www.book.com/1.png",short_desc="this is a book",inventory_product_id=4)
+  p_3 = Product(wishlist_id=w_1.id,name = "tv",price=1001.5,status=Availability.AVAILABLE,\
+    pic_url="www.tv.com/1.png",short_desc="this is a tv",inventory_product_id=15)
+  p_4 = Product(wishlist_id=w_1.id,name = "pepsi",price=7.5,status=Availability.AVAILABLE,\
+    pic_url="www.drinks.com/pepsi.png",short_desc="this is pepsi coke",inventory_product_id=1)
+  p_5 = Product(wishlist_id=w_1.id,name = "bread",price=3.5,status=Availability.AVAILABLE,\
+    pic_url="www.bakery.com/1.png",short_desc="this is a bread",inventory_product_id=20)
+  p_6 = Product(wishlist_id=w_1.id,name = "soccer",price=23.5,status=Availability.AVAILABLE,\
+    pic_url="www.soccer.com/1.png",short_desc="this is a soccer",inventory_product_id=5)
+  p_7 = Product(wishlist_id=w_2.id,name = "bread",price=3.5,status=Availability.AVAILABLE,\
+    pic_url="www.bakery.com/1.png",short_desc="this is a bread",inventory_product_id=20)
+  p_8 = Product(wishlist_id=w_2.id,name = "soccer",price=23.5,status=Availability.AVAILABLE,\
+    pic_url="www.soccer.com/1.png",short_desc="this is a soccer",inventory_product_id=5)
+  p_9 = Product(wishlist_id=w_2.id,name = "toy",price=11.5,status=Availability.AVAILABLE, \
+    pic_url="www.toy.com/1.png",short_desc="this is a toy",inventory_product_id=3)
 
-  products = [p_1,p_2,p_3,p_4,p_5,p_6]
+  products = [p_1,p_2,p_3,p_4,p_5,p_6,p_7,p_8,p_9]
   for product in products:
     product.create()
-
-  w_1.add_products([1,2,3,4,5,6])
-  w_2.add_products([1,5,6])

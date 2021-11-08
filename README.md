@@ -25,7 +25,6 @@ Please replace the ```tests.test_product``` with the module name you want to tes
 ```
 python -m unittest tests.test_product
 python -m unittest tests.test_wishlist
-python -m unittest tests.test_wishlist_product
 ```
 
 ## How to invoke nosetests
