@@ -324,7 +324,7 @@ def create_product_in_wishlist(wishlist_id):
     data = request.get_json()
 
     request_data = request.get_json()
-    if request_data is None:
+    if not isinstance(request_data, dict):
       return make_response(
         jsonify(
           data = [],
@@ -377,8 +377,8 @@ def update_product_in_wishlist(wishlist_id, product_id):
   product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
   request_data = request.get_json()
   non_null_fields = get_non_null_product_fields()
-
-  if request_data is None:
+  print(request_data)
+  if not isinstance(request_data, dict):
     return make_response(
       jsonify(
         data = [],

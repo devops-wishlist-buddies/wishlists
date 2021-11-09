@@ -73,7 +73,12 @@ class Product(db.Model):
 
   def deserialize(self, data:dict):
     """Deserialize a Product from dictionary"""
+    table_keys = Product.__table__.columns.keys()
     try:
+      for key in data.keys():
+        if key not in table_keys:
+          raise DataValidationError("Invalid argument for Product: ", key)
+
       self.name = data['name']
       self.price = data['price']
       if isinstance(data["status"],Availability) and data['status'] \
@@ -87,11 +92,12 @@ class Product(db.Model):
       self.short_desc = data['short_desc']
       self.inventory_product_id = data['inventory_product_id']
       self.wishlist_id = data['wishlist_id']
-
     except KeyError as error:
       raise DataValidationError("Invalid Product: missing " + error.args[0])
     except TypeError as error:
       raise DataValidationError("Invalud Product: body of request contained bad or no data")
+    except AttributeError as error:
+      raise DataValidationError("Unable to parse dictionary")
     return self
 
   @classmethod

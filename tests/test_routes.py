@@ -294,6 +294,7 @@ class TestWishlistsServer(unittest.TestCase):
       'short_desc': "this is a piggy",
       'inventory_product_id': 12,
     }
+    # valid request
     resp = self.app.post("/wishlists/{0}/products".format(w_instance_1.id),\
       json=p_instance_1, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
@@ -307,6 +308,11 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(product.short_desc, "this is a piggy")
     self.assertEqual(product.wishlist_id, w_instance_1.id)
 
+    # wrong payload
+    resp = self.app.post("/wishlists/{0}/products".format(w_instance_1.id),\
+      json='im a string!', content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     w_instance_2 = WishlistFactory()
     w_instance_2.create()
 
@@ -316,21 +322,24 @@ class TestWishlistsServer(unittest.TestCase):
       'pic_url': "www.piggy.com/1.png",
       'short_desc': "this is a piggy",
     }
+    # attempt to create with missing fields
     resp = self.app.post("/wishlists/{0}/products".format(w_instance_2.id), json=p_instance_2,\
       content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    resp = self.app.post(\
-      "/wishlists/{0}/products?name=mug&price=10&status=1&pic_url=www.piggy.com/1.png"\
-      "&short_desc=\"the best mug in the world\"".format(w_instance_2.id),\
-      content_type="application/x-www-form-urlencoded")
-    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
+    # valid request as url-encoded
     resp = self.app.post(\
       "/wishlists/{0}/products?name=mug&price=10&status=1&pic_url=www.piggy.com/1.png"\
       "&short_desc=\"the best mug in the world\"&inventory_product_id=30".format(w_instance_2.id),\
       content_type="application/x-www-form-urlencoded")
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+    # invalid request as url-encoded (missing fields)
+    resp = self.app.post(\
+      "/wishlists/{0}/products?name=mug&price=10&status=1&pic_url=www.piggy.com/1.png"\
+      "&short_desc=\"the best mug in the world\"".format(w_instance_2.id),\
+      content_type="application/x-www-form-urlencoded")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
   def test_update_product_in_wishlist(self):
     """Update product"""
@@ -362,3 +371,23 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(altered_product.name, updated_fields['name'])
     self.assertEqual(altered_product.status, updated_fields['status'])
     self.assertEqual(altered_product.short_desc, p_instance_1['short_desc'])
+
+    # test some invalid scenarios
+    updated_fields = {
+      'some_invalid_field': 'will it break?'
+    }
+    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+      json=updated_fields, content_type="application/json")
+
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+      json="not a dictionary", content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+    self.assertEqual(resp.get_json()['message'], "Expected a json request body")
+
+    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+      json={'name': None}, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+    self.assertEqual(resp.get_json()['message'], "name cannot be null")
+
