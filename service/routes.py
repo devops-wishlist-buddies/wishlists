@@ -220,13 +220,12 @@ def list_products_in_wishlist(wishlist_id):
   app.logger.info("Request to list products in a wishlist")
   wishlist_products = Product.find_all_by_wishlist_id(wishlist_id)
   res = []
-  for product_id in wishlist_products:
-    product = Product.find_by_id(product_id.id)
+  for product in wishlist_products:
     if not product:
       return make_response(
         jsonify(
           data = [],
-          message = "Product with id {} was not found".format(product_id)
+          message = "Product {} with id {} was not found".format(product.name, product.id)
         ),
         status.HTTP_404_NOT_FOUND
       )
