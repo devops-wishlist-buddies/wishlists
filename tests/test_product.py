@@ -144,7 +144,6 @@ class TestProductModel(unittest.TestCase):
 
     self.assertEqual(len(Product.find_all()), 5)
     self.assertEqual(len(Product.find_all_by_wishlist_id(self.w_1.id)), 5)
-    print(Product.find_all_by_wishlist_id(self.w_1.id))
     Product.delete_all_by_wishlist_id(self.w_1.id)
 
     self.assertEqual(len(Product.find_all_by_wishlist_id(self.w_1.id)), 0)

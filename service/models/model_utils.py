@@ -7,6 +7,10 @@ from flask_sqlalchemy import SQLAlchemy
 logger = logging.getLogger("flask.app")
 db = SQLAlchemy()
 
+def get_non_null_product_fields():
+  """"Returns non-null fields for Product model"""
+  return ['name', 'price', 'status','inventory_product_id', 'wishlist_id']
+
 class DataValidationError(ValueError):
   pass
 

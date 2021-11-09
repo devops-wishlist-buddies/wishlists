@@ -79,6 +79,8 @@ class Product(db.Model):
       if isinstance(data["status"],Availability) and data['status'] \
           in [Availability.AVAILABLE, Availability.UNAVAILABLE]:
         self.status = data['status']
+      elif isinstance(data['status'], str):
+        self.status = getattr(Availability, data['status'])
       else:
         raise DataValidationError("Invalid type for field status, integer expected")
       self.pic_url = data['pic_url']

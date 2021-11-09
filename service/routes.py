@@ -30,7 +30,7 @@ from . import status  # HTTP Status Codes
 # Import Flask application
 from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
-from service.models.model_utils import Availability
+from service.models.model_utils import Availability, get_non_null_product_fields
 
 DATABASE_URI = os.getenv(
   "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
@@ -185,11 +185,11 @@ def delete_products_from_wishlist(wishlist_id):
   if not wishlist:
     return make_response(
       jsonify(
-          data = [],
-          message = "Wishlist {} not found".format(wishlist_id)
-        ),
-        status.HTTP_200_OK
-      )
+        data = [],
+        message = "Wishlist {} not found".format(wishlist_id)
+      ),
+      status.HTTP_404_NOT_FOUND
+    )
   cnt = wishlist.delete_products(product_ids_list)
 
   if cnt == len(product_ids_list):
@@ -210,53 +210,6 @@ def delete_products_from_wishlist(wishlist_id):
   )
 
 ######################################################################
-# Add products to a wishlist
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products", methods=["PUT"])
-def add_products_to_wishlist(wishlist_id):
-  """
-  Add products to wishlist
-  This endpoint will add products to the wishlist with id specified in the URL.
-  The endpoint will add products that are provided in the body as a list of product ids.
-  """
-  if request.headers.get("Content-Type") != "application/json":
-    return abort(
-      status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Unsupported media type : application/json expected"
-    )
-
-  data = request.get_json()
-  product_ids_list = data['product_ids_list']
-  if not isinstance(product_ids_list, list):
-    return abort(
-      status.HTTP_400_BAD_REQUEST, "product_ids_list argument sohuld be an array"
-    )
-  app.logger.info("Request to add products with id %s to wishlist %s" % (product_ids_list, wishlist_id))
-  wishlist = Wishlist.find_by_id(wishlist_id)
-
-  if not wishlist:
-    return abort(
-      status.HTTP_404_NOT_FOUND, "Wishlist with id {} not found!".format(wishlist_id)
-    )
-
-  cnt = wishlist.add_products(product_ids_list)
-  if cnt == len(product_ids_list):
-    return make_response(
-      jsonify(
-        data = [],
-        message = "All products are added"
-      ),
-      status.HTTP_200_OK
-    )
-
-  return make_response(
-    jsonify(
-      data = [],
-      message = "{} products are added".format(cnt)
-    ),
-    status.HTTP_206_PARTIAL_CONTENT
-  )
-
-######################################################################
 # LIST PRODUCTS IN A WISHLIST
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>", methods=["GET"])
@@ -268,7 +221,7 @@ def list_products_in_wishlist(wishlist_id):
   wishlist_products = Product.find_all_by_wishlist_id(wishlist_id)
   res = []
   for product_id in wishlist_products:
-    product = Product.find_by_id(product_id)
+    product = Product.find_by_id(product_id.id)
     if not product:
       return make_response(
         jsonify(
@@ -278,6 +231,7 @@ def list_products_in_wishlist(wishlist_id):
         status.HTTP_404_NOT_FOUND
       )
     res.append(product.serialize())
+
   wishlist = Wishlist.find_by_id(wishlist_id)
   if not wishlist:
     return make_response(
@@ -287,6 +241,7 @@ def list_products_in_wishlist(wishlist_id):
       ),
       status.HTTP_404_NOT_FOUND
     )
+
   return make_response(
     jsonify(
       wishlist_id = wishlist.id,
@@ -340,16 +295,18 @@ def get_a_product_in_a_wishlist(wishlist_id, product_id):
   )
 
 ######################################################################
-# CREATE A NEW PRODUCT
+# CREATE A NEW PRODUCT IN A WISHLIST
 ######################################################################
-@app.route("/products", methods=["POST"])
-def create_products():
+@app.route("/wishlists/<int:wishlist_id>/products", methods=["POST"])
+def create_product_in_wishlist(wishlist_id):
   """
   Creates a product
   This endpoint will create a product based the data in the body that is posted
   """
   app.logger.info("Request to create a product")
   data = {}
+  non_null_fields = get_non_null_product_fields()
+
   if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
     app.logger.info("Processing FORM data")
     data = {
@@ -359,21 +316,43 @@ def create_products():
         if request.args.get("status") == '1' else Availability.UNAVAILABLE,
       "pic_url": request.args.get("pic_url"),
       "short_desc": request.args.get("short_desc"),
+      "wishlist_id": wishlist_id,
+      "inventory_product_id": request.args.get("inventory_product_id"),
     }
   else:
     app.logger.info("Processing JSON data")
     data = request.get_json()
-    if isinstance(data["status"], str):
-      if not hasattr(Availability, data["status"]):
-        return make_response(
-          jsonify(
-            data = [],
-            message = "Input Product raw data got wrong status"
-          ),
-          status.HTTP_400_BAD_REQUEST
-        )
-      data["status"] = getattr(Availability, data["status"])
-  product= Product()
+
+    request_data = request.get_json()
+    if request_data is None:
+      return make_response(
+        jsonify(
+          data = [],
+          message = "Expected a json request body"
+        ),
+        status.HTTP_400_BAD_REQUEST
+      )
+
+    for key in request_data:
+      if key == 'status' and request_data[key]:
+        data[key] = getattr(Availability, request_data[key])
+      else:
+        data[key] = request_data[key]
+
+    data["wishlist_id"] = wishlist_id
+
+  new_body_keys = data.keys()
+  for key in non_null_fields:
+    if key not in new_body_keys or data[key] is None:
+      return make_response(
+        jsonify(
+          data = [],
+          message = "%s cannot be null" % key
+        ),
+        status.HTTP_400_BAD_REQUEST
+      )
+
+  product = Product()
   product.deserialize(data)
   product.create()
 
@@ -383,6 +362,52 @@ def create_products():
       message = "Product Created"
     ),
     status.HTTP_201_CREATED
+  )
+
+######################################################################
+# UPDATE A PRODUCT IN A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["PUT"])
+def update_product_in_wishlist(wishlist_id, product_id):
+  """
+  Updates a product
+  This endpoint will modify an existing product in a wishlist
+  """
+  app.logger.info("Request to update a product")
+  product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
+  request_data = request.get_json()
+  non_null_fields = get_non_null_product_fields()
+
+  if request_data is None:
+    return make_response(
+      jsonify(
+        data = [],
+        message = "Expected a json request body"
+      ),
+      status.HTTP_400_BAD_REQUEST
+    )
+
+  product_fields = product.serialize()
+  product_fields.update(request_data)
+  for key in product_fields:
+    if product_fields[key] is None and key in non_null_fields:
+      return make_response(
+        jsonify(
+          data = [],
+          message = "%s cannot be null" % key
+        ),
+        status.HTTP_400_BAD_REQUEST
+      )
+
+  product.deserialize(product_fields)
+  product.update()
+
+  return make_response(
+    jsonify(
+      data = product.id,
+      message = "Product Updated"
+    ),
+    status.HTTP_200_OK
   )
 
 def init_db():
