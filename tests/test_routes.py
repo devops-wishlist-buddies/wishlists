@@ -126,18 +126,16 @@ class TestWishlistsServer(unittest.TestCase):
     wishlist2.deserialize(t2)
     wishlist2.create()
 
-    resp = self.app.get("/wishlists/user/1")
+    resp = self.app.get("/wishlists?user_id=1")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
     d = resp.get_json()["data"]
     self.assertEqual(len(d), 2)
     self.assertEqual(d, Wishlist.find_all_by_user_id(1))
 
-    resp = self.app.get("/wishlists/user/2")
+    resp = self.app.get("/wishlists?user_id=2")
     self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
     d = resp.get_json()
     self.assertEqual(d["message"],"404 Not Found: wishlists with user_id '2' not found!")
-    resp = self.app.post("/wishlists/user/1")
-    self.assertEqual(resp.status_code,405)
 
   def test_delete_wishlist(self):
     """ Delete a Wishlist """
