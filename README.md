@@ -1,3 +1,5 @@
+![github actions](https://github.com/devops-wishlist-buddies/wishlists/actions/workflows/workflow.yml/badge.svg)
+
 # Wishlists
 
 This repo is for the Wishlists squad in DevOps Fall 2021 class.
