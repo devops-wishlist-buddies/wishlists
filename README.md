@@ -43,5 +43,5 @@ Once the vagrant is up and you are inside the ```/vagrant``` folder
 
 ```
 cd /vagrant
-FLASK_APP=service:app flask run -h 0.0.0.0
+FLASK_APP=service:app flask run -h 0.0.0.0 -p 3000
 ```
