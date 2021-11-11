@@ -8,6 +8,7 @@ While debugging just these tests it's convinient to use this:
 """
 
 import os
+import json
 import logging
 import unittest
 from werkzeug.exceptions import NotFound
@@ -20,6 +21,10 @@ from .factories import ProductFactory, WishlistFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
+
+if 'VCAP_SERVICES' in os.environ:
+    vcap = json.loads(os.environ['VCAP_SERVICES'])
+    DATABASE_URI = vcap['user-provided'][0]['credentials']['url']
 
 ######################################################################
 #  P R O D U C T   M O D E L   T E S T   C A S E S

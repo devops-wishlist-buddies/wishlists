@@ -32,10 +32,6 @@ from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
 from service.models.model_utils import Availability, get_non_null_product_fields
 
-DATABASE_URI = os.getenv(
-  "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/postgres"
-)
-
 ######################################################################
 # GET INDEX
 ######################################################################
@@ -396,46 +392,12 @@ def update_product_in_wishlist(wishlist_id, product_id):
     status.HTTP_200_OK
   )
 
-def init_db():
+######################################################################
+# INITIALIZE DATABASE
+######################################################################
+def init_db(app):
   """Initlaize the model"""
-
-  app.config["TESTING"] = True
-  app.config["DEBUG"] = False
-  app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-  app.logger.setLevel(logging.CRITICAL)
   app.app_context().push()
 
   Product.init_db(app)
   Wishlist.init_db(app)
-
-  logging.info('Creating dummy data')
-
-  w_1 = Wishlist(name = "User 1 first wishlist", user_id = 1)
-  w_1.create()
-  w_2 = Wishlist(name = "User 1 second wishlist", user_id = 1)
-  w_2.create()
-  w_3 = Wishlist(name = "User 2 first wishlist", user_id = 2)
-  w_3.create()
-
-  p_1 = Product(wishlist_id=w_1.id,name = "toy",price=11.5,status=Availability.AVAILABLE, \
-    pic_url="www.toy.com/1.png",short_desc="this is a toy",inventory_product_id=3)
-  p_2 = Product(wishlist_id=w_1.id,name = "book",price=20.5,status=Availability.AVAILABLE, \
-    pic_url="www.book.com/1.png",short_desc="this is a book",inventory_product_id=4)
-  p_3 = Product(wishlist_id=w_1.id,name = "tv",price=1001.5,status=Availability.AVAILABLE,\
-    pic_url="www.tv.com/1.png",short_desc="this is a tv",inventory_product_id=15)
-  p_4 = Product(wishlist_id=w_1.id,name = "pepsi",price=7.5,status=Availability.AVAILABLE,\
-    pic_url="www.drinks.com/pepsi.png",short_desc="this is pepsi coke",inventory_product_id=1)
-  p_5 = Product(wishlist_id=w_1.id,name = "bread",price=3.5,status=Availability.AVAILABLE,\
-    pic_url="www.bakery.com/1.png",short_desc="this is a bread",inventory_product_id=20)
-  p_6 = Product(wishlist_id=w_1.id,name = "soccer",price=23.5,status=Availability.AVAILABLE,\
-    pic_url="www.soccer.com/1.png",short_desc="this is a soccer",inventory_product_id=5)
-  p_7 = Product(wishlist_id=w_2.id,name = "bread",price=3.5,status=Availability.AVAILABLE,\
-    pic_url="www.bakery.com/1.png",short_desc="this is a bread",inventory_product_id=20)
-  p_8 = Product(wishlist_id=w_2.id,name = "soccer",price=23.5,status=Availability.AVAILABLE,\
-    pic_url="www.soccer.com/1.png",short_desc="this is a soccer",inventory_product_id=5)
-  p_9 = Product(wishlist_id=w_2.id,name = "toy",price=11.5,status=Availability.AVAILABLE, \
-    pic_url="www.toy.com/1.png",short_desc="this is a toy",inventory_product_id=3)
-
-  products = [p_1,p_2,p_3,p_4,p_5,p_6,p_7,p_8,p_9]
-  for product in products:
-    product.create()
