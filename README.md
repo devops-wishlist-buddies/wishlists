@@ -1,4 +1,5 @@
 ![github actions](https://github.com/devops-wishlist-buddies/wishlists/actions/workflows/workflow.yml/badge.svg)
+[![codecov](https://codecov.io/gh/devops-wishlist-buddies/wishlists/branch/main/graph/badge.svg?token=DQRGYGIC60)](https://codecov.io/gh/devops-wishlist-buddies/wishlists)
 
 # Wishlists
 
