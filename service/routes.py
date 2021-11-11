@@ -83,54 +83,42 @@ def create_wishlists():
   )
 
 ######################################################################
-# List ALL WISHLISTS
+# List WISHLISTS
 ######################################################################
 @app.route("/wishlists", methods=["GET"])
 def list_all_wishlists():
   """
-  Lists all wishlists
-  This endpoint will return all wishlists in the database.
+  Lists wishlists
+  This endpoint will return all wishlists in the database
+  or wishlists with a specific user_id.
   """
-  app.logger.info("Request for all wishlists")
-  query_res = Wishlist.find_all()
+  user_id = request.args.get('user_id')
+  if not user_id:
+    app.logger.info("Request for all wishlists")
+    query_res = Wishlist.find_all()
+    res = [r.read() for r in query_res]
 
-  wishlists = [r for r in query_res]
-  res = []
-  for wishlist in wishlists:
-    wishlist_products = Product.find_all_by_wishlist_id(wishlist.id)
-    res.append(WishlistVo(wishlist,wishlist_products))
+    if not res:
+      msg = "No wishlists found!"
+    else:
+      msg = "All the wishlists."
 
-  result_ser = [vo.serialize() for vo in res]
-
-  if not result_ser:
-    return abort(
-      status.HTTP_404_NOT_FOUND, "No wishlists found!"
+    return make_response(
+      jsonify(data = res, message = msg),
+      status.HTTP_200_OK
     )
 
-  return make_response(
-    jsonify(data = result_ser, message = "All the wishlists."),
-    status.HTTP_200_OK
-  )
-
-######################################################################
-# List ALL WISHLISTS FOR A USER
-######################################################################
-@app.route("/wishlists/user/<int:user_id>", methods=["GET"])
-def list_wishlists_by_userid(user_id):
-  """
-  Lists user's wishlists
-  This endpoint will return all wishlists for a user based on the id provided in the URL.
-  """
+  user_id = int(user_id)
   app.logger.info("Request for wishlists with user_id: %s", user_id)
   res = Wishlist.find_all_by_user_id(user_id)
   if not res:
-    return abort(
-      status.HTTP_404_NOT_FOUND, "wishlists with user_id '%s' not found!" % user_id
-    )
+    msg = "No wishlists found for user_id '%s'." % user_id
+  else:
+    msg = "Wishlists for user_id '%s'." % user_id
 
   return make_response(
-      jsonify(data = res, message = "wishlists for user_id '%s'." % user_id),
-      status.HTTP_200_OK
+    jsonify(data = res, message = msg),
+    status.HTTP_200_OK
   )
 
 ######################################################################

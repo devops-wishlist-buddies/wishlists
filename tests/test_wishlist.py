@@ -273,7 +273,7 @@ class TestWishlistModel(unittest.TestCase):
     self.assertEqual(len(ws),3)
 
   def test_find_by_id(self):
-    """"Test find one wishlist from database by its id"""
+    """Test find one wishlist from database by its id"""
     w_instance_1 = WishlistFactory()
     w_instance_1.create()
     w_instance_2 = WishlistFactory()

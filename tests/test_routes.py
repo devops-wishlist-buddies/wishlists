@@ -78,6 +78,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(data["version"], "1.0")
 
   def test_create_wishlist(self):
+    """Create a wishlist"""
     new_wl = {"name": "test", "user_id": 1}
     resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
@@ -98,10 +99,11 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(resp.status_code,405)
 
   def test_list_all_wishlists(self):
+    """List all wishlists"""
     resp = self.app.get("/wishlists")
-    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    self.assertEqual(resp.status_code, status.HTTP_200_OK)
     d = resp.get_json()
-    self.assertEqual(d["message"],"404 Not Found: No wishlists found!")
+    self.assertEqual(d["message"],"No wishlists found!")
 
     t1 = {"name": "test 1", "user_id": 1}
     t2 = {"name": "test 2", "user_id": 1}
@@ -117,6 +119,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(d), 2)
 
   def test_list_wishlists_by_userid(self):
+    """List wishlists by userid"""
     t1 = {"name": "test 1", "user_id": 1}
     t2 = {"name": "test 2", "user_id": 1}
     wishlist1 = Wishlist()
@@ -126,18 +129,16 @@ class TestWishlistsServer(unittest.TestCase):
     wishlist2.deserialize(t2)
     wishlist2.create()
 
-    resp = self.app.get("/wishlists/user/1")
+    resp = self.app.get("/wishlists?user_id=1")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
     d = resp.get_json()["data"]
     self.assertEqual(len(d), 2)
     self.assertEqual(d, Wishlist.find_all_by_user_id(1))
 
-    resp = self.app.get("/wishlists/user/2")
-    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    resp = self.app.get("/wishlists?user_id=2")
+    self.assertEqual(resp.status_code, status.HTTP_200_OK)
     d = resp.get_json()
-    self.assertEqual(d["message"],"404 Not Found: wishlists with user_id '2' not found!")
-    resp = self.app.post("/wishlists/user/1")
-    self.assertEqual(resp.status_code,405)
+    self.assertEqual(d["message"],"No wishlists found for user_id '2'.")
 
   def test_delete_wishlist(self):
     """ Delete a Wishlist """
