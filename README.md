@@ -49,5 +49,6 @@ FLASK_APP=service:app flask run -h 0.0.0.0 -p 3000
 Or, one can invoke ```honcho``` to start the application with the following command
 
 ```
-hocho start
+honcho start
 ```
+Make sure to create a local ```.env``` file based on the information in ```dot-env-example```. Otherwise, the ```honcho start``` may not work properly.
