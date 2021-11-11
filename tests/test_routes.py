@@ -27,7 +27,7 @@ import json
 import logging
 import unittest
 from service import status  # HTTP Status Codes
-from service.models.model_utils import db, Availability
+from service.models.model_utils import db, Availability, init_db
 from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.routes import app
@@ -57,8 +57,7 @@ class TestWishlistsServer(unittest.TestCase):
     app.config["DEBUG"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
     app.logger.setLevel(logging.CRITICAL)
-    Product.init_db(app)
-    Wishlist.init_db(app)
+    init_db(app)
 
   @classmethod
   def tearDownClass(cls):

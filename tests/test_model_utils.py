@@ -5,7 +5,7 @@ import logging
 import os
 import json
 
-from service.models.model_utils import Availability, JsonEncoder, db, seeds
+from service.models.model_utils import Availability, JsonEncoder, db, init_db, seeds
 from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service import app
@@ -28,8 +28,7 @@ class TestModelUtils(unittest.TestCase):
     app.config["DEBUG"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
     app.logger.setLevel(logging.CRITICAL)
-    Product.init_db(app)
-    Wishlist.init_db(app)
+    init_db(app)
 
   @classmethod
   def tearDownClass(cls):

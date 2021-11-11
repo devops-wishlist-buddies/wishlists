@@ -65,3 +65,8 @@ def seeds():
   products = [p_1,p_2,p_3,p_4,p_5,p_6,p_7,p_8,p_9]
   for product in products:
     product.create()
+
+def init_db(app):
+  with app.app_context():
+    db.drop_all()
+    db.create_all()

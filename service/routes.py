@@ -30,7 +30,7 @@ from . import status  # HTTP Status Codes
 # Import Flask application
 from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
-from service.models.model_utils import Availability, get_non_null_product_fields
+from service.models.model_utils import Availability, get_non_null_product_fields, db
 
 ######################################################################
 # GET INDEX
@@ -397,7 +397,9 @@ def update_product_in_wishlist(wishlist_id, product_id):
 ######################################################################
 def init_db(app):
   """Initlaize the model"""
+  db.init_app(app)
   app.app_context().push()
-
-  Product.init_db(app)
-  Wishlist.init_db(app)
+  db.drop_all()
+  db.create_all()
+  #Product.init_db(app)
+  #Wishlist.init_db(app)
