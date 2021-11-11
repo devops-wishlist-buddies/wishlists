@@ -8,7 +8,7 @@ applications:
   routes:
   - route: nyu-wishlist-service-fall2103.us-south.cf.appdomain.cloud
   disk_quota: 1024M
-  buildpacks: 
+  buildpacks:
   - python_buildpack
   timeout: 180
   services:
