@@ -23,6 +23,7 @@ Test cases can be run with the following:
 """
 
 import os
+import json
 import logging
 import unittest
 from service import status  # HTTP Status Codes
@@ -36,6 +37,10 @@ from .factories import WishlistFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
+
+if 'VCAP_SERVICES' in os.environ:
+    vcap = json.loads(os.environ['VCAP_SERVICES'])
+    DATABASE_URI = vcap['user-provided'][0]['credentials']['url']
 
 BASE_URL = "/wishlists"
 

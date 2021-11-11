@@ -71,6 +71,11 @@ Vagrant.configure(2) do |config|
     config.vm.provision "file", source: "~/.vimrc", destination: "~/.vimrc"
   end
 
+  # Copy your IBM Cloud API Key if you have one
+  if File.exists?(File.expand_path("~/.bluemix/apikey.json"))
+    config.vm.provision "file", source: "~/.bluemix/apikey.json", destination: "~/.bluemix/apikey.json"
+  end
+
   ######################################################################
   # Create a Python 3 development environment
   ######################################################################
@@ -116,5 +121,29 @@ Vagrant.configure(2) do |config|
 	  docker exec postgres psql -c "drop database if exists testdb;" -U postgres
     docker exec postgres psql -c "create database testdb;" -U postgres
     # Done
+  SHELL
+
+  ######################################################################
+  # Setup a Bluemix and Kubernetes environment
+  ######################################################################
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "\n************************************"
+    echo " Installing IBM Cloud CLI..."
+    echo "************************************\n"
+    # Install IBM Cloud CLI as Vagrant user
+    sudo -H -u vagrant sh -c '
+    curl -fsSL https://clis.cloud.ibm.com/install/linux | sh && \
+    ibmcloud cf install && \
+    echo "alias ic=ibmcloud" >> ~/.bashrc
+    '
+    # Show completion instructions
+    sudo -H -u vagrant sh -c "echo alias ic=/usr/local/bin/ibmcloud >> ~/.bash_aliases"
+    echo "\n************************************"
+    echo "If you have an IBM Cloud API key in ~/.bluemix/apiKey.json"
+    echo "You can login with the following command:"
+    echo "\n"
+    echo "ibmcloud login -a https://cloud.ibm.com --apikey @~/.bluemix/apikey.json -r us-south"
+    echo "ibmcloud target --cf -o <your_org_here> -s dev"
+    echo "\n************************************"
   SHELL
 end

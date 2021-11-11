@@ -43,6 +43,11 @@ nosetests --with-spec --spec-color
 Once the vagrant is up and you are inside the ```/vagrant``` folder
 
 ```
-cd /vagrant
 FLASK_APP=service:app flask run -h 0.0.0.0 -p 3000
+```
+
+Or, one can invoke ```honcho``` to start the application with the following command
+
+```
+hocho start
 ```
