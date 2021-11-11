@@ -27,13 +27,12 @@ import json
 import logging
 import unittest
 from service import status  # HTTP Status Codes
-from service.models.model_utils import db, Availability, init_db
+from service.models.model_utils import db, Availability
 from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.routes import app
 from .factories import WishlistFactory
 
-# DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgres://postgres:postgres@localhost:5432/testdb"
 )
@@ -57,7 +56,9 @@ class TestWishlistsServer(unittest.TestCase):
     app.config["DEBUG"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
     app.logger.setLevel(logging.CRITICAL)
-    init_db(app)
+    with app.app_context():
+      db.drop_all()
+      db.create_all()
 
   @classmethod
   def tearDownClass(cls):

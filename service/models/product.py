@@ -105,9 +105,6 @@ class Product(db.Model):
     """ Initializes the database session """
     logger.info("Product: initializing database")
     cls.app = app
-    with app.app_context():
-      db.drop_all()
-      Product.__table__.create(db.session.bind)
 
   @classmethod
   def find_all(cls)->list:

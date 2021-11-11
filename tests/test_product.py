@@ -12,7 +12,7 @@ import json
 import logging
 import unittest
 from werkzeug.exceptions import NotFound
-from service.models.model_utils import Availability, DataValidationError, db, init_db
+from service.models.model_utils import Availability, DataValidationError, db
 from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service import app
@@ -39,7 +39,11 @@ class TestProductModel(unittest.TestCase):
     app.config["DEBUG"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
     app.logger.setLevel(logging.CRITICAL)
-    init_db(app)
+    with app.app_context():
+      db.drop_all()
+      db.create_all()
+      Product.init_db(app)
+      Wishlist.init_db(app)
 
   @classmethod
   def tearDownClass(cls):

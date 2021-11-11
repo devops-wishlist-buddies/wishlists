@@ -401,5 +401,3 @@ def init_db(app):
   app.app_context().push()
   db.drop_all()
   db.create_all()
-  #Product.init_db(app)
-  #Wishlist.init_db(app)

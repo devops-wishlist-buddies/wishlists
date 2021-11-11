@@ -27,7 +27,7 @@ import unittest
 from service.models.product import Product
 from service.models.wishlist import Wishlist, WishlistVo
 from service import app
-from service.models.model_utils import Availability, DataValidationError,EntityNotFoundError, db, init_db
+from service.models.model_utils import Availability, DataValidationError,EntityNotFoundError, db
 from .factories import ProductFactory, WishlistFactory
 
 DATABASE_URI = os.getenv(
@@ -51,7 +51,11 @@ class TestWishlistModel(unittest.TestCase):
     app.config["DEBUG"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
     app.logger.setLevel(logging.CRITICAL)
-    init_db(app)
+    with app.app_context():
+      db.drop_all()
+      db.create_all()
+      Product.init_db(app)
+      Wishlist.init_db(app)
 
   @classmethod
   def tearDownClass(cls):

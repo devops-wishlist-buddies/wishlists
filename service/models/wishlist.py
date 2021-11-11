@@ -108,9 +108,6 @@ class Wishlist(db.Model):
     """Initialize database Wishlists table"""
     logger.info("Wishlist: Initializing database")
     cls.app = app
-    with app.app_context():
-      db.drop_all()
-      Wishlist.__table__.create(db.session.bind)
 
   @classmethod
   def find_all(cls):
