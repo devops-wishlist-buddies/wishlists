@@ -31,8 +31,6 @@ class TestModelUtils(unittest.TestCase):
     with app.app_context():
       db.drop_all()
       db.create_all()
-      Product.init_db(app)
-      Wishlist.init_db(app)
 
   @classmethod
   def tearDownClass(cls):
