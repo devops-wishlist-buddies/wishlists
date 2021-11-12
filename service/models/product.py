@@ -25,8 +25,6 @@ class Product(db.Model):
 
   __tablename__= 'product'
 
-  app:Flask = None
-
   id = db.Column(db.Integer,primary_key = True)
   name = db.Column(db.String(64), nullable=False)
   price = db.Column(db.DECIMAL,nullable=False)
@@ -99,17 +97,6 @@ class Product(db.Model):
     except AttributeError as error:
       raise DataValidationError("Unable to parse dictionary")
     return self
-
-  @classmethod
-  def init_db(cls, app:Flask):
-    """ Initializes the database session """
-    logger.info("Product: initializing database")
-    cls.app = app
-
-    db.init_app(app)
-    with app.app_context():
-      db.drop_all()
-      db.create_all()
 
   @classmethod
   def find_all(cls)->list:

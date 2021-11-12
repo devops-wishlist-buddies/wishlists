@@ -28,8 +28,9 @@ class TestModelUtils(unittest.TestCase):
     app.config["DEBUG"] = False
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
     app.logger.setLevel(logging.CRITICAL)
-    Product.init_db(app)
-    Wishlist.init_db(app)
+    with app.app_context():
+      db.drop_all()
+      db.create_all()
 
   @classmethod
   def tearDownClass(cls):
