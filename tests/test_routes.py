@@ -395,5 +395,4 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
       json={'name': None}, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-    self.assertEqual(resp.get_json()['message'], "name cannot be null")
-
+    self.assertEqual(resp.get_json()['message'], "Field name cannot be null")

@@ -272,7 +272,7 @@ def get_a_product_in_a_wishlist(wishlist_id, product_id):
   return make_response(
     jsonify(
       data = product.serialize(),
-      message = "Successfully get Product with id {product_id} in wishlist with id {wishlist_id}"
+      message = f"Successfully get Product with id {product_id} in wishlist with id {wishlist_id}"
     ),
     status.HTTP_200_OK
   )
@@ -288,7 +288,6 @@ def create_product_in_wishlist(wishlist_id):
   """
   app.logger.info("Request to create a product")
   data = {}
-  non_null_fields = get_non_null_product_fields()
 
   if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
     app.logger.info("Processing FORM data")
@@ -317,23 +316,9 @@ def create_product_in_wishlist(wishlist_id):
       )
 
     for key in request_data:
-      if key == 'status' and request_data[key]:
-        data[key] = getattr(Availability, request_data[key])
-      else:
-        data[key] = request_data[key]
+      data[key] = request_data[key]
 
     data["wishlist_id"] = wishlist_id
-
-  new_body_keys = data.keys()
-  for key in non_null_fields:
-    if key not in new_body_keys or data[key] is None:
-      return make_response(
-        jsonify(
-          data = [],
-          message = "%s cannot be null" % key
-        ),
-        status.HTTP_400_BAD_REQUEST
-      )
 
   product = Product()
   product.deserialize(data)
@@ -342,7 +327,7 @@ def create_product_in_wishlist(wishlist_id):
   return make_response(
     jsonify(
       data = product.id,
-      message = "Product Created"
+      message = "Product Created!"
     ),
     status.HTTP_201_CREATED
   )
@@ -359,7 +344,6 @@ def update_product_in_wishlist(wishlist_id, product_id):
   app.logger.info("Request to update a product")
   product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
   request_data = request.get_json()
-  non_null_fields = get_non_null_product_fields()
   if not isinstance(request_data, dict):
     return make_response(
       jsonify(
@@ -371,16 +355,6 @@ def update_product_in_wishlist(wishlist_id, product_id):
 
   product_fields = product.serialize()
   product_fields.update(request_data)
-  for key in product_fields:
-    if product_fields[key] is None and key in non_null_fields:
-      return make_response(
-        jsonify(
-          data = [],
-          message = "%s cannot be null" % key
-        ),
-        status.HTTP_400_BAD_REQUEST
-      )
-
   product.deserialize(product_fields)
   product.update()
 

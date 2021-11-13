@@ -19,7 +19,7 @@ wishlist_id
 
 from flask import Flask
 from sqlalchemy import asc
-from .model_utils import db, logger, Availability, DataValidationError
+from .model_utils import db, logger, Availability, DataValidationError, get_non_null_product_fields
 
 class Product(db.Model):
 
@@ -72,26 +72,37 @@ class Product(db.Model):
   def deserialize(self, data:dict):
     """Deserialize a Product from dictionary"""
     table_keys = Product.__table__.columns.keys()
+    non_null_fields = get_non_null_product_fields()
     try:
       for key in data.keys():
         if key not in table_keys:
-          raise DataValidationError("Invalid argument for Product: ", key)
+          raise DataValidationError(
+            "Invalid argument {0} with value {1} for Product: ".format(key, data.get(key))
+          )
 
-      self.name = data['name']
-      self.price = data['price']
-      if isinstance(data["status"],Availability) and data['status'] \
-          in [Availability.AVAILABLE, Availability.UNAVAILABLE]:
-        self.status = data['status']
-      elif isinstance(data['status'], str):
-        self.status = getattr(Availability, data['status'])
+      for non_null_key in non_null_fields:
+        if data.get(non_null_key) is None:
+          raise DataValidationError("Field {0} cannot be null".format(non_null_key))
+
+      self.name = data.get('name')
+      self.price = data.get('price')
+
+      status_candidate = data.get('status')
+      if isinstance(status_candidate,Availability) and \
+        status_candidate in [Availability.AVAILABLE, Availability.UNAVAILABLE]:
+        self.status = status_candidate
+      elif isinstance(status_candidate, str):
+        self.status = getattr(Availability, status_candidate.upper())
+      elif isinstance(status_candidate, int):
+        self.status = Availability(status_candidate)
       else:
-        raise DataValidationError("Invalid type for field status, integer expected")
-      self.pic_url = data['pic_url']
-      self.short_desc = data['short_desc']
-      self.inventory_product_id = data['inventory_product_id']
-      self.wishlist_id = data['wishlist_id']
-    except KeyError as error:
-      raise DataValidationError("Invalid Product: missing " + error.args[0])
+        raise DataValidationError(
+          "Invalid type for field \'status\', expected 1/0, or available/unavailable"
+        )
+      self.pic_url = data.get('pic_url')
+      self.short_desc = data.get('short_desc')
+      self.inventory_product_id = data.get('inventory_product_id')
+      self.wishlist_id = data.get('wishlist_id')
     except TypeError as error:
       raise DataValidationError("Invalud Product: body of request contained bad or no data")
     except AttributeError as error:

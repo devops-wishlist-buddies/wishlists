@@ -190,7 +190,6 @@ class TestProductModel(unittest.TestCase):
   def test_deserialize_a_product(self):
     """Test deserialization of a Product"""
     data = {
-      'id': 1,
       'name': "piggy",
       'price': 100.5,
       'status': Availability.UNAVAILABLE,
@@ -211,9 +210,28 @@ class TestProductModel(unittest.TestCase):
     self.assertEqual(product_instance.wishlist_id,5)
     self.assertEqual(product_instance.inventory_product_id,315)
 
+    # some fields can be null
+    data = {
+      'id': 5,
+      'name': "monitor",
+      'price': 4,
+      'status': 0,
+      'wishlist_id': 5,
+      'inventory_product_id': 1
+    }
+    product_instance = Product()
+    product_instance.deserialize(data)
+    self.assertNotEqual(product_instance, None)
+    self.assertEqual(product_instance.id, None)
+    self.assertEqual(product_instance.name, "monitor")
+    self.assertEqual(product_instance.status, Availability.UNAVAILABLE)
+    self.assertEqual(product_instance.price, 4)
+    self.assertEqual(product_instance.wishlist_id,5)
+    self.assertEqual(product_instance.inventory_product_id,1)
+
   def test_deserialize_missing_data(self):
     """Test deserialization of a Product with missing data"""
-    data = {"id": 1, "name": "kitty", "status": Availability.UNAVAILABLE}
+    data = {'id': 1, 'name': "kitty", 'status': Availability.UNAVAILABLE}
     product_instance = Product()
     self.assertRaises(DataValidationError, product_instance.deserialize, data)
 
@@ -222,6 +240,30 @@ class TestProductModel(unittest.TestCase):
     data = "this is not a dictionary"
     product_instance = Product()
     self.assertRaises(DataValidationError, product_instance.deserialize, data)
+
+    # bad data for status
+    data = {
+      'id': 5,
+      'name': "monitor",
+      'price': 4,
+      'status': 'in stock',
+      'wishlist_id': 5,
+      'inventory_product_id': 1
+    }
+    self.assertRaises(DataValidationError, product_instance.deserialize, data)
+
+        # some fields can be null
+    data = {
+      'id': 5,
+      'name': "monitor",
+      'price': 4,
+      'status': [1],
+      'wishlist_id': 5,
+      'inventory_product_id': 1
+    }
+    self.assertRaises(DataValidationError, product_instance.deserialize, data)
+
+
 
   def test_deserialize_bad_status(self):
     """ Test deserialization of bad available attribute """
