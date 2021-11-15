@@ -189,7 +189,8 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(new_product_list), 0)
 
     resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
-    self.assertEqual(resp.status_code, 206)
+    self.assertEqual(resp.get_json()['message'],\
+       "There is no products in the wishlist, 0 products are deleted.")
 
     resp = self.app.get("/wishlists/1/products")
     self.assertEqual(resp.status_code, 405)
@@ -223,7 +224,8 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(new_product_list), 2)
 
     resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_2.id, p_instance_2.id))
-    self.assertEqual(resp.status_code, 206)
+    self.assertEqual(resp.get_json()['message'], "Product with id {} is not in this wishlist."\
+      .format(p_instance_2.id))
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 2)
 

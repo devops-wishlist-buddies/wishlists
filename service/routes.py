@@ -153,8 +153,6 @@ def delete_wishlists(wishlist_id):
 def delete_products_from_wishlist(wishlist_id):
   """
   Delete all products from a wishlist
-  This endpoint will delete all products from the wishlist with id specified in the URL.
-  The endpoint will remove products that are provided in the body as a list of product ids.
   """
   wishlist = Wishlist.find_by_id(wishlist_id)
   if not wishlist:
@@ -187,7 +185,7 @@ def delete_products_from_wishlist(wishlist_id):
       data = [],
       message = "There is no products in the wishlist, 0 products are deleted."
     ),
-    status.HTTP_206_PARTIAL_CONTENT
+    status.HTTP_200_OK
   )
 ######################################################################
 # Delete a product from a wishlist
@@ -219,7 +217,7 @@ def delete_a_product_from_wishlist(wishlist_id, product_id):
         data = [],
         message = "Product with id {} is not in this wishlist.".format(product_id)
       ),
-      status.HTTP_206_PARTIAL_CONTENT
+      status.HTTP_200_OK
   )
   return make_response(
     jsonify(
