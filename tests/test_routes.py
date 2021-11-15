@@ -370,6 +370,47 @@ class TestWishlistsServer(unittest.TestCase):
       content_type="application/x-www-form-urlencoded")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+  def test_rename_wishlist(self):
+    """Rename wishlist"""
+    w_instance_1 = WishlistFactory()
+    w_instance_1.create()
+    w_instance_2 = WishlistFactory()
+    w_instance_2.user_id=w_instance_1.user_id
+    w_instance_2.create()
+
+    updated_fields = {
+      'name': 'new-name',
+    }
+
+    # test normal name
+
+    resp = self.app.put("/wishlists/{0}".format(w_instance_1.id),\
+      json=updated_fields, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    altered_wishlist = Wishlist.find_by_id(w_instance_1.id)
+    self.assertEqual(altered_wishlist.name, updated_fields['name'])
+
+    # test same name and same user_id
+
+    resp = self.app.put("/wishlists/{0}".format(w_instance_2.id), \
+      json=updated_fields, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    altered_wishlist = Wishlist.find_by_id(w_instance_2.id)
+    self.assertEqual(altered_wishlist.name, updated_fields['name']+' 2')
+
+    # test invalid scenarios
+
+    resp = self.app.put("/wishlists/{0}".format(w_instance_1.id),\
+      json={'name': None}, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+    self.assertEqual(resp.get_json()['message'], "Field name cannot be null")
+
+
+
+
   def test_update_product_in_wishlist(self):
     """Update product"""
     w_instance_1 = WishlistFactory()

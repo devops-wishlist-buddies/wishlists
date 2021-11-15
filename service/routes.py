@@ -367,6 +367,51 @@ def create_product_in_wishlist(wishlist_id):
   )
 
 ######################################################################
+# RENAME A WISHLIST
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
+def rename_a_wishlist(wishlist_id):
+  """
+  Renames a wishlist
+  This endpoint will rename an existing wishlist
+  """
+  app.logger.info("Request to rename the wishlist with id %s"\
+    % (wishlist_id))
+
+  request_data = request.get_json()
+
+  wishlist = Wishlist.find_by_id(wishlist_id)
+
+  if not request_data['name']:
+    return make_response(
+      jsonify(
+        data=[],
+        message = "Field name cannot be null"
+      ),
+      status.HTTP_400_BAD_REQUEST
+    )
+
+  query_res = Wishlist.find_all()
+
+  for i in query_res:
+    if request_data['name']==i.name and wishlist.user_id==i.user_id:
+      request_data['name']=request_data['name']+' 2'
+      break
+
+  wishlist_fields = wishlist.serialize()
+  wishlist_fields.update(request_data)
+  wishlist.deserialize(wishlist_fields)
+  wishlist.update()
+
+  return make_response(
+    jsonify(
+      data = [],
+      message = "Wishlist with id {} is renamed.".format(wishlist_id)
+    ),
+    status.HTTP_200_OK
+  )
+
+######################################################################
 # UPDATE A PRODUCT IN A WISHLIST
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["PUT"])
