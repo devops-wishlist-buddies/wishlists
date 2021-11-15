@@ -227,14 +227,12 @@ def list_products_in_wishlist(wishlist_id):
 
   return make_response(
     jsonify(
-      wishlist_id = wishlist.id,
-      wishlist_user_id = wishlist.user_id,
-      wishlist_name = wishlist.name,
-      product_list = res,
+      data = WishlistVo(wishlist,res),    
       message = "Getting Products from wishlists with id {} success".format(wishlist_id)
     ),
     status.HTTP_200_OK
   )
+
 
 ######################################################################
 # GET A PRODUCT IN A WISHLIST
