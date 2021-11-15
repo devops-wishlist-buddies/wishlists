@@ -166,6 +166,39 @@ class TestWishlistsServer(unittest.TestCase):
     """Delete products from wishlist"""
     w_instance_1 = WishlistFactory()
     w_instance_1.create()
+
+    p_instance_1 = Product(wishlist_id = w_instance_1.id, inventory_product_id=1,name="book",price=12.5,\
+      status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test book")
+    p_instance_1.create()
+    p_instance_2 = Product(wishlist_id = w_instance_1.id, inventory_product_id=2,name="toy",price=121.5,\
+      status=Availability.AVAILABLE,pic_url="www.google.com",short_desc="this is a test toy")
+    p_instance_2.create()
+    p_instance_3 = Product(wishlist_id = w_instance_1.id, inventory_product_id=3,name="TV",price=1210.5,\
+      status=Availability.AVAILABLE,pic_url="www.tv.com",short_desc="this is a test tv")
+    p_instance_3.create()
+
+    wps = Product.find_all()
+    self.assertEqual(len(wps), 3)
+
+    resp = self.app.delete("/wishlists/16359/products")
+    self.assertEqual(resp.status_code, 404)
+
+    resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
+    self.assertEqual(resp.status_code, 200)
+    new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
+    self.assertEqual(len(new_product_list), 0)
+
+    resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
+    self.assertEqual(resp.get_json()['message'],\
+       "There is no products in the wishlist, 0 products are deleted.")
+
+    resp = self.app.get("/wishlists/1/products")
+    self.assertEqual(resp.status_code, 405)
+
+  def test_delete_a_product_from_wishlist(self):
+    """Delete a product from a wishlist"""
+    w_instance_1 = WishlistFactory()
+    w_instance_1.create()
     w_instance_2 = WishlistFactory()
     w_instance_2.create()
 
@@ -178,32 +211,23 @@ class TestWishlistsServer(unittest.TestCase):
     p_instance_3 = Product(wishlist_id = w_instance_1.id, inventory_product_id=3,name="TV",price=1210.5,\
       status=Availability.AVAILABLE,pic_url="www.tv.com",short_desc="this is a test tv")
     p_instance_3.create()
-    p_instance_4 = Product(wishlist_id = w_instance_2.id, inventory_product_id=3,name="TV",price=1210.5,\
-      status=Availability.AVAILABLE,pic_url="www.tv.com",short_desc="this is a test tv")
-    p_instance_4.create()
 
     wps = Product.find_all()
-    self.assertEqual(len(wps),4)
+    self.assertEqual(len(wps), 3)
 
-    pd_ids = {'product_ids_list': [p_instance_2.id, p_instance_3.id]}
-    resp = self.app.delete("/wishlists/16359/products",json=pd_ids,content_type="application/json")
-    self.assertEqual(resp.status_code,status.HTTP_404_NOT_FOUND)
+    resp = self.app.delete("/wishlists/16359/products/1")
+    self.assertEqual(resp.status_code, 404)
 
-    resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id),\
-      json=pd_ids,content_type="multipart/form-data")
-    self.assertEqual(resp.status_code,415)
-    resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id),\
-      json=pd_ids,content_type="application/json")
-    self.assertEqual(resp.status_code,status.HTTP_200_OK)
+    resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_1.id, p_instance_1.id))
+    self.assertEqual(resp.status_code, 200)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
-    self.assertEqual(len(new_product_list),1)
+    self.assertEqual(len(new_product_list), 2)
 
-    resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id),\
-      json={'product_ids_list': [p_instance_4.id, p_instance_3.id]},content_type="application/json")
-    self.assertEqual(resp.status_code,206)
-
-    resp = self.app.get("/wishlists/1/products",json=pd_ids,content_type="application/json")
-    self.assertEqual(resp.status_code,405)
+    resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_2.id, p_instance_2.id))
+    self.assertEqual(resp.get_json()['message'], "Product with id {} is not in this wishlist."\
+      .format(p_instance_2.id))
+    new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
+    self.assertEqual(len(new_product_list), 2)
 
   def test_list_products_in_wishlist(self):
     """List all products in a wishlist"""
@@ -279,7 +303,6 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(data["short_desc"], p_instance_2.short_desc)
     self.assertEqual(data["wishlist_id"], p_instance_2.wishlist_id)
     self.assertEqual(data["wishlist_id"], w_instance_1.id)
-
 
     resp = self.app.get(
           "/wishlists/1/products/4",

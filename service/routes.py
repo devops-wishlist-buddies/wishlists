@@ -147,25 +147,14 @@ def delete_wishlists(wishlist_id):
   )
 
 ######################################################################
-# Delete products from a wishlist
+# Delete all products from a wishlist
 ######################################################################
 @app.route("/wishlists/<int:wishlist_id>/products", methods=["DELETE"])
 def delete_products_from_wishlist(wishlist_id):
   """
-  Delete products from wishlist
-  This endpoint will delete products from the wishlist with id specified in the URL.
-  The endpoint will remove products that are provided in the body as a list of product ids.
+  Delete all products from a wishlist
   """
-  if request.headers.get("Content-Type") != "application/json":
-    return abort(
-      status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Unsupported media type : application/json expected"
-    )
-  data = request.get_json()
-  product_ids_list = data['product_ids_list']
-  app.logger.info("Request to delete products with id %s from wishlist %s"\
-    % (product_ids_list,wishlist_id))
   wishlist = Wishlist.find_by_id(wishlist_id)
-
   if not wishlist:
     return make_response(
       jsonify(
@@ -174,13 +163,19 @@ def delete_products_from_wishlist(wishlist_id):
       ),
       status.HTTP_404_NOT_FOUND
     )
+
+  product_list = wishlist.read()["products"]
+  product_ids_list = [p["id"] for p in product_list]
+  app.logger.info("Request to delete all the products from wishlist %s"\
+    % (wishlist_id))
+
   cnt = wishlist.delete_products(product_ids_list)
 
-  if cnt == len(product_ids_list):
+  if cnt != 0:
     return make_response(
       jsonify(
         data = [],
-        message = "All products are deleted"
+        message = "All products are deleted."
       ),
       status.HTTP_200_OK
     )
@@ -188,9 +183,48 @@ def delete_products_from_wishlist(wishlist_id):
   return make_response(
     jsonify(
       data = [],
-      message = "{} products are deleted".format(cnt)
+      message = "There is no products in the wishlist, 0 products are deleted."
     ),
-    status.HTTP_206_PARTIAL_CONTENT
+    status.HTTP_200_OK
+  )
+######################################################################
+# Delete a product from a wishlist
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["DELETE"])
+def delete_a_product_from_wishlist(wishlist_id, product_id):
+  """
+  Delete a product from a wishlist
+  This endpoint will delete a product from a wishlist based the wishlist_id
+  and the product_id specified in the URL
+  """
+  app.logger.info("Request to delete products with id %s from wishlist %s"\
+    % (product_id,wishlist_id))
+
+  wishlist = Wishlist.find_by_id(wishlist_id)
+  if not wishlist:
+    return make_response(
+      jsonify(
+        data = [],
+        message = "Wishlist {} not found".format(wishlist_id)
+      ),
+      status.HTTP_404_NOT_FOUND
+    )
+  cnt = wishlist.delete_products([product_id])
+
+  if cnt == 0:
+    return make_response(
+      jsonify(
+        data = [],
+        message = "Product with id {} is not in this wishlist.".format(product_id)
+      ),
+      status.HTTP_200_OK
+  )
+  return make_response(
+    jsonify(
+      data = [],
+      message = "Product with id {} is deleted.".format(product_id)
+    ),
+    status.HTTP_200_OK
   )
 
 ######################################################################
