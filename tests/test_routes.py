@@ -381,7 +381,6 @@ class TestWishlistsServer(unittest.TestCase):
     w_instance_1 = WishlistFactory()
 
     #test no wishlists
-
     resp = self.app.put("/wishlists/{0}".format(w_instance_1.id), \
       json=updated_fields, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
@@ -397,7 +396,6 @@ class TestWishlistsServer(unittest.TestCase):
     w_instance_3.create()
 
     # test normal name
-
     resp = self.app.put("/wishlists/{0}".format(w_instance_1.id),\
       json=updated_fields, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -405,8 +403,17 @@ class TestWishlistsServer(unittest.TestCase):
     altered_wishlist = Wishlist.find_by_id(w_instance_1.id)
     self.assertEqual(altered_wishlist.name, updated_fields['name'])
 
-    # test same name and same user_id
+    w_instance_4 = WishlistFactory()
+    w_instance_4.create()
 
+    # different user_id should just update the name as usual
+    resp = self.app.put("/wishlists/{0}".format(w_instance_4.id), \
+      json=updated_fields, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    altered_wishlist = Wishlist.find_by_id(w_instance_4.id)
+    self.assertEqual(altered_wishlist.name, updated_fields['name'])
+
+    # test same name and same user_id - remove duplicates automatically
     resp = self.app.put("/wishlists/{0}".format(w_instance_2.id), \
       json=updated_fields, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -422,13 +429,10 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(altered_wishlist.name, updated_fields['name'] + ' 2')
 
     # test invalid scenarios
-
     resp = self.app.put("/wishlists/{0}".format(w_instance_1.id),\
       json={'name': None}, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
     self.assertEqual(resp.get_json()['message'], "Field name cannot be null")
-
-
 
 
   def test_update_product_in_wishlist(self):
