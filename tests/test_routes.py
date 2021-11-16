@@ -254,17 +254,17 @@ class TestWishlistsServer(unittest.TestCase):
       content_type = "application/json"
     )
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    data = resp.get_json()
-    self.assertEqual(len(data["product_list"]), 3)
-    self.assertEqual(data["wishlist_id"], 1)
+    resp_body = resp.get_json()
+    self.assertEqual(len(resp_body["data"]["products"]), 3)
+    self.assertEqual(resp_body["data"]["id"], 1)
 
     resp = self.app.get(
       "/wishlists/{0}".format(w_instance_2.id),
       content_type = "application/json"
     )
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    data = resp.get_json()
-    self.assertEqual(len(data["product_list"]), 0)
+    resp_body = resp.get_json()
+    self.assertEqual(len(resp_body["data"]["products"]), 0)
 
   def test_get_a_product_in_a_wishlist(self):
     """Get a product in a wishlist"""
