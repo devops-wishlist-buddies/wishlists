@@ -30,7 +30,7 @@ from . import status  # HTTP Status Codes
 # Import Flask application
 from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
-from service.models.model_utils import Availability, get_non_null_product_fields, db
+from service.models.model_utils import Availability, InCartStatus, get_non_null_product_fields, db
 
 ######################################################################
 # GET INDEX
@@ -396,6 +396,40 @@ def update_product_in_wishlist(wishlist_id, product_id):
     ),
     status.HTTP_200_OK
   )
+
+######################################################################
+# ADD A PRODUCT IN A WISHLIST TO CART
+######################################################################
+@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>/add-to-cart", methods=["PUT"])
+def add_product_to_cart(wishlist_id, product_id):
+  """
+  Updates a product in_cart_status to indicate placing an item in a shopcart
+  This endpoint will modify an existing product in a wishlist
+  """
+
+  app.logger.info("Request to place a product in wishlist to cart")
+  product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
+  if not product:
+    return(
+      jsonify(
+        data = [],
+        message = f"Product with id {product_id} was not found in wishlist with id {wishlist_id}"
+      ),
+      status.HTTP_404_NOT_FOUND
+    )
+
+  # Call to Shopcarts API here with this product's inventory_product_id. Assuming success:
+  product.in_cart_status = InCartStatus.IN_CART
+  product.update()
+
+  return make_response(
+    jsonify(
+      data = product.id,
+      message = "Product placed in shopping cart."
+    ),
+    status.HTTP_200_OK
+  )
+
 
 ######################################################################
 # INITIALIZE DATABASE

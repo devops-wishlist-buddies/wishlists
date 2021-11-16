@@ -27,7 +27,7 @@ import json
 import logging
 import unittest
 from service import status  # HTTP Status Codes
-from service.models.model_utils import db, Availability
+from service.models.model_utils import db, Availability, InCartStatus
 from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.routes import app
@@ -419,3 +419,23 @@ class TestWishlistsServer(unittest.TestCase):
       json={'name': None}, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
     self.assertEqual(resp.get_json()['message'], "Field name cannot be null")
+
+  def test_add_product_to_cart(self):
+    """ Tests "Add product to shopcart" action on a product in a wishlist """
+    w_instance_1 = WishlistFactory()
+    w_instance_1.create()
+
+    p_instance_1 = Product(wishlist_id=w_instance_1.id,inventory_product_id=1,name="book",\
+      price=12.5, pic_url="www.google.com",short_desc="best book")
+    p_instance_1.create()
+    self.assertEqual(p_instance_1.in_cart_status, InCartStatus.DEFAULT)
+
+    resp = self.app.put("/wishlists/{0}/products/{1}/add-to-cart"\
+      .format(w_instance_1.id, p_instance_1.id))
+    self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    db_product = Product.find_by_id(p_instance_1.id)
+    self.assertEqual(db_product.in_cart_status, InCartStatus.IN_CART)
+
+    resp = self.app.put("/wishlists/{0}/products/{1}/add-to-cart".format(w_instance_1.id, 15))
+    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+

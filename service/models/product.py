@@ -19,7 +19,7 @@ wishlist_id
 
 from flask import Flask
 from sqlalchemy import asc
-from .model_utils import db, logger, Availability, DataValidationError, get_non_null_product_fields
+from .model_utils import db, logger, Availability, InCartStatus, DataValidationError, get_non_null_product_fields
 
 class Product(db.Model):
 
@@ -28,13 +28,14 @@ class Product(db.Model):
   id = db.Column(db.Integer,primary_key = True)
   name = db.Column(db.String(64), nullable=False)
   price = db.Column(db.DECIMAL,nullable=False)
-  status = db.Column(db.Enum(Availability),nullable=False,default=1)
+  status = db.Column(db.Enum(Availability),nullable=False,default=Availability.AVAILABLE)
   pic_url = db.Column(db.Text,nullable=True)
   short_desc = db.Column(db.Text,nullable=True)
   # corresponds to real product in inventory
   inventory_product_id = db.Column(db.Integer,nullable=False)
   # wishlist id it belongs to
   wishlist_id = db.Column(db.Integer,db.ForeignKey("wishlist.id"),nullable=False)
+  in_cart_status = db.Column(db.Enum(InCartStatus),nullable=False,default=InCartStatus.DEFAULT)
 
   def create(self):
     """Create Product instance in database"""
