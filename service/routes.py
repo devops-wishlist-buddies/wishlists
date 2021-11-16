@@ -375,13 +375,18 @@ def rename_a_wishlist(wishlist_id):
   Renames a wishlist
   This endpoint will rename an existing wishlist
   """
-  app.logger.info("Request to rename the wishlist with id %s"\
-    % (wishlist_id))
+  app.logger.info("Request to rename a wishlist")
+  wishlist = Wishlist.find_by_id(wishlist_id)
+  if not wishlist:
+    return make_response(
+      jsonify(
+        data=[],
+        message="Wishlist with id {} not found".format(wishlist_id)
+      ),
+      status.HTTP_404_NOT_FOUND
+    )
 
   request_data = request.get_json()
-
-  wishlist = Wishlist.find_by_id(wishlist_id)
-
   if not request_data['name']:
     return make_response(
       jsonify(
@@ -391,15 +396,29 @@ def rename_a_wishlist(wishlist_id):
       status.HTTP_400_BAD_REQUEST
     )
 
-  query_res = Wishlist.find_all()
-
+  query_res = Wishlist.find_all_by_user_id(wishlist.user_id)
+  res = []
   for i in query_res:
-    if request_data['name']==i.name and wishlist.user_id==i.user_id:
-      request_data['name']=request_data['name']+' 2'
-      break
+    res.append(i['name'])
 
+  num=0
   wishlist_fields = wishlist.serialize()
-  wishlist_fields.update(request_data)
+
+  while 1:
+    if num==0:
+      if request_data['name'] in res:
+        num=num+1
+      else:
+        wishlist_fields.update(request_data)
+        break
+    else:
+      if request_data['name']+' {0}'.format(num) in res:
+        num=num+1
+      else:
+        request_data['name'] = request_data['name'] + ' {0}'.format(num)
+        wishlist_fields.update(request_data)
+        break
+
   wishlist.deserialize(wishlist_fields)
   wishlist.update()
 
