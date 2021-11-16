@@ -21,6 +21,11 @@ class Availability(Enum):
   AVAILABLE = 1
   UNAVAILABLE = 0
 
+class InCartStatus(Enum):
+  ORDERED = 2
+  IN_CART = 1
+  DEFAULT = 0
+
 class JsonEncoder(JSONEncoder):
   def default(self, obj):
     if isinstance(obj, decimal.Decimal):
