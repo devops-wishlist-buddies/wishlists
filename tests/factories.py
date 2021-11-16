@@ -17,7 +17,7 @@ Test Factory to make fake objects for testing
 """
 import factory
 import random
-from factory.fuzzy import FuzzyChoice
+from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyDecimal
 from service.models.product import Product
 from service.models.wishlist import Wishlist
 from service.models.model_utils import Availability
@@ -27,12 +27,12 @@ class ProductFactory(factory.Factory):
     model = Product
 
   name = factory.Sequence(lambda n : "Product_%d"% n)
-  price = random.random() * 100
+  price = FuzzyDecimal(10,3000)
   status = FuzzyChoice(choices=[Availability.AVAILABLE, Availability.UNAVAILABLE])
   pic_url = factory.LazyAttribute(lambda obj : 'www.%s.com/sth/1/png' % obj.name)
   short_desc = factory.lazy_attribute(lambda obj :\
     'this is a %s with price %s and status %s' % (obj.name , obj.price , obj.status))
-  inventory_product_id = random.randint(1, 400)
+  inventory_product_id = FuzzyInteger(1, 400)
 
 class WishlistFactory(factory.Factory):
   """Helper class to create dummy Wishlist data for tests"""
@@ -41,4 +41,4 @@ class WishlistFactory(factory.Factory):
     model = Wishlist
 
   name = factory.Sequence(lambda n : "Wishlist_%d"% n)
-  user_id = random.randint(0,100)
+  user_id = FuzzyInteger(0,100)
