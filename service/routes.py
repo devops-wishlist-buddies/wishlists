@@ -247,7 +247,7 @@ def list_products_in_wishlist(wishlist_id):
         ),
         status.HTTP_404_NOT_FOUND
       )
-    res.append(product.serialize())
+    res.append(product)
 
   wishlist = Wishlist.find_by_id(wishlist_id)
   if not wishlist:
@@ -261,10 +261,7 @@ def list_products_in_wishlist(wishlist_id):
 
   return make_response(
     jsonify(
-      wishlist_id = wishlist.id,
-      wishlist_user_id = wishlist.user_id,
-      wishlist_name = wishlist.name,
-      product_list = res,
+      data = WishlistVo(wishlist,res).serialize(),
       message = "Getting Products from wishlists with id {} success".format(wishlist_id)
     ),
     status.HTTP_200_OK
@@ -407,5 +404,4 @@ def init_db(app):
   """Initlaize the model"""
   db.init_app(app)
   app.app_context().push()
-  db.drop_all()
   db.create_all()
