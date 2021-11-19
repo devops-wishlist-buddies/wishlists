@@ -43,13 +43,15 @@ Vagrant.configure(2) do |config|
   ############################################################
   config.vm.provider :docker do |docker, override|
     override.vm.box = nil
-    docker.image = "rofrano/vagrant-provider:ubuntu"
+    # Chromium driver does not work with ubuntu so we use debian
+    override.vm.hostname = "debian"
+    docker.image = "rofrano/vagrant-provider:debian"
     docker.remains_running = true
     docker.has_ssh = true
     docker.privileged = true
     docker.volumes = ["/sys/fs/cgroup:/sys/fs/cgroup:ro"]
     # Uncomment to force arm64 for testing images on Intel
-    # docker.create_args = ["--platform=linux/arm64"]     
+    # docker.create_args = ["--platform=linux/arm64"]
   end
 
   ######################################################################
@@ -83,18 +85,19 @@ Vagrant.configure(2) do |config|
     echo "****************************************"
     echo " INSTALLING PYTHON 3 ENVIRONMENT..."
     echo "****************************************"
-    # Install Python 3 and dev tools 
+    # Install Python 3 and dev tools
     apt-get update
-    apt-get install -y git vim tree python3 python3-pip python3-venv
+    apt-get install -y git vim tree python3 python3-pip python3-venv python3-selenium chromium-driver
+
     apt-get -y autoremove
-    
+
     # Need PostgreSQL development library to compile on arm64
     apt-get install -y libpq-dev
 
     # Create a Python3 Virtual Environment and Activate it in .profile
     sudo -H -u vagrant sh -c 'python3 -m venv ~/venv'
     sudo -H -u vagrant sh -c 'echo ". ~/venv/bin/activate" >> ~/.profile'
-    
+
     # Install app dependencies in virtual environment as vagrant user
     sudo -H -u vagrant sh -c '. ~/venv/bin/activate && pip install -U pip && pip install wheel'
     sudo -H -u vagrant sh -c '. ~/venv/bin/activate && cd /vagrant && pip install -r requirements.txt'
@@ -109,7 +112,7 @@ Vagrant.configure(2) do |config|
     d.run "postgres:alpine",
        args: "-d --name postgres -p 5432:5432 -v psqldata:/var/lib/postgresql/data -e POSTGRES_PASSWORD=postgres"
   end
-  
+
   ######################################################################
   # Add a test database after PostgreSQL is provisioned
   ######################################################################
