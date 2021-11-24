@@ -1,0 +1,176 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+  <link rel="stylesheet" type="text/css" href="static/css/index.css"></link>
+  <script type="text/javascript" src = "static/js/index.js"></script>
+  <title>Wishilsts interface</title>
+</head>
+<body>
+  <header class="header text-white bg-dark">
+    <div class="container">
+      <div class="py-3">
+        Wishlist service
+      </div>
+    </div>
+  </header>
+  <main class="container py-3">
+    <h1>Manage wishlists</h1>
+    <form>
+      <!-- Wishlists fields -->
+      <div class="d-flex flex-no-wrap justify-content-between">
+        <div class="d-inline-block text-wrap" id="error-message"></div>
+        <button class="d-inline-block btn btn-link" id="wishlists_clear">Clear all fields</button>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_id">Wishlist ID</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_id" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_name">Wishlist name</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_name" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_user_id">User ID</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_user_id" />
+        </div>
+      </div>
+      <div class="wishlist__btn-group my-3">
+        <button id="search-wishlist" type="submit" class="btn btn-primary">Search wishlists</button>
+        <button id="create-wishlist" type="submit" class="btn btn-success">Create wishlist</button>
+        <button id="rename-wishlist" type="submit" class="btn btn-secondary">Rename wishlist</button>
+        <button id="delete-wishlist" type="submit" class="btn btn-danger">Delete wishlist</button>
+      </div>
+      <!-- Product fields -->
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_product_id">Product ID</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_product_id" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_inventory_product_id">Inventory ID</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_inventory_product_id" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_product_name">Product name</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_product_name" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_product_price">Product price</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_product_price" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_product_status">Product availability</label>
+        </div>
+        <div class="col-9">
+          <select class="custom-select mr-sm-2" id="wishlist_product_status">
+            <option selected value="1">Available</option>
+            <option value="0">Unavailable</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_product_pic">Product picture URL</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="wishlist_product_pic" />
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="wishlist_product_description">Product description</label>
+        </div>
+        <div class="col-9">
+          <textarea class="form-control" type="text" id="wishlist_product_description"></textarea>
+        </div>
+      </div>
+      <div class="wishlist-products__btn-group my-3">
+        <button id="search-product" type="submit" class="btn btn-primary">Search product</button>
+        <button id="add-product" type="submit" class="btn btn-success">Add product</button>
+        <button id="update-product" type="submit" class="btn btn-secondary">Update product</button>
+        <button id="delete-product" type="submit" class="btn btn-danger">Delete product</button>
+        <button id="order-product" type="submit" class="btn btn-info">Order product</button>
+      </div>
+    </form>
+    <h2 class="">Results</h2>
+    <div>Example of wishlist result</div>
+    <div class="accordion" id="wishlist_results_accordion">
+      <button class="toggle-btn btn btn-block" type="button" data-toggle="collapse" data-target="#wishlist_collapse_1" aria-expanded="true" aria-controls="wishlist_collapse_1">
+        Wishlist {name} here
+      </button>
+      <div id="wishlist_collapse_1" class="wishlist-collapse collapse show" data-parent="#wishlist_results_accordion">
+        <div class="wishlist-products__list">
+          <span>By {user_id}</span>
+          <div class="wishlist-products__list-item">
+            <div class="product-image-container">
+              <img class="img-thumbnail" src="https://via.placeholder.com/150" />
+            </div>
+            <div>
+              <strong>Product {name}</strong>
+              <div>This is the {description}: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sollicitudin lectus eget augue bibendum luctus.</div>
+              <div>{Available} - ${price}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="toggle-btn btn btn-block" type="button" data-toggle="collapse" data-target="#wishlist_collapse_2" aria-expanded="true" aria-controls="wishlist_collapse_1">
+        Second Wishlist {name} here
+      </button>
+      <div id="wishlist_collapse_2" class="wishlist-collapse collapse" data-parent="#wishlist_results_accordion">
+        <div class="wishlist-products__list">
+          <span>By {user_id}</span>
+          <div class="wishlist-products__list-item">
+            <div class="product-image-container">
+              <img class="img-thumbnail" src="https://via.placeholder.com/150" />
+            </div>
+            <div>
+              <strong>{Product name}</strong>
+              <div>This is the {description}: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sollicitudin lectus eget augue bibendum luctus.</div>
+              <div>{Available} - ${price}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <footer class="footer text-white bg-dark">
+    <div class="container">
+      <div class="py-3">Developed for NYU DevOps class, Fall 2021</div>
+    </div>
+    </footer>
+</body>
+</html>

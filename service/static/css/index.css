@@ -1,0 +1,93 @@
+/* a color scheme I like :) */
+:root {
+  --blue: #0d9edf;
+  --accent-blue: #00a9d8;
+  --midnight-blue: #192231;
+  --pastel-purple: #746193;
+  --lavender: #675682;
+  --forest-green: #626e60;
+  --muted-green: #a7b3a5;
+  --teal: #3fb0ac;
+  --cyan: #66b9bf;
+  --red: #af473c;
+  --light-red: #be4e43;
+  --light-gray: #f6f6f6;
+
+  /* theme */
+  --primary: var(--blue);
+  --secondary: var(--lavender);
+  --danger: var(--red);
+  --success: var(--teal);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-primary:hover {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+}
+.btn-secondary:hover {
+  background-color: var(--pastel-purple);
+  border-color: var(--pastel-purple);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+}
+.btn-danger:hover {
+  background-color: var(--light-red);
+  border-color: var(--light-red);
+}
+
+.btn-success {
+  background-color: var(--success);
+  border-color: var(--success);
+}
+.btn-success:hover {
+  background-color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+
+.footer {
+  width:100%;
+  height: auto;
+}
+
+.form-group {
+  margin-bottom: 0.5rem;
+}
+
+.toggle-btn {
+  text-align: left;
+  background-color: var(--light-gray);
+  margin-bottom: 0.5rem;
+}
+
+.toggle-btn:hover{
+  text-decoration: underline;
+  border: solid 1px;
+}
+
+.wishlist-collapse {
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.wishlist-products__list-item {
+  display: flex;
+  align-items: center;
+}
+.product-image-container {
+  max-width: 200px;
+  margin-right: 1rem;
+}
