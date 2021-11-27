@@ -36,7 +36,7 @@ def step_impl(context):
     expect(context.resp.status_code).to_equal(200)
     for wishlist in context.resp.json()['data']:
         context.resp = requests.delete(context.base_url + '/wishlists/' + str(wishlist["id"]), headers=headers)
-        expect(context.resp.status_code).to_equal(204)
+        expect(context.resp.status_code).to_equal(200)
 
     # load the database with new wishlists
     create_url = context.base_url + '/wishlists'
