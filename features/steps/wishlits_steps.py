@@ -42,7 +42,7 @@ def step_impl(context):
     create_url = context.base_url + '/wishlists'
     for row in context.table:
         data = {
-            "id" : row['id'],
+            "id" : int(row['id']),
             "name" : row['name'],
             "user_id" : int(row['user_id'])
             }
