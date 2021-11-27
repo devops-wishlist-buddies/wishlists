@@ -33,11 +33,11 @@ from service.models.product import Product
 from service.models.model_utils import Availability, InCartStatus, get_non_null_product_fields, db
 
 ######################################################################
-# GET INDEX
+# GET HEALTH CHECK
 ######################################################################
-@app.route("/",methods=["GET"])
-def index():
-  """ Root URL response """
+@app.route("/info")
+def info():
+  """ API info"""
   return (
     jsonify(
       name="Wishlists REST API Service",
@@ -45,6 +45,14 @@ def index():
     ),
     status.HTTP_200_OK,
   )
+
+######################################################################
+# GET INDEX
+######################################################################
+@app.route("/")
+def index():
+  """ Serve static home page"""
+  return app.send_static_file("index.html")
 
 ######################################################################
 # CREATE A NEW WISHLIST

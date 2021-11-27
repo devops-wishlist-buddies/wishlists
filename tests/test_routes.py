@@ -75,8 +75,8 @@ class TestWishlistsServer(unittest.TestCase):
     db.drop_all()
 
   def test_index(self):
-    """Test the index page"""
-    resp = self.app.get("/")
+    """Test the info page"""
+    resp = self.app.get("/info")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
     data = resp.get_json()
     self.assertEqual(data["name"], "Wishlists REST API Service")
