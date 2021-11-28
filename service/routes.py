@@ -78,9 +78,10 @@ def create_wishlists():
   wishlist = Wishlist()
   wishlist.deserialize(data)
   wishlist.create()
+  data = wishlist.serialize()
   return make_response(
     jsonify(
-      data = wishlist.id,
+      data = data,
       message = "Wishlist Created!"
     ),
     status.HTTP_201_CREATED
