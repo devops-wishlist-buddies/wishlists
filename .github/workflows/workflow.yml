@@ -39,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip wheel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           apt-get update
-          apt-get -y install python3-selenium chromium-driver libpq-dev unzip
+          apt-get -y install python3-selenium chromium-driver libpq-dev unzip curl
           LATEST_CHROMEDRIVER_VERSION=`curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"`
           curl "https://chromedriver.storage.googleapis.com/${LATEST_CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O
           unzip chromedriver_linux64.zip -d ~/bin
