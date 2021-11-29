@@ -12,8 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     # use a known build environment
     container: python:3.8-slim
-
-    # Required services    
+    # Required services
     services:
       # Label used to access the service container
       postgres:
@@ -33,15 +32,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip wheel
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          apt-get update
+          apt-get -y install git vim curl tree unzip python3 python3-pip python3-venv python3-selenium chromium-driver
+          apt-get -y autoremove
+          LATEST_CHROMEDRIVER_VERSION=`curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"`
+          curl "https://chromedriver.storage.googleapis.com/${LATEST_CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O
+          unzip chromedriver_linux64.zip -d ~/bin
+          chromedriver --version
+          apt-get -y install libpq-dev
+          pip3 install -r requirements.txt
+          cp dot-env-example .env
+
       - name: Run unit tests with nose
         run: nosetests
         env:
           DATABASE_URI: "postgres://postgres:postgres@postgres:5432/testdb"
-      
+
+      - name: Run BDD with behave
+        run: |
+          honcho start &
+          sleep 5
+          behave
+        env:
+          DATABASE_URI: "postgres://postgres:postgres@postgres:5432/postgres"
+
       - name: Upload code coverage
         uses: codecov/codecov-action@v2
