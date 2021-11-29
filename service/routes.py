@@ -430,7 +430,7 @@ def rename_a_wishlist(wishlist_id):
 
   return make_response(
     jsonify(
-      data = [],
+      data = wishlist.serialize(),
       message = "Wishlist with id {} is renamed.".format(wishlist_id)
     ),
     status.HTTP_200_OK
