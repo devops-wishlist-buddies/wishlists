@@ -4,10 +4,10 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
   <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
   <link rel="stylesheet" type="text/css" href="static/css/index.css"></link>
   <script type="text/javascript" src = "static/js/index.js"></script>
+  <script type="text/javascript" src = "static/js/jquery-3.1.1.min.js"></script>
   <title>Wishilsts interface</title>
 </head>
 <body>
@@ -20,11 +20,24 @@
   </header>
   <main class="container py-3">
     <h1>Manage wishlists</h1>
-    <form>
+    <div>
       <!-- Wishlists fields -->
       <div class="d-flex flex-no-wrap justify-content-between">
         <div class="d-inline-block text-wrap" id="error-message"></div>
-        <button class="d-inline-block btn btn-link" id="wishlists_clear">Clear all fields</button>
+        <button type="submit" class="d-inline-block btn btn-link" id="wishlists_clear">Clear all fields</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <tr><td>Status:</td><td><span id="flash_message"></span></td></tr>
+        </table>
+      </div>
+      <form class="form-group row">
+        <div class="col-3">
+          <label class="control-label" for="flash_message">Status</label>
+        </div>
+        <div class="col-9">
+          <input class="form-control" type="text" id="flash_message" />
+        </div>
       </div>
       <div class="form-group row">
         <div class="col-3">
@@ -123,7 +136,7 @@
         <button id="delete-product" type="submit" class="btn btn-danger">Delete product</button>
         <button id="order-product" type="submit" class="btn btn-info">Order product</button>
       </div>
-    </form>
+    </div>
     <h2 class="">Results</h2>
     <div>Example of wishlist result</div>
     <div class="accordion" id="wishlist_results_accordion">
@@ -164,7 +177,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </form>
 
   </main>
   <footer class="footer text-white bg-dark">
