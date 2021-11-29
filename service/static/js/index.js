@@ -25,7 +25,8 @@ $(function () {
   // ****************************************
   // Create a Wishlist
   // ****************************************
-  $("#create-wishlist").click(function () {
+  $("#create-wishlist").click(function (event) {
+    event.preventDefault();
     var name = $("#wishlist_name").val();
     var user_id = $("#wishlist_user_id").val();
 
@@ -36,7 +37,7 @@ $(function () {
 
     var ajax = $.ajax({
         type: "POST",
-        url: "http://localhost:3000/wishlists",
+        url: `/wishlists`,
         contentType:"application/json",
         data: JSON.stringify(data),
     });
@@ -54,13 +55,13 @@ $(function () {
   // ****************************************
   // Retrieve a Wishlist
   // ****************************************
-  $("#search-wishlist").click(function () {
-
+  $("#search-wishlist").click(function (event) {
+    event.preventDefault();
     var wishlist_id = $("#wishlist_id").val();
 
     var ajax = $.ajax({
       type: "GET",
-      url: "/wishlists/" + wishlist_id,
+      url: `/wishlists/` + wishlist_id,
       contentType: "application/json",
       data: ''
     })
