@@ -84,17 +84,17 @@ $(function () {
     })
 
     ajax.done(function(res){
-      update_wishlist_form_data(res["data"])
-      flash_message("Success")
+      update_wishlist_form_data(res["data"]);
+      flash_message("Success");
       $("#search_results").empty();
       $("#search_results").append('<table class="table-striped" cellpadding="10">');
-      var header = '<tr>'
-      header += '<th style="width:10%">ID</th>'
-      header += '<th style="width:30%">Name</th>'
-      header += '<th style="width:10%">User_ID</th>'
-      header += '<th style="width:50%">Products</th></tr>'
+      var header = '<tr>';
+      header += '<th style="width:10%">ID</th>';
+      header += '<th style="width:30%">Name</th>';
+      header += '<th style="width:10%">User_ID</th>';
+      header += '<th style="width:50%">Products</th></tr>';
       $("#search_results").append(header);
-      res = res["data"]
+      res = res["data"];
       var row = "<tr><td>"+res.id+"</td><td>"+res.name+"</td><td>"+res.user_id+"</td><td>"+res.products+"</td></tr>";
       $("#search_results").append(row);
 
@@ -130,10 +130,10 @@ $(function () {
     event.preventDefault();
     var user_id = $("#wishlist-user_id").val();
 
-    var queryString = ""
+    var queryString = "";
 
     if (user_id) {
-      queryString += 'user_id=' + user_id
+      queryString += 'user_id=' + user_id;
     }
 
     var ajax = $.ajax({
@@ -147,14 +147,14 @@ $(function () {
       //alert(res.toSource())
       $("#search_results").empty();
       $("#search_results").append('<table class="table-striped" cellpadding="10">');
-      var header = '<tr>'
-      header += '<th style="width:10%">ID</th>'
-      header += '<th style="width:30%">Name</th>'
-      header += '<th style="width:10%">User_ID</th>'
-      header += '<th style="width:50%">Products</th></tr>'
+      var header = '<tr>';
+      header += '<th style="width:10%">ID</th>';
+      header += '<th style="width:30%">Name</th>';
+      header += '<th style="width:10%">User_ID</th>';
+      header += '<th style="width:50%">Products</th></tr>';
       $("#search_results").append(header);
       var firstWishlist = "";
-      res = res["data"]
+      res = res["data"];
       for(var i = 0; i < res.length; i++) {
         var wishlist = res[i];
         var row = "<tr><td>"+wishlist.id+"</td><td>"+wishlist.name+"</td><td>"+wishlist.user_id+"</td><td>"+wishlist.products+"</td></tr>";
@@ -184,7 +184,7 @@ $(function () {
   // ****************************************
 
   $("#rename-wishlist").click(function (event) {
-    event.preventDefault()
+    event.preventDefault();
     var name = $("#wishlist-name").val();
     var id = $("#wishlist-id").val();
 
