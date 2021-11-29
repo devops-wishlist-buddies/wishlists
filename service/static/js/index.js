@@ -100,8 +100,8 @@ $(function () {
       $("#search_results").append('</table>');
 
       // copy the first result to the form
-      update_wishlist_form_data(res);
-      update_product_form_data(res.products[0]);
+      update_wishlist_form_data(res)
+      update_product_form_data(res.products[0])
 
       flash_message("Success");
     });
