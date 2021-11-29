@@ -20,6 +20,37 @@ $(function () {
     $("#wishlist-product-description").val(res.short_desc);
   }
 
+  // Creates the results table
+  function add_row(record, results_table) {
+    const id = record.id || '';
+    const name = record.name || '';
+    const user_id = record.user_id || ''
+    const product_list = JSON.stringify(record.products) || ''
+    const row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td><td class=\"col-md-4\">"+name+
+      "</td><td class=\"col-md-2\">"+user_id+"</td><td class=\"col-md-6\">"+product_list +"</td></tr>";
+    results_table.append(row);
+  }
+
+  function build_table(data) {
+    $("#search-results").empty();
+    let results_table = $("<table>", {"class": "table-striped", "cellpadding": "10"});
+    let header = $('<tr>');
+    header.append('<th class="col-md-2">ID</th>');
+    header.append('<th class="col-md-4">Name</th>');
+    header.append('<th class="col-md-2">User_ID</th>');
+    header.append('<th class="col-md-6">Products</th></tr>');
+    results_table.append(header);
+    if (Array.isArray(data)) {
+      for (let i = 0; i < data.length; i++) {
+        add_row(data[i], results_table);
+      }
+    } else {
+      add_row(data, results_table);
+    }
+
+    $("#search-results").append(results_table);
+  }
+
   // Clears all form fields
   function clear_form_data() {
     $("#wishlist-name").val("");
@@ -65,7 +96,8 @@ $(function () {
     });
 
     ajax.done(function(res){
-      update_wishlist_form_data(res["data"]);
+      // update_wishlist_form_data(res["data"]);
+      build_table(res["data"]);
       flash_message(res["message"]);
     });
 
@@ -107,34 +139,7 @@ $(function () {
     });
 
     ajax.done(function(res){
-      $("#search-results").empty();
-      $("#search-results").append('<table class="table-striped" cellpadding="10">');
-      var header = '<tr>';
-      header += '<th style="width:10%">ID</th>';
-      header += '<th style="width:30%">Name</th>';
-      header += '<th style="width:10%">User_ID</th>';
-      header += '<th style="width:50%">Products</th></tr>';
-      $("#search-results").append(header);
-      var firstWishlist = "";
-      res = res["data"];
-      if (wishlist_id) {
-        var row = "<tr><td class=\"results-table__wishlist-id\">"+res.id+"</td><td>"+res.name+"</td><td>"+res.user_id+
-          "</td><td>"+JSON.stringify(res.products)+"</td></tr>";
-        $("#search-results").append(row);
-      }
-      else {
-        for(var i = 0; i < res.length; i++) {
-          var wishlist = res[i];
-          var row = "<tr><td class=\"results-table__wishlist-id\">"+wishlist.id+"</td><td>"+wishlist.name+"</td><td>"+wishlist.user_id+
-            "</td><td>"+JSON.stringify(wishlist.products)+"</td></tr>";
-          $("#search-results").append(row);
-          if (i == 0) {
-            firstWishlist = wishlist;
-            }
-        }
-      }
-
-      $("#search-results").append('</table>');
+      build_table(res['data']);
       flash_message("Success");
     });
 
@@ -164,7 +169,8 @@ $(function () {
     });
 
     ajax.done(function(res){
-      update_wishlist_form_data(res["data"]);
+      // update_wishlist_form_data(res["data"]);
+      build_table(res["data"]);
       flash_message("Success");
     });
 
