@@ -84,6 +84,8 @@ $(function () {
     })
 
     ajax.done(function(res){
+      update_wishlist_form_data(res["data"])
+      flash_message("Success")
       $("#search_results").empty();
       $("#search_results").append('<table class="table-striped" cellpadding="10">');
       var header = '<tr>'
