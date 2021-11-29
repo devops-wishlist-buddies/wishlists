@@ -67,8 +67,10 @@ class Product(db.Model):
       "pic_url": self.pic_url,
       "short_desc": self.short_desc,
       "inventory_product_id": self.inventory_product_id,
-      "wishlist_id": self.wishlist_id
+      "wishlist_id": self.wishlist_id,
+      "in_cart_status": self.in_cart_status,
     }
+    print(prep_data)
 
     return {k: v for k, v in prep_data.items() if v}
 

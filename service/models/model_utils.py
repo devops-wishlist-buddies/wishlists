@@ -32,6 +32,8 @@ class JsonEncoder(JSONEncoder):
       return float(obj)
     if isinstance(obj, Availability):
       return obj.name
+    if isinstance(obj, InCartStatus):
+      return obj.name
     return JSONEncoder.default(self, obj)
 
 from .wishlist import Wishlist
