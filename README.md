@@ -38,15 +38,39 @@ Once the vagrant is up and you are inside the ```/vagrant``` folder, type the fo
 nosetests --with-spec --spec-color
 ```
 
+## How to perform BDD testing
+
+Once the vagrant is up and you are inside the ```/vagrant``` folder, make sure you have a ```.env``` file inside the ```/vagrant``` folder. Otherwise, execute the following command inside your terminal.
+
+```
+cp dot-env-example .env
+```
+
+Execute the following command to start the service with ```honcho```.
+
+```
+honcho start &
+```
+Execute the following command to perform BDD testing with ```behave```.
+```
+behave
+```
+Once the BDD testing is done, execute the following command to bring the service back to the foreground.
+```
+fg
+```
+Then, press ```CTRL+C``` to stop the service if necessary.
+
+
 ## How to run the flask service
 
-Once the vagrant is up and you are inside the ```/vagrant``` folder
+Once the vagrant is up and you are inside the ```/vagrant``` folder.
 
 ```
 FLASK_APP=service:app flask run -h 0.0.0.0 -p 3000
 ```
 
-Or, one can invoke ```honcho``` to start the application with the following command
+Or, one can invoke ```honcho``` to start the application with the following command.
 
 ```
 honcho start
