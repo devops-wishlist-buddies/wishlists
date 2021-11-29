@@ -60,3 +60,23 @@ Scenario: Read a wishlist
     And I paste the "Wishlist-Id" field
     And I press the "retrieve-wishlist" button
     Then I should see "My wishlist" in the results
+
+Scenario: List wishlists by user(Query)
+    When I visit the "Home Page"
+    And I set the "wishlist-user_id" to "1"
+    And I press the "search-wishlist" button
+    Then I should see "My greatest wishlist" in the results
+    And I should not see "My wishlist" in the results
+
+Scenario: Delete a wishlist
+    When I visit the "Home Page"
+    And I press the "Search-wishlist" button
+    Then I should see "My wishlist" in the results
+    When I copy the "Wishlist-Id" field
+    And I press the "Wishlists-clear" button
+    And I paste the "Wishlist-Id" field
+    And I press the "Delete-wishlist" button
+    Then I should see the message "Wishlist Deleted!"
+    When I press the "search-wishlist" button
+    Then I should not see "My wishlist" in the results
+    Then I should see "My greatest wishlist" in the results

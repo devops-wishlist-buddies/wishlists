@@ -133,7 +133,7 @@ $(function () {
     var queryString = "";
 
     if (user_id) {
-      queryString += 'user_id=' + user_id;
+      queryString += "user_id=" + user_id;
     }
 
     var ajax = $.ajax({
@@ -208,5 +208,30 @@ $(function () {
       flash_message(res.responseJSON.message);
     });
 
+  });
+
+  // ****************************************
+  // Delete a Wishlist
+  // ****************************************
+
+  $("#delete-wishlist").click(function (event) {
+    event.preventDefault();
+    var wishlist_id = $("#wishlist-id").val();
+
+    var ajax = $.ajax({
+      type: "DELETE",
+      url: `/wishlists/` + wishlist_id,
+      contentType: "application/json",
+      data: '',
+    })
+
+    ajax.done(function(res){
+      clear_form_data();
+      flash_message("Wishlist Deleted!");
+    });
+
+    ajax.fail(function(res){
+      flash_message("Server error!");
+    });
   });
 });
