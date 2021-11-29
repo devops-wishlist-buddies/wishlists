@@ -56,6 +56,8 @@ jobs:
           honcho start &
           sleep 5
           behave
+        env:
+          DATABASE_URI: "postgres://postgres:postgres@postgres:5432/postgres"
 
       - name: Upload code coverage
         uses: codecov/codecov-action@v2
