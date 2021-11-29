@@ -52,8 +52,6 @@ def step_impl(context):
         expect(context.resp.status_code).to_equal(201)
         parsed_response = context.resp.json()
         context.wishlist_ids.append(parsed_response.get('data').get('id'))
-    print(context.wishlist_ids)
-
 
 
 @given('the following products')
@@ -74,5 +72,4 @@ def step_impl(context):
         wishlist_id = str(random.choice(context.wishlist_ids))
         add_url = context.base_url + '/wishlists/' + wishlist_id + '/products'
         context.resp = requests.post(add_url, data=payload, headers=headers)
-        print(context.resp.json())
         expect(context.resp.status_code).to_equal(201)

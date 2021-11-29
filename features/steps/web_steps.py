@@ -125,10 +125,8 @@ def step_impl(context, classname):
 
 @when('I copy a random cell with class "{classname}"')
 def step_impl(context, classname):
-    print(classname)
     context.driver.implicitly_wait(context.WAIT_SECONDS)
     elements = context.driver.find_elements_by_class_name(classname)
-    print(elements)
     random_element = choice(elements)
     context.clipboard = random_element.text
     logging.info('Clipboard contains: %s', context.clipboard)
