@@ -44,7 +44,6 @@ jobs:
           curl "https://chromedriver.storage.googleapis.com/${LATEST_CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O
           unzip chromedriver_linux64.zip -d ~/bin
           chromedriver --version
-          cp dot-env-example .env
 
       - name: Run unit tests with nose
         run: nosetests
@@ -53,7 +52,8 @@ jobs:
 
       - name: Run BDD with behave
         run: |
-          honcho start &
+          gunicorn --log-level=critical --bind=127.0.0.1:3000 service:app &
+          sleep 5
           behave
 
       - name: Upload code coverage
