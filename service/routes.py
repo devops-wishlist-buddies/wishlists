@@ -360,6 +360,7 @@ def create_product_in_wishlist(wishlist_id):
 
     data["wishlist_id"] = wishlist_id
 
+  print('route received: ', data)
   product = Product()
   product.deserialize(data)
   product.create()

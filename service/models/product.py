@@ -59,16 +59,19 @@ class Product(db.Model):
 
   def serialize(self) -> dict:
     """serialize a Product into a dictionary"""
-    return {
-      "id":self.id,
-      "name":self.name,
-      "price":self.price,
-      "status":self.status,
-      "pic_url":self.pic_url,
-      "short_desc":self.short_desc,
-      "inventory_product_id":self.inventory_product_id,
-      "wishlist_id":self.wishlist_id
+    prep_data = {
+      "id": self.id,
+      "name": self.name,
+      "price": self.price,
+      "status": self.status,
+      "pic_url": self.pic_url,
+      "short_desc": self.short_desc,
+      "inventory_product_id": self.inventory_product_id,
+      "wishlist_id": self.wishlist_id
     }
+
+    return {k: v for k, v in prep_data.items() if v}
+
 
   def deserialize(self, data:dict):
     """Deserialize a Product from dictionary"""
@@ -86,7 +89,7 @@ class Product(db.Model):
           raise DataValidationError("Field {0} cannot be null".format(non_null_key))
 
       self.name = data.get('name')
-      self.price = data.get('price')
+      self.price = float(data.get('price'))
 
       status_candidate = data.get('status')
       if isinstance(status_candidate,Availability) and \
@@ -102,11 +105,12 @@ class Product(db.Model):
         )
       self.pic_url = data.get('pic_url')
       self.short_desc = data.get('short_desc')
-      self.inventory_product_id = data.get('inventory_product_id')
-      self.wishlist_id = data.get('wishlist_id')
+      self.inventory_product_id = int(data.get('inventory_product_id'))
+      self.wishlist_id = int(data.get('wishlist_id'))
     except TypeError as error:
       raise DataValidationError("Invalud Product: body of request contained bad or no data")
     except AttributeError as error:
+      logger.error(error)
       raise DataValidationError("Unable to parse dictionary")
     return self
 

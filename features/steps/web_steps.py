@@ -5,6 +5,7 @@ For information on Waiting until elements are present in the HTML see:
     https://selenium-python.readthedocs.io/waits.html
 """
 import logging
+from random import choice
 from behave import when, then
 from compare import expect, ensure
 from selenium.webdriver.common.by import By
@@ -71,7 +72,7 @@ def step_impl(context, button):
 def step_impl(context, name):
     found = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element(
-            (By.ID, 'search_results'),
+            (By.ID, 'search-results'),
             name
         )
     )
@@ -79,7 +80,7 @@ def step_impl(context, name):
 
 @then('I should not see "{name}" in the results')
 def step_impl(context, name):
-    element = context.driver.find_element_by_id('search_results')
+    element = context.driver.find_element_by_id('search-results')
     error_msg = "I should not see '%s' in '%s'" % (name, element.text)
     ensure(name in element.text, False, error_msg)
 
@@ -87,7 +88,7 @@ def step_impl(context, name):
 def step_impl(context, message):
     found = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element(
-            (By.ID, 'flash_message'),
+            (By.ID, 'flash-message'),
             message
         )
     )
@@ -112,3 +113,22 @@ def step_impl(context, element_name, text_string):
     )
     element.clear()
     element.send_keys(text_string)
+
+@when('I copy the first cell with class "{classname}"')
+def step_impl(context, classname):
+    element = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+        expected_conditions.presence_of_element_located((By.CLASS_NAME, classname))
+    )
+    top_element_value = element.text
+    context.clipboard = top_element_value
+    logging.info('Clipboard contains: %s', context.clipboard)
+
+@when('I copy a random cell with class "{classname}"')
+def step_impl(context, classname):
+    print(classname)
+    context.driver.implicitly_wait(context.WAIT_SECONDS)
+    elements = context.driver.find_elements_by_class_name(classname)
+    print(elements)
+    random_element = choice(elements)
+    context.clipboard = random_element.text
+    logging.info('Clipboard contains: %s', context.clipboard)
