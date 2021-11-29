@@ -70,7 +70,6 @@ class Product(db.Model):
       "wishlist_id": self.wishlist_id,
       "in_cart_status": self.in_cart_status,
     }
-    print(prep_data)
 
     return {k: v for k, v in prep_data.items() if v}
 

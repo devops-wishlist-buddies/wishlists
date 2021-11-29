@@ -80,11 +80,11 @@ Scenario: Delete a wishlist
     And I press the "Search-wishlist" button
     Then I should see "My wishlist" in the results
     When I copy the first cell with class "results-table__wishlist-id"
-    And I press the "Wishlists-clear" button
     And I paste the "Wishlist-Id" field
     And I press the "Delete-wishlist" button
     Then I should see the message "Wishlist Deleted!"
-    When I press the "search-wishlist" button
+    When I press the "Wishlists-clear" button
+    And I press the "search-wishlist" button
     Then I should not see "My wishlist" in the results
     Then I should see "My greatest wishlist" in the results
 

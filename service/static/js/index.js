@@ -51,6 +51,11 @@ $(function () {
     $("#search-results").append(results_table);
   }
 
+  // Clears the results table
+  function clear_table() {
+    $("#search-results").empty();
+  }
+
   // Clears all form fields
   function clear_form_data() {
     $("#wishlist-name").val("");
@@ -103,6 +108,7 @@ $(function () {
 
     ajax.fail(function(res){
       flash_message(res.responseJSON.message);
+      clear_table();
     });
   });
 
@@ -120,7 +126,6 @@ $(function () {
 
   $("#search-wishlist").click(function (event) {
     event.preventDefault();
-    console.log(event)
     const user_id = $("#wishlist-user-id").val();
     const wishlist_id = $("#wishlist-id").val();
     let queryString = "?";
@@ -130,7 +135,6 @@ $(function () {
     }
 
     const url = wishlist_id ? `/wishlists/${wishlist_id}` : `/wishlists`+ queryString;
-    console.log(url)
     var ajax = $.ajax({
       type: "GET",
       url,
@@ -145,6 +149,7 @@ $(function () {
 
     ajax.fail(function(res){
       flash_message(res.responseJSON.message);
+      clear_table();
     });
   });
 
@@ -176,6 +181,7 @@ $(function () {
 
     ajax.fail(function(res){
       flash_message(res.responseJSON.message);
+      clear_table();
     });
 
   });
@@ -202,6 +208,7 @@ $(function () {
 
     ajax.fail(function(res){
       flash_message("Server error!");
+      clear_table();
     });
   });
 
@@ -247,6 +254,7 @@ $(function () {
 
     ajax.fail(function(res){
       flash_message(res.responseJSON.message);
+      clear_table();
     });
   });
 
