@@ -12,7 +12,7 @@ Background:
         |name           |inventory_product_id|price|status|short_desc|
         |IPhone 20      |33                  |1200 |1|Future is here|
         |Board game     |23                  | 30  |1|Best time killer you've ever seen!|
-        |Nintendo Switch|21                  |300  |1|New pokemon game available|
+        |Nintendo Switch|21                  |400  |1|New pokemon game available|
         |Pen            |57                  |7    |1||
 
 Scenario: The server is running
@@ -157,3 +157,4 @@ Scenario: Edit a product in a wishlist
     When I press the "search-wishlist" button
     Then I should see "New Board game" in the results
     And I should see "6666" in the results
+    And I should not see "30" in the results
