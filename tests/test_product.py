@@ -170,6 +170,8 @@ class TestProductModel(unittest.TestCase):
   def test_serialize_a_product(self):
     """Test serialization of a Product"""
     product_instance = ProductFactory()
+    product_instance.wishlist_id = 1
+    product_instance.create()
     data = product_instance.serialize()
     self.assertNotEqual(data, None)
     self.assertIn("id", data)
@@ -186,6 +188,7 @@ class TestProductModel(unittest.TestCase):
     self.assertEqual(data["short_desc"], product_instance.short_desc)
     self.assertIn("inventory_product_id", data)
     self.assertEqual(data["inventory_product_id"], product_instance.inventory_product_id)
+    self.assertEqual(data["in_cart_status"], product_instance.in_cart_status)
 
   def test_deserialize_a_product(self):
     """Test deserialization of a Product"""

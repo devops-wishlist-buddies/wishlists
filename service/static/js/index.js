@@ -7,36 +7,72 @@ $(function () {
   function update_wishlist_form_data(res) {
     $("#wishlist-id").val(res.id);
     $("#wishlist-name").val(res.name);
-    $("#wishlist-user_id").val(res.user_id);
+    $("#wishlist-user-id").val(res.user_id);
   }
 
   function update_product_form_data(res) {
-    $("#wishlist-product_id").val(res.id);
-    $("#wishlist-inventory_product_id").val(res.inventory_product_id);
-    $("#wishlist-product_name").val(res.name);
-    $("#wishlist-product_price").val(res.price);
-    $("#wishlist-product_status").val(res.status);
-    $("#wishlist-product_pic").val(res.pic_url);
-    $("#wishlist-product_description").val(res.short_desc);
+    $("#wishlist-product-id").val(res.id);
+    $("#wishlist-inventory-product-id").val(res.inventory_product_id);
+    $("#wishlist-product-name").val(res.name);
+    $("#wishlist-product-price").val(res.price);
+    $("#wishlist-product-status").val(res.status);
+    $("#wishlist-product-pic").val(res.pic_url);
+    $("#wishlist-product-description").val(res.short_desc);
+  }
+
+  // Creates the results table
+  function add_row(record, results_table) {
+    const id = record.id || '';
+    const name = record.name || '';
+    const user_id = record.user_id || ''
+    const product_list = JSON.stringify(record.products) || ''
+    const row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td><td class=\"col-md-4\">"+name+
+      "</td><td class=\"col-md-2\">"+user_id+"</td><td class=\"col-md-6\">"+product_list +"</td></tr>";
+    results_table.append(row);
+  }
+
+  function build_table(data) {
+    $("#search-results").empty();
+    let results_table = $("<table>", {"class": "table-striped", "cellpadding": "10"});
+    let header = $('<tr>');
+    header.append('<th class="col-md-2">ID</th>');
+    header.append('<th class="col-md-4">Name</th>');
+    header.append('<th class="col-md-2">User_ID</th>');
+    header.append('<th class="col-md-6">Products</th></tr>');
+    results_table.append(header);
+    if (Array.isArray(data)) {
+      for (let i = 0; i < data.length; i++) {
+        add_row(data[i], results_table);
+      }
+    } else {
+      add_row(data, results_table);
+    }
+
+    $("#search-results").append(results_table);
+  }
+
+  // Clears the results table
+  function clear_table() {
+    $("#search-results").empty();
   }
 
   // Clears all form fields
   function clear_form_data() {
     $("#wishlist-name").val("");
-    $("#wishlist-user_id").val("");
-    $("#wishlist-product_id").val("");
-    $("#wishlist-inventory_product_id").val("");
-    $("#wishlist-product_name").val("");
-    $("#wishlist-product_price").val("");
-    $("#wishlist-product_status").val("");
-    $("#wishlist-product_pic").val("");
-    $("#wishlist-product_description").val("");
+    $("#wishlist-user-id").val("");
+    $("#wishlist-product-id").val("");
+    $("#wishlist-inventory-product-id").val("");
+    $("#wishlist-product-name").val("");
+    $("#wishlist-product-price").val("");
+    $("#wishlist-product-status").val(1);
+    $("#wishlist-product-pic").val("");
+    $("#wishlist-product-description").val("");
   }
 
   // Updates the flash message area
   function flash_message(message) {
-    $("#flash_message").empty();
-    $("#flash_message").append(message);
+    $("#flash-message").empty();
+    $("#flash-message").text(message);
   }
 
   // ****************************************
@@ -45,7 +81,12 @@ $(function () {
   $("#create-wishlist").click(function (event) {
     event.preventDefault();
     var name = $("#wishlist-name").val();
-    var user_id = $("#wishlist-user_id").val();
+    var user_id = $("#wishlist-user-id").val();
+
+    if (!name || !user_id) {
+      flash_message("User id and name should be defined")
+      return;
+    }
 
     var data = {
       "name": name,
@@ -60,58 +101,15 @@ $(function () {
     });
 
     ajax.done(function(res){
-      update_wishlist_form_data(res["data"]);
+      // update_wishlist_form_data(res["data"]);
+      build_table(res["data"]);
       flash_message(res["message"]);
     });
 
     ajax.fail(function(res){
       flash_message(res.responseJSON.message);
+      clear_table();
     });
-  });
-
-  // ****************************************
-  // Retrieve a Wishlist
-  // ****************************************
-  $("#retrieve-wishlist").click(function (event) {
-    event.preventDefault();
-    var wishlist_id = $("#wishlist-id").val();
-
-    var ajax = $.ajax({
-      type: "GET",
-      url: `/wishlists/` + wishlist_id,
-      contentType: "application/json",
-      data: ''
-    })
-
-    ajax.done(function(res){
-      update_wishlist_form_data(res["data"]);
-      flash_message("Success");
-      $("#search_results").empty();
-      $("#search_results").append('<table class="table-striped" cellpadding="10">');
-      var header = '<tr>';
-      header += '<th style="width:10%">ID</th>';
-      header += '<th style="width:30%">Name</th>';
-      header += '<th style="width:10%">User_ID</th>';
-      header += '<th style="width:50%">Products</th></tr>';
-      $("#search_results").append(header);
-      res = res["data"];
-      var row = "<tr><td>"+res.id+"</td><td>"+res.name+"</td><td>"+res.user_id+"</td><td>"+res.products+"</td></tr>";
-      $("#search_results").append(row);
-
-
-      $("#search_results").append('</table>');
-
-      // copy the first result to the form
-      update_wishlist_form_data(res);
-      update_product_form_data(res.products[0]);
-
-      flash_message("Success");
-    });
-
-    ajax.fail(function(res){
-      flash_message(res.responseJSON.message);
-    });
-
   });
 
   // ****************************************
@@ -128,54 +126,30 @@ $(function () {
 
   $("#search-wishlist").click(function (event) {
     event.preventDefault();
-    var user_id = $("#wishlist-user_id").val();
-
-    var queryString = "";
+    const user_id = $("#wishlist-user-id").val();
+    const wishlist_id = $("#wishlist-id").val();
+    let queryString = "?";
 
     if (user_id) {
       queryString += "user_id=" + user_id;
     }
 
+    const url = wishlist_id ? `/wishlists/${wishlist_id}` : `/wishlists`+ queryString;
     var ajax = $.ajax({
       type: "GET",
-      url: `/wishlists?`+ queryString,
+      url,
       contentType: "application/json",
       data: ''
-    })
+    });
 
     ajax.done(function(res){
-      //alert(res.toSource())
-      $("#search_results").empty();
-      $("#search_results").append('<table class="table-striped" cellpadding="10">');
-      var header = '<tr>';
-      header += '<th style="width:10%">ID</th>';
-      header += '<th style="width:30%">Name</th>';
-      header += '<th style="width:10%">User_ID</th>';
-      header += '<th style="width:50%">Products</th></tr>';
-      $("#search_results").append(header);
-      var firstWishlist = "";
-      res = res["data"];
-      for(var i = 0; i < res.length; i++) {
-        var wishlist = res[i];
-        var row = "<tr><td>"+wishlist.id+"</td><td>"+wishlist.name+"</td><td>"+wishlist.user_id+"</td><td>"+wishlist.products+"</td></tr>";
-        $("#search_results").append(row);
-        if (i == 0) {
-          firstWishlist = wishlist;
-          }
-      }
-
-      $("#search_results").append('</table>');
-
-      // copy the first result to the form
-      if (firstWishlist!= "") {
-        update_wishlist_form_data(firstWishlist);
-      }
-
+      build_table(res['data']);
       flash_message("Success");
     });
 
     ajax.fail(function(res){
       flash_message(res.responseJSON.message);
+      clear_table();
     });
   });
 
@@ -197,15 +171,17 @@ $(function () {
       url: `/wishlists/`+ id,
       contentType: "application/json",
       data: JSON.stringify(data)
-    })
+    });
 
     ajax.done(function(res){
-      update_wishlist_form_data(res["data"]);
+      // update_wishlist_form_data(res["data"]);
+      build_table(res["data"]);
       flash_message("Success");
     });
 
     ajax.fail(function(res){
       flash_message(res.responseJSON.message);
+      clear_table();
     });
 
   });
@@ -232,6 +208,54 @@ $(function () {
 
     ajax.fail(function(res){
       flash_message("Server error!");
+      clear_table();
     });
   });
+
+  // ****************************************
+  // Add a product to a Wishlist
+  // ****************************************
+  $("#add-product").click(function (event) {
+    event.preventDefault();
+
+    inventory_product_id = $("#wishlist-inventory-product-id").val();
+    product_name = $("#wishlist-product-name").val();
+    product_price = $("#wishlist-product-price").val();
+    product_status = $("#wishlist-product-status").val();
+    product_pic = $("#wishlist-product-pic").val();
+    product_description = $("#wishlist-product-description").val();
+    wishlist_id = $('#wishlist-id').val();
+
+    if (!inventory_product_id || !product_name || !product_price || !wishlist_id) {
+      flash_message('Inventory ID, product name, product price and wishlist id should be defined')
+      return;
+    }
+
+    const data = {
+      "name": product_name,
+      "price": product_price,
+      "status": parseInt(product_status),
+      "pic_url": product_pic,
+      "short_desc": product_description,
+      "inventory_product_id": inventory_product_id,
+      "wishlist_id":  wishlist_id
+    }
+
+    var ajax = $.ajax({
+      type: "POST",
+      url: `/wishlists/${wishlist_id}/products`,
+      contentType: "application/json",
+      data: JSON.stringify(data),
+    })
+
+    ajax.done(function(){
+      flash_message("Product was added to wishlist.");
+    });
+
+    ajax.fail(function(res){
+      flash_message(res.responseJSON.message);
+      clear_table();
+    });
+  });
+
 });

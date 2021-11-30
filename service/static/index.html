@@ -26,12 +26,12 @@
         <div class="d-inline-block text-wrap" id="error-message"></div>
         <button type="submit" class="d-inline-block btn btn-link" id="wishlists-clear">Clear all fields</button>
       </div>
-      <form class="form-group row">
+      <form class="form-group row mb-3">
         <div class="col-3">
-          <label class="control-label" for="flash_message">Status</label>
+          <div>Status</div>
         </div>
         <div class="col-9">
-          <input class="form-control" type="text" id="flash_message" />
+          <div id="flash-message"></div>
         </div>
       </div>
       <div class="form-group row">
@@ -52,15 +52,14 @@
       </div>
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-user_id">User ID</label>
+          <label class="control-label" for="wishlist-user-id">User ID</label>
         </div>
         <div class="col-9">
-          <input class="form-control" type="text" id="wishlist-user_id" />
+          <input class="form-control" type="text" id="wishlist-user-id" />
         </div>
       </div>
       <div class="wishlist__btn-group my-3">
         <button id="search-wishlist" type="submit" class="btn btn-primary">Search wishlists</button>
-        <button id="retrieve-wishlist" type="submit" class="btn btn-primary">Retrieve wishlists</button>
         <button id="create-wishlist" type="submit" class="btn btn-success">Create wishlist</button>
         <button id="rename-wishlist" type="submit" class="btn btn-secondary">Rename wishlist</button>
         <button id="delete-wishlist" type="submit" class="btn btn-danger">Delete wishlist</button>
@@ -68,42 +67,42 @@
       <!-- Product fields -->
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-product_id">Product ID</label>
+          <label class="control-label" for="wishlist-product-id">Product ID</label>
         </div>
         <div class="col-9">
-          <input class="form-control" type="text" id="wishlist-product_id" />
+          <input class="form-control" type="text" id="wishlist-product-id" />
         </div>
       </div>
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-inventory_product_id">Inventory ID</label>
+          <label class="control-label" for="wishlist-inventory-product-id">Inventory ID</label>
         </div>
         <div class="col-9">
-          <input class="form-control" type="text" id="wishlist-inventory_product_id" />
+          <input class="form-control" type="text" id="wishlist-inventory-product-id" />
         </div>
       </div>
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-product_name">Product name</label>
+          <label class="control-label" for="wishlist-product-name">Product name</label>
         </div>
         <div class="col-9">
-          <input class="form-control" type="text" id="wishlist-product_name" />
+          <input class="form-control" type="text" id="wishlist-product-name" />
         </div>
       </div>
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-product_price">Product price</label>
+          <label class="control-label" for="wishlist-product-price">Product price</label>
         </div>
         <div class="col-9">
-          <input class="form-control" type="text" id="wishlist-product_price" />
+          <input class="form-control" type="text" id="wishlist-product-price" />
         </div>
       </div>
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-product_status">Product availability</label>
+          <label class="control-label" for="wishlist-product-status">Product availability</label>
         </div>
         <div class="col-9">
-          <select class="custom-select mr-sm-2" id="wishlist-product_status">
+          <select class="custom-select mr-sm-2" id="wishlist-product-status">
             <option selected value="1">Available</option>
             <option value="0">Unavailable</option>
           </select>
@@ -111,18 +110,18 @@
       </div>
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-product_pic">Product picture URL</label>
+          <label class="control-label" for="wishlist-product-pic">Product picture URL</label>
         </div>
         <div class="col-9">
-          <input class="form-control" type="text" id="wishlist-product_pic" />
+          <input class="form-control" type="text" id="wishlist-product-pic" />
         </div>
       </div>
       <div class="form-group row">
         <div class="col-3">
-          <label class="control-label" for="wishlist-product_description">Product description</label>
+          <label class="control-label" for="wishlist-product-description">Product description</label>
         </div>
         <div class="col-9">
-          <textarea class="form-control" type="text" id="wishlist-product_description"></textarea>
+          <textarea class="form-control" type="text" id="wishlist-product-description"></textarea>
         </div>
       </div>
       <div class="wishlist-products__btn-group my-3">
@@ -176,17 +175,7 @@
     </form>
 
     <!-- Search Results -->
-      <div class="table-responsive col-md-12" id="search_results">
-        <table class="table-striped">
-          <thead>
-            <tr>
-              <th class="col-md-1">ID</th>
-              <th class="col-md-4">Name</th>
-              <th class="col-md-4">User_id</th>
-              <th class="col-md-3">Products</th>
-            </tr>
-          </thead>
-        </table>
+      <div class="table-responsive" id="search-results">
       </div>
 
   </main>

@@ -24,6 +24,7 @@ For information on Waiting until elements are present in the HTML see:
 """
 import json
 import requests
+import random
 from behave import given
 from compare import expect
 
@@ -40,6 +41,7 @@ def step_impl(context):
 
     # load the database with new wishlists
     create_url = context.base_url + '/wishlists'
+    context.wishlist_ids = []
     for row in context.table:
         data = {
             "name" : row['name'],
@@ -47,4 +49,27 @@ def step_impl(context):
             }
         payload = json.dumps(data)
         context.resp = requests.post(create_url, data=payload, headers=headers)
+        expect(context.resp.status_code).to_equal(201)
+        parsed_response = context.resp.json()
+        context.wishlist_ids.append(parsed_response.get('data').get('id'))
+
+
+@given('the following products')
+def step_impl(context):
+    """ Add products to the newly created empty wishlists """
+    headers = {'Content-Type': 'application/json'}
+    for row in context.table:
+        data = {
+            "name": row.get('name'),
+            "price": int(row.get('price')),
+            "status":  int(row.get('status')),
+            "pic_url": row.get('pic_url'),
+            "short_desc": row.get('short_desc'),
+            "inventory_product_id": row.get('inventory_product_id'),
+        }
+        trimmed_data = {k: v for k, v in data.items() if v}
+        payload = json.dumps(trimmed_data)
+        wishlist_id = str(random.choice(context.wishlist_ids))
+        add_url = context.base_url + '/wishlists/' + wishlist_id + '/products'
+        context.resp = requests.post(add_url, data=payload, headers=headers)
         expect(context.resp.status_code).to_equal(201)
