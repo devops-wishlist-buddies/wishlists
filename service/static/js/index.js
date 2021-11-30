@@ -21,17 +21,17 @@ $(function () {
   }
 
   // Creates the results table
-  function add_row(record, results_table) {
+  function add_wishlist_row(record, results_table) {
     const id = record.id || '';
     const name = record.name || '';
-    const user_id = record.user_id || ''
-    const product_list = JSON.stringify(record.products) || ''
+    const user_id = record.user_id || '';
+    const product_list = JSON.stringify(record.products) || '';
     const row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td><td class=\"col-md-4\">"+name+
-      "</td><td class=\"col-md-2\">"+user_id+"</td><td class=\"col-md-6\">"+product_list +"</td></tr>";
+      "</td><td class=\"col-md-2\">"+user_id+"</td><td class=\"col-md-6 product-cell\">"+product_list +"</td></tr>";
     results_table.append(row);
   }
 
-  function build_table(data) {
+  function build_wishlist_results_table(data) {
     $("#search-results").empty();
     let results_table = $("<table>", {"class": "table-striped", "cellpadding": "10"});
     let header = $('<tr>');
@@ -42,12 +42,46 @@ $(function () {
     results_table.append(header);
     if (Array.isArray(data)) {
       for (let i = 0; i < data.length; i++) {
-        add_row(data[i], results_table);
+        add_wishlist_row(data[i], results_table);
       }
     } else {
-      add_row(data, results_table);
+      add_wishlist_row(data, results_table);
     }
 
+    $("#search-results").append(results_table);
+  }
+
+  function add_product_row(data, results_table) {
+    const { id, inventory_product_id, name, pic_url='', price, short_desc='', status, wishlist_id } = data;
+
+    const row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td>"
+      +"<td class=\"col-md-2\">"+name+"</td>"
+      +"<td class=\"col-md-2\">"+price+"</td>"
+      +"<td class=\"col-md-2\">"+inventory_product_id +"</td>"
+      +"<td class=\"col-md-2\">"+wishlist_id +"</td>"
+      +"<td class=\"col-md-2\">"+status+"</td>"
+      +"<td class=\"col-md-2\">"+short_desc +"</td>"
+      +"<td class=\"col-md-2\"><a href=\""+pic_url +"\">pic</a></td>"
+      +"</tr>";
+
+    results_table.append(row);
+  }
+
+  function build_product_results_table(data) {
+    $("#search-results").empty();
+    let results_table = $("<table>", {"class": "table-striped", "cellpadding": "10"});
+    let header = $('<tr>');
+    header.append('<th class="col-md-2">ID</th>');
+    header.append('<th class="col-md-2">Name</th>');
+    header.append('<th class="col-md-2">Price</th>');
+    header.append('<th class="col-md-2">Inventory \#</th></tr>');
+    header.append('<th class="col-md-2">Wishlist ID</th></tr>');
+    header.append('<th class="col-md-2">Status</th></tr>');
+    header.append('<th class="col-md-2">Description</th></tr>');
+    header.append('<th class="col-md-2">Picture</th></tr>');
+
+    results_table.append(header);
+    add_product_row(data, results_table);
     $("#search-results").append(results_table);
   }
 
@@ -102,7 +136,7 @@ $(function () {
 
     ajax.done(function(res){
       // update_wishlist_form_data(res["data"]);
-      build_table(res["data"]);
+      build_wishlist_results_table(res["data"]);
       flash_message(res["message"]);
     });
 
@@ -143,7 +177,7 @@ $(function () {
     });
 
     ajax.done(function(res){
-      build_table(res['data']);
+      build_wishlist_results_table(res['data']);
       flash_message("Success");
     });
 
@@ -175,7 +209,7 @@ $(function () {
 
     ajax.done(function(res){
       // update_wishlist_form_data(res["data"]);
-      build_table(res["data"]);
+      build_wishlist_results_table(res["data"]);
       flash_message("Success");
     });
 
@@ -239,17 +273,49 @@ $(function () {
       "short_desc": product_description,
       "inventory_product_id": inventory_product_id,
       "wishlist_id":  wishlist_id
-    }
+    };
 
     var ajax = $.ajax({
       type: "POST",
       url: `/wishlists/${wishlist_id}/products`,
       contentType: "application/json",
       data: JSON.stringify(data),
-    })
+    });
 
     ajax.done(function(){
       flash_message("Product was added to wishlist.");
+    });
+
+    ajax.fail(function(res){
+      flash_message(res.responseJSON.message);
+      clear_table();
+    });
+  });
+
+  // ****************************************
+  // Get a product in a Wishlist
+  // ****************************************
+  $("#search-product").click(function (event) {
+    event.preventDefault();
+
+    product_id = $('#wishlist-product-id').val();
+    wishlist_id = $('#wishlist-id').val();
+
+    if (!product_id || !wishlist_id) {
+      flash_message("Product Id and Wishlist id should be defined.")
+      return;
+    }
+
+    var ajax = $.ajax({
+      type: "GET",
+      url: `/wishlists/${wishlist_id}/products/${product_id}`,
+      contentType: "application/json",
+      data: '',
+    });
+
+    ajax.done(function(res){
+      flash_message("Success");
+      build_product_results_table(res["data"]);
     });
 
     ajax.fail(function(res){

@@ -5,6 +5,7 @@ For information on Waiting until elements are present in the HTML see:
     https://selenium-python.readthedocs.io/waits.html
 """
 import logging
+import json
 from random import choice
 from behave import when, then
 from compare import expect, ensure
@@ -61,6 +62,7 @@ def step_impl(context, element_name):
     )
     element.clear()
     element.send_keys(context.clipboard)
+    print('Pasted %s in %s' % (context.clipboard, element_name))
 
 @when('I press the "{button}" button')
 def step_impl(context, button):
@@ -130,3 +132,37 @@ def step_impl(context, classname):
     random_element = choice(elements)
     context.clipboard = random_element.text
     logging.info('Clipboard contains: %s', context.clipboard)
+
+# for testing simplicity we will assume that proucts have different names
+@when('I copy the product id of "{product_name}"')
+def step_impl(context, product_name):
+  # print('//td[contains(text(), \"'+product_name+'\")]')
+  elements = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_element_located(
+      # (By.XPATH, '//button[text()="Search wishlists"]')
+      (By.XPATH, '//td[contains(text(), \"'+product_name+'\") and contains(@class, "product-cell")]')
+    )
+  )
+
+  field_json = json.loads(elements.text)
+  for element in field_json:
+    if element["name"] == product_name:
+      print(element)
+      context.clipboard = element["id"]
+      break
+
+@when('I copy the wishlist id of "{product_name}"')
+def step_impl(context, product_name):
+  # print('//td[contains(text(), \"'+product_name+'\")]')
+  elements = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_element_located(
+      (By.XPATH, '//td[contains(text(), \"'+product_name+'\") and contains(@class, "product-cell")]')
+    )
+  )
+
+  field_json = json.loads(elements.text)
+  for element in field_json:
+    if element["name"] == product_name:
+      print(element)
+      context.clipboard = element["wishlist_id"]
+      break
