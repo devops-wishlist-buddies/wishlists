@@ -324,4 +324,75 @@ $(function () {
     });
   });
 
+  // ****************************************
+  // Delete a Product
+  // ****************************************
+
+  $("#delete-product").click(function (event) {
+    event.preventDefault();
+    var product_id = $("#wishlist-product-id").val();
+    var wishlist_id = $("#wishlist-id").val();
+
+    var ajax = $.ajax({
+      type: "DELETE",
+      url: `/wishlists/` + wishlist_id + `/products/` + product_id,
+      contentType: "application/json",
+      data: '',
+    })
+
+    ajax.done(function(res){
+      clear_form_data();
+      flash_message("Success");
+    });
+
+    ajax.fail(function(res){
+      flash_message(res.responseJSON.message);
+      clear_table();
+    });
+  });
+
+  // ****************************************
+  // Update a Product
+  // ****************************************
+  $("#update-product").click(function (event) {
+    event.preventDefault();
+    var wishlist_id = $("#wishlist-id").val();
+    var name = $("#wishlist-product-name").val();
+    var product_id = $("#wishlist-product-id").val();
+    var i_id = $("#wishlist-inventory-product-id").val();
+    var price = $("#wishlist-product-price").val();
+    var status = $("#wishlist-product-status").val();
+    var pic = $("#wishlist-product-pic").val();
+    var desc = $("#wishlist-product-description").val();
+
+    var data = {
+      status: parseInt(status),
+      ...name && { name },
+      ...i_id && { inventory_product_id: parseInt(i_id) },
+      ...price && { price: parseFloat(price) },
+      ...pic && {pic_url: pic},
+      ...desc && { short_desc: desc }
+    };
+
+    if(!data){
+      flash_message("Nothing Updated!");
+      return;
+    }
+
+    var ajax = $.ajax({
+      type: "PUT",
+      url: `/wishlists/${wishlist_id}/products/${product_id}`,
+      contentType: "application/json",
+      data: JSON.stringify(data)
+    });
+
+    ajax.done(function(res){
+      build_product_results_table(res["data"]);
+      flash_message("Updated Success!");
+    });
+
+    ajax.fail(function(res){
+      flash_message(res.responseJSON.message);
+    });
+  });
 });
