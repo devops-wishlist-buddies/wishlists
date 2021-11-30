@@ -346,7 +346,7 @@ $(function () {
     });
 
     ajax.fail(function(res){
-      flash_message("Product doesn't exist!");
+      flash_message(res.responseJSON.message);
       clear_table();
     });
   });
@@ -365,40 +365,15 @@ $(function () {
     var pic = $("#wishlist-product-pic").val();
     var desc = $("#wishlist-product-description").val();
 
-    // var data = {
-    //   ...name && {name = name},
-    //   ...i_id && {inventory_product_id = parseInt(i_id)},
-    //   ...price && {price = parseFloat(price)},
-    //   ...(status == "AVAILABLE") && {status = 1},
-    //   ...(status == "UNAVAILABLE") && {status = 0},
-    //   ...pic && {pic_url = pic},
-    //   ...desc && {short_desc = desc}
-    // };
+    var data = {
+      status: parseInt(status),
+      ...name && { name },
+      ...i_id && { inventory_product_id: parseInt(i_id) },
+      ...price && { price: parseFloat(price) },
+      ...pic && {pic_url: pic},
+      ...desc && { short_desc: desc }
+    };
 
-    var data = {};
-
-    if(name){
-      data.name = name;
-    }
-    if(i_id){
-      data.inventory_product_id = parseInt(i_id);
-    }
-    if(price){
-      data.price = parseFloat(price);
-    }
-    if(status){
-      if(status == "AVAILABLE"){
-        data.status = 1;
-      }else{
-        data.status = 0;
-      }
-    }
-    if(pic){
-      data.pic_url = pic;
-    }
-    if(desc){
-      data.short_desc = desc;
-    }
     if(!data){
       flash_message("Nothing Updated!");
       return;
