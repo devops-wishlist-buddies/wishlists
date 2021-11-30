@@ -9,10 +9,11 @@ Background:
         |My wishlist           |6       |
         |My greatest wishlist  |1       |
     And the following products
-        |name          |inventory_product_id|price|status|
-        |IPhone 20      |33                  |1200 |1|
-        |Board game     |23                  | 30  |1|
-        |Nintendo Switch|21                  |300  |1|
+        |name           |inventory_product_id|price|status|short_desc|
+        |IPhone 20      |33                  |1200 |1|Future is here|
+        |Board game     |23                  | 30  |1|Best time killer you've ever seen!|
+        |Nintendo Switch|21                  |300  |1|New pokemon game available|
+        |Pen            |57                  |7    |1||
 
 Scenario: The server is running
     When I visit the "Home Page"
@@ -111,3 +112,19 @@ Scenario: Add a product to wishlist
     When I paste the "wishlist-id" field
     And I press the "search-wishlist" button
     Then I should see "Golden Snitch" in the results
+
+Scenario: Read a product in a wishlist
+    When I visit the "Home Page"
+    And I press the "search-product" button
+    Then I should see the message "Product Id and Wishlist id should be defined."
+    When I press the "search-wishlist" button
+    Then I should see "Board game" in the results
+    When I copy the product id of "Board game"
+    And I paste the "wishlist-product-id" field
+    And I copy the wishlist id of "Board game"
+    And I paste the "wishlist-id" field
+    And I press the "search-product" button
+    Then I should see "Best time killer you've ever seen!" in the results
+    And I should not see "IPhone" in the results
+    And I should not see "Pen" in the results
+    And I should not see "My wishlist" in the results
