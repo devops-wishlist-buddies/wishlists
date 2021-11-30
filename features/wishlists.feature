@@ -128,3 +128,32 @@ Scenario: Read a product in a wishlist
     And I should not see "IPhone" in the results
     And I should not see "Pen" in the results
     And I should not see "My wishlist" in the results
+
+Scenario: Delete a product from a wishlist
+    When I visit the "Home Page"
+    And I press the "search-wishlist" button
+    Then I should see "Board game" in the results
+    When I copy the product id of "Board game"
+    And I paste the "wishlist-product-id" field
+    And I copy the wishlist id of "Board game"
+    And I paste the "wishlist-id" field
+    And I press the "delete-product" button
+    Then I should see the message "Success"
+    When I press the "search-wishlist" button
+    Then I should not see "Board game" in the results
+
+Scenario: Edit a product in a wishlist
+    When I visit the "Home Page"
+    And I press the "search-wishlist" button
+    Then I should see "Board game" in the results
+    When I copy the product id of "Board game"
+    And I paste the "wishlist-product-id" field
+    And I copy the wishlist id of "Board game"
+    And I paste the "wishlist-id" field
+    And I set the "wishlist-product-name" to "New Board game"
+    And I set the "wishlist-product-price" to "6666"
+    And I press the "update-product" button
+    Then I should see the message "Updated Success!"
+    When I press the "search-wishlist" button
+    Then I should see "New Board game" in the results
+    And I should see "6666" in the results
