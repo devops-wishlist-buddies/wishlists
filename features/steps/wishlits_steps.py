@@ -58,6 +58,7 @@ def step_impl(context):
 def step_impl(context):
     """ Add products to the newly created empty wishlists """
     headers = {'Content-Type': 'application/json'}
+    i = 0
     for row in context.table:
         data = {
             "name": row.get('name'),
@@ -68,8 +69,9 @@ def step_impl(context):
             "inventory_product_id": row.get('inventory_product_id'),
         }
         trimmed_data = {k: v for k, v in data.items() if v}
+        i += 1
         payload = json.dumps(trimmed_data)
-        wishlist_id = str(random.choice(context.wishlist_ids))
+        wishlist_id = str(random.choice(context.wishlist_ids)) if i != 0 else str(context.wishlist_ids[0])
         add_url = context.base_url + '/wishlists/' + wishlist_id + '/products'
         context.resp = requests.post(add_url, data=payload, headers=headers)
         expect(context.resp.status_code).to_equal(201)

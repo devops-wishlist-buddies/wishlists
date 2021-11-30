@@ -195,8 +195,8 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.get("/wishlists/1/products")
     self.assertEqual(resp.status_code, 405)
 
-  def test_delete_a_product_from_wishlist(self):
-    """Delete a product from a wishlist"""
+  def test_delete_a_product(self):
+    """Delete a product"""
     w_instance_1 = WishlistFactory()
     w_instance_1.create()
     w_instance_2 = WishlistFactory()
@@ -215,17 +215,11 @@ class TestWishlistsServer(unittest.TestCase):
     wps = Product.find_all()
     self.assertEqual(len(wps), 3)
 
-    resp = self.app.delete("/wishlists/16359/products/1")
+    resp = self.app.delete("/wishlists/products/134243")
     self.assertEqual(resp.status_code, 404)
 
-    resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_1.id, p_instance_1.id))
+    resp = self.app.delete("/wishlists/products/{}".format(p_instance_1.id))
     self.assertEqual(resp.status_code, 200)
-    new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
-    self.assertEqual(len(new_product_list), 2)
-
-    resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_2.id, p_instance_2.id))
-    self.assertEqual(resp.get_json()['message'], "Product with id {} is not in this wishlist."\
-      .format(p_instance_2.id))
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 2)
 
@@ -290,7 +284,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(wps),4)
 
     resp = resp = self.app.get(
-          "/wishlists/{0}/products/{1}".format(w_instance_1.id, p_instance_2.id),
+          "/wishlists/products/{0}".format(p_instance_2.id),
           content_type = "application/json"
       )
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -305,7 +299,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(data["wishlist_id"], w_instance_1.id)
 
     resp = self.app.get(
-          "/wishlists/1/products/4",
+          "/wishlists/products/4000",
           content_type = "application/json"
       )
     self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
@@ -457,7 +451,7 @@ class TestWishlistsServer(unittest.TestCase):
       'status': Availability.AVAILABLE
     }
     product_id = resp.get_json()['data']
-    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+    resp = self.app.put("/wishlists/products/{0}".format(product_id),\
       json=updated_fields, content_type="application/json")
 
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -470,17 +464,17 @@ class TestWishlistsServer(unittest.TestCase):
     updated_fields = {
       'some_invalid_field': 'will it break?'
     }
-    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+    resp = self.app.put("/wishlists/products/{0}".format(product_id),\
       json=updated_fields, content_type="application/json")
 
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+    resp = self.app.put("/wishlists/products/{0}".format(product_id),\
       json="not a dictionary", content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
     self.assertEqual(resp.get_json()['message'], "Expected a json request body")
 
-    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+    resp = self.app.put("/wishlists/products/{0}".format(product_id),\
       json={'name': None}, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
     self.assertEqual(resp.get_json()['message'], "Field name cannot be null")

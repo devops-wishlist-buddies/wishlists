@@ -144,6 +144,8 @@ $(function () {
 
     ajax.done(function(res){
       build_table(res['data']);
+      update_wishlist_form_data(res['data'][0]);
+      update_product_form_data(res['data'][0].products[0]);
       flash_message("Success");
     });
 
@@ -258,4 +260,117 @@ $(function () {
     });
   });
 
+  // ****************************************
+  // Delete a Product
+  // ****************************************
+
+  $("#delete-product").click(function (event) {
+    event.preventDefault();
+    var product_id = $("#wishlist-product-id").val();
+
+    var ajax = $.ajax({
+      type: "DELETE",
+      url: `/wishlists/products/` + parseInt(product_id),
+      contentType: "application/json",
+      data: '',
+    })
+
+    ajax.done(function(res){
+      clear_form_data();
+      flash_message("Success");
+    });
+
+    ajax.fail(function(res){
+      flash_message("Product doesn't exist!");
+      clear_table();
+    });
+  });
+
+  // ****************************************
+  // Update a Product
+  // ****************************************
+
+  $("#update-product").click(function (event) {
+    event.preventDefault();
+    var name = $("#wishlist-product-name").val();
+    var id = $("#wishlist-product-id").val();
+    var i_id = $("#wishlist-inventory-product-id").val();
+    var price = $("#wishlist-product-price").val();
+    var status = $("#wishlist-product-status").val();
+    var pic = $("#wishlist-product-pic").val();
+    var desc = $("#wishlist-product-description").val();
+
+    var data = {};
+
+    if(name){
+      data.name = name;
+    }
+    if(i_id){
+      data.inventory_product_id = parseInt(i_id);
+    }
+    if(price){
+      data.price = parseFloat(price);
+    }
+    if(status){
+      if(status == "AVAILABLE"){
+        data.status = 1;
+      }else{
+        data.status = 0;
+      }
+    }
+    if(pic){
+      data.pic_url = pic;
+    }
+    if(desc){
+      data.short_desc = desc;
+    }
+
+    if(!data){
+      flash_message("Nothing Updated!");
+      return;
+    }
+
+    var ajax = $.ajax({
+      type: "PUT",
+      url: `/wishlists/products/`+ id,
+      contentType: "application/json",
+      data: JSON.stringify(data)
+    });
+
+    ajax.done(function(res){
+      update_product_form_data(res["data"]);
+      flash_message("Updated Success!");
+    });
+
+    ajax.fail(function(res){
+      flash_message(res.responseJSON.message);
+    });
+
+  });
+
+// ****************************************
+  // Search for a Product
+  // ****************************************
+
+  $("#search-product").click(function (event) {
+    event.preventDefault();
+    const id = $("#wishlist-product-id").val();
+
+    var ajax = $.ajax({
+      type: "GET",
+      url: `/wishlists/products/` + id,
+      contentType: "application/json",
+      data: ''
+    });
+
+    ajax.done(function(res){
+      update_product_form_data(res['data']);
+      flash_message("Success");
+    });
+
+    ajax.fail(function(res){
+      flash_message(res.responseJSON.message);
+      clear_table();
+    });
+  });
 });

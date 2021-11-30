@@ -195,6 +195,17 @@ class Product(db.Model):
       entity.delete()
 
   @classmethod
+  def delete_by_id(cls, pid:int) -> bool:
+    """Delete products by product id"""
+    logger.info("Products: processing deletion for product_id %s ...", pid)
+    entity = Product.find_by_id(pid)
+    if entity is not None:
+      entity.delete()
+      return True
+    return False
+
+
+  @classmethod
   def delete_all_by_wishlist_id(cls, wishlist_id:int):
     """Delete all products by wishlist id they belong to"""
     logger.info("Product: processing deletion for wishlist_id %s ...", wishlist_id)

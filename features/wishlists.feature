@@ -111,3 +111,32 @@ Scenario: Add a product to wishlist
     When I paste the "wishlist-id" field
     And I press the "search-wishlist" button
     Then I should see "Golden Snitch" in the results
+
+Scenario: Delete a product from a wishlist
+    When I visit the "Home Page"
+    And I press the "search-wishlist" button
+    Then I should see "IPhone 20" in the results
+    When I copy the "wishlist-product-id" field
+    And I press the "Wishlists-clear" button
+    And I paste the "wishlist-product-id" field
+    And I press the "delete-product" button
+    Then I should see the message "Success"
+    When I paste the "wishlist-product-id" field
+    And I press the "delete-product" button
+    Then I should see the message "Product doesn't exist!"
+
+Scenario: Edit a product in a wishlist
+    When I visit the "Home Page"
+    And I press the "search-wishlist" button
+    Then I should see "IPhone 20" in the results
+    When I copy the "wishlist-product-id" field
+    And I press the "wishlists-clear" button
+    And I set the "wishlist-product-name" to "New Iphone 20"
+    And I set the "wishlist-product-price" to "6666"
+    And I paste the "wishlist-product-id" field
+    And I press the "update-product" button
+    Then I should see the message "Updated Success!"
+    When I paste the "wishlist-product-id" field
+    And I press the "search-product" button
+    Then I should see "New Iphone 20" in the "wishlist-product-name" field
+    And I should see "6666" in the "wishlist-product-price" field

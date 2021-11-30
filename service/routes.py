@@ -199,34 +199,24 @@ def delete_products_from_wishlist(wishlist_id):
 ######################################################################
 # Delete a product from a wishlist
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["DELETE"])
-def delete_a_product_from_wishlist(wishlist_id, product_id):
+@app.route("/wishlists/products/<int:product_id>", methods=["DELETE"])
+def delete_a_product_from_wishlist(product_id):
   """
   Delete a product from a wishlist
   This endpoint will delete a product from a wishlist based the wishlist_id
   and the product_id specified in the URL
   """
-  app.logger.info("Request to delete products with id %s from wishlist %s"\
-    % (product_id,wishlist_id))
+  app.logger.info("Request to delete product with id %s" % (product_id))
 
-  wishlist = Wishlist.find_by_id(wishlist_id)
-  if not wishlist:
-    return make_response(
-      jsonify(
-        data = [],
-        message = "Wishlist {} not found".format(wishlist_id)
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
-  cnt = wishlist.delete_products([product_id])
+  flag = Product.delete_by_id([product_id])
 
-  if cnt == 0:
+  if not flag:
     return make_response(
       jsonify(
         data = [],
         message = "Product with id {} is not in this wishlist.".format(product_id)
       ),
-      status.HTTP_200_OK
+      status.HTTP_404_NOT_FOUND
   )
   return make_response(
     jsonify(
@@ -279,25 +269,14 @@ def list_products_in_wishlist(wishlist_id):
 ######################################################################
 # GET A PRODUCT IN A WISHLIST
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["GET"])
-def get_a_product_in_a_wishlist(wishlist_id, product_id):
+@app.route("/wishlists/products/<int:product_id>", methods=["GET"])
+def get_a_product_in_a_wishlist(product_id):
   """
   Get a product in a wishlist based on a wishlist_id
   This endpoint will firstly look for a wishlist based on a wishlist_id
   Then look for a product based on a product_id
   """
   app.logger.info("Request to get a specific product in a wishlist")
-  wishlist_product= Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
-
-  if not wishlist_product:
-    return(
-      jsonify(
-        data = [],
-        message = f"Wishlist with id {wishlist_id} and Product with" \
-          f"id {product_id} was not found in Wishlist_Product db"
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
 
   product = Product.find_by_id(product_id)
   if not product:
@@ -312,7 +291,7 @@ def get_a_product_in_a_wishlist(wishlist_id, product_id):
   return make_response(
     jsonify(
       data = product.serialize(),
-      message = f"Successfully get Product with id {product_id} in wishlist with id {wishlist_id}"
+      message = f"Successfully get Product with id {product_id}"
     ),
     status.HTTP_200_OK
   )
@@ -439,14 +418,14 @@ def rename_a_wishlist(wishlist_id):
 ######################################################################
 # UPDATE A PRODUCT IN A WISHLIST
 ######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["PUT"])
-def update_product_in_wishlist(wishlist_id, product_id):
+@app.route("/wishlists/products/<int:product_id>", methods=["PUT"])
+def update_product_in_wishlist(product_id):
   """
   Updates a product
   This endpoint will modify an existing product in a wishlist
   """
   app.logger.info("Request to update a product")
-  product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
+  product = Product.find_by_id(product_id)
   request_data = request.get_json()
   if not isinstance(request_data, dict):
     return make_response(
@@ -464,7 +443,7 @@ def update_product_in_wishlist(wishlist_id, product_id):
 
   return make_response(
     jsonify(
-      data = product.id,
+      data = product.serialize(),
       message = "Product Updated"
     ),
     status.HTTP_200_OK
