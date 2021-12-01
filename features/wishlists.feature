@@ -158,3 +158,18 @@ Scenario: Edit a product in a wishlist
     Then I should see "New Board game" in the results
     And I should see "6666" in the results
     And I should not see "30" in the results
+
+Scenario: Place a product from a wishlist in a shopcart
+    When I visit the "Home Page"
+    And I press the "order-product" button
+    Then I should see the message "Product id and wishlist id should be defined"
+    When I press the "search-wishlist" button
+    Then I should see "Pen" in the results
+    When I copy the product id of "Pen"
+    And I paste the "wishlist-product-id" field
+    And I copy the wishlist id of "Pen"
+    And I paste the "wishlist-id" field
+    And I press the "order-product" button
+    Then I should see the message "Success"
+    When I press the "search-wishlist" button
+    Then I should see "IN_CART" in the results
