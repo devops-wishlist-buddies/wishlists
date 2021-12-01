@@ -403,8 +403,8 @@ $(function () {
   $("#order-product").click(function (event) {
     event.preventDefault();
 
-    product_id = $('#wishlist-product-id').val();
-    wishlist_id = $('#wishlist-id').val();
+    var product_id = $('#wishlist-product-id').val();
+    var wishlist_id = $('#wishlist-id').val();
 
     if (!product_id || !wishlist_id) {
       flash_message('Product id and wishlist id should be defined')
