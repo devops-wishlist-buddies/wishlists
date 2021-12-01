@@ -395,4 +395,36 @@ $(function () {
       flash_message(res.responseJSON.message);
     });
   });
+
+  // #####################################################################
+  // PLACE A PRODUCT IN A WISHLIST TO CART
+  // #####################################################################
+  $("#order-product").click(function (event) {
+    event.preventDefault();
+
+    var product_id = $('#wishlist-product-id').val();
+    var wishlist_id = $('#wishlist-id').val();
+
+    if (!product_id || !wishlist_id) {
+      flash_message('Product id and wishlist id should be defined')
+      return;
+    }
+
+    var ajax = $.ajax({
+      type: "PUT",
+      url: `/wishlists/${wishlist_id}/products/${product_id}/add-to-cart`,
+      contentType: "application/json",
+      data: '',
+    })
+
+    ajax.done(function(){
+      flash_message("Success");
+    });
+
+    ajax.fail(function(res){
+      flash_message(res.responseJSON.message);
+      clear_table();
+    });
+  });
+  
 });
