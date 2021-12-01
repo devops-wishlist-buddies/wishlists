@@ -395,7 +395,6 @@ $(function () {
       flash_message(res.responseJSON.message);
     });
   });
-});
 
   // #####################################################################
   // PLACE A PRODUCT IN A WISHLIST TO CART
@@ -427,3 +426,5 @@ $(function () {
       clear_table();
     });
   });
+  
+});

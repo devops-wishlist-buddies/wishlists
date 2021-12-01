@@ -161,6 +161,8 @@ Scenario: Edit a product in a wishlist
 
 Scenario: Place a product from a wishlist in a shopcart
     When I visit the "Home Page"
+    And I press the "order-product" button
+    Then I should see the message "Product id and wishlist id should be defined"
     When I press the "search-wishlist" button
     Then I should see "Pen" in the results
     When I copy the product id of "Pen"
