@@ -9,7 +9,7 @@ db = SQLAlchemy()
 
 def get_non_null_product_fields():
   """"Returns non-null fields for Product model"""
-  return ['name', 'price', 'status','inventory_product_id', 'wishlist_id']
+  return ['name', 'price', 'status', 'inventory_product_id', 'wishlist_id']
 
 class DataValidationError(ValueError):
   pass

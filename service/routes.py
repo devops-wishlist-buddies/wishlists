@@ -23,6 +23,7 @@ TBD
 import os
 import logging
 from flask import jsonify, request, make_response, abort
+from flask_restx import Api, Resource, fields, reqparse, inputs
 
 from . import app
 from . import status  # HTTP Status Codes
@@ -31,6 +32,70 @@ from . import status  # HTTP Status Codes
 from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
 from service.models.model_utils import Availability, InCartStatus, get_non_null_product_fields, db
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(app,
+  version='1.0.0',
+  title='Wishlists Service REST API',
+  description='This is an API for Wishlists Service, NYU DevOps 2021.',
+  default='wishlists',
+  default_label='Wishlists CRUD operations',
+  doc='/apidocs/', # default also could use doc='/apidocs/'
+  prefix='/api'
+)
+
+# Define the model so that the docs reflect what can be sent
+create_wishlist_model = api.model('Wishlist', {
+  'name': fields.String(required=True,
+    description='The name of the wishlist.'),
+  'user_id': fields.Integer(required=True,
+    description='User ID who the wishlist belongs to.'),
+})
+
+full_wishlist_model = api.inherit(
+  'DBWishlistModel',
+  create_wishlist_model,
+  {
+    'id': fields.Integer(readOnly=True,
+      description='The unique id assigned internally by service'),
+  }
+)
+
+wishlist_arg = reqparse.RequestParser()
+wishlist_arg.add_argument('user_id', type=int, required=False, help='List Wishlists by user id.')
+
+create_product_model = api.model('Product', {
+  'name': fields.String(required=True,
+    description='The name of the product'),
+  'price': fields.Float(required=True,
+    description='Price of the product.'),
+  'status': fields.String(required=True,
+    description='Availability status.',
+    enum=Availability._member_names_),
+  'pic_url': fields.String(required=False,
+    description='URL for a picture of the product.'),
+  'short_desc': fields.String(required=False,
+    description='Short description of the product.'),
+  'inventory_product_id': fields.Integer(required=True,
+    description='ID of the product in inventory.'),
+  'wishlist_id': fields.Integer(required=True,
+    description='Wishlist ID that this product belongs to.'),
+  'in_cart_status': fields.String(required=False,
+    description='Flag indicating if this product has been placed in cart.' +
+      'Can only be changed with the add-to-cart endpoint.  Not in cart by default.',
+    enum=InCartStatus._member_names_),
+})
+
+full_product_model = api.inherit(
+  'DBProductModel',
+  create_product_model,
+  {
+    'id': fields.String(readOnly=True,
+      description='The unique id assigned internally by service'),
+  }
+)
 
 ######################################################################
 # GET HEALTH CHECK
@@ -53,6 +118,116 @@ def info():
 def index():
   """ Serve static home page"""
   return app.send_static_file("index.html")
+
+######################################################################
+#  PATH: /wishlists/{id}
+######################################################################
+@api.route('/wishlists/<wishlist_id>')
+@api.param('wishlist_id', 'The Wishlist identifier')
+class WishlistResource(Resource):
+  """
+  WishlistResource class
+
+  Allows the manipulation of a single Wishlist
+  GET /{wishlist_id} - Returns a Wishlist with the id
+  PUT /{wishlist_id} - Update a Wishlist with the id
+  DELETE /{wishlist_id} -  Deletes a Wishlist with the id
+  """
+
+  def get(self):
+    pass
+
+  def post(self):
+    pass
+
+  def put(self):
+    pass
+
+  def delete(self):
+    pass
+
+######################################################################
+#  PATH: /wishlists
+######################################################################
+@api.route('/wishlists', strict_slashes=False)
+class WishlistCollection(Resource):
+  """
+  WishlistCollection class
+
+  Allows the manipulation on a set of Wishlists
+  GET / - Returns all wishlists in the database
+  POST / - Create a Wishlist
+  """
+  def get(self):
+    pass
+
+  def post(self):
+    pass
+
+######################################################################
+#  PATH: /wishlists/{wishlist_id}/products/{product_id}
+######################################################################
+@api.route('/wishlists/<wishlist_id>/products/<product_id>')
+@api.param('wishlist_id', 'The Wishlist identifier')
+@api.param('product_id', 'The Product identifier')
+class ProductResource(Resource):
+  """
+  ProductResource class
+
+  Allows the manipulation on a a single Product in a Wishlist
+  GET - Returns the product in the wishlist
+  POST - Create the product in the wishlist
+  DELETE - Delete the product from the wishlist
+  """
+
+  def get(self):
+    pass
+
+  def post(self):
+    pass
+
+  def put(self):
+    pass
+
+  def delete(self):
+    pass
+
+######################################################################
+#  PATH: /wishlists/{wishlist_id}/products
+######################################################################
+@api.route('/wishlists/<wishlist_id>/products', strict_slashes=False)
+@api.param('wishlist_id', 'The Wishlist identifier')
+class ProductCollection(Resource):
+  """
+  ProductCollection class
+
+  Allows the manipulation on a set of Products in a Wishlist
+  GET / - Returns all products in a wishlists in the database
+  DELETE / - Delete all products in a wishlist
+  """
+
+  def get(self):
+    pass
+
+  def delete(self):
+    pass
+
+@api.route('/wishlists/<wishlist_id>/products/<product_id>/add-to-cart')
+@api.param('wishlist_id', 'The Wishlist identifier')
+@api.param('product_id', 'The Product identifier')
+class AddToCartResource(Resource):
+  """
+  AddToCartResource class
+
+  Allows to place a product in a wishlist in the cart
+  PUT - place the product in the wishlist in the cart
+  """
+  def put(self):
+    pass
+
+###
+# TODO: MOVE THE FUNCTIONS BELOW INTO THE CLASSES ABOVE
+###
 
 ######################################################################
 # CREATE A NEW WISHLIST
