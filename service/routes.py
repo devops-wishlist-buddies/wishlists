@@ -72,7 +72,8 @@ create_product_model = api.model('Product', {
   'price': fields.Float(required=True,
     description='Price of the product.'),
   'status': fields.String(required=True,
-    description='Availability status.'),
+    description='Availability status.',
+    enum=Availability._member_names_),
   'pic_url': fields.String(required=False,
     description='URL for a picture of the product.'),
   'short_desc': fields.String(required=False,
@@ -82,7 +83,9 @@ create_product_model = api.model('Product', {
   'wishlist_id': fields.Integer(required=True,
     description='Wishlist ID that this product belongs to.'),
   'in_cart_status': fields.String(required=False,
-    description='Flag indicating if this product has been placed in cart. Not in cart by default.'),
+    description='Flag indicating if this product has been placed in cart.' +
+      'Can only be changed with the add-to-cart endpoint.  Not in cart by default.',
+    enum=InCartStatus._member_names_),
 })
 
 full_product_model = api.inherit(
