@@ -88,7 +88,6 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
     new_json = resp.get_json()
-    print(new_json)
     # location = resp.headers.get("Location", None)
     # self.assertNotEqual(location, None)
     wl = Wishlist.find_by_id(new_json["id"])
