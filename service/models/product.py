@@ -97,7 +97,10 @@ class Product(db.Model):
         status_candidate in [Availability.AVAILABLE, Availability.UNAVAILABLE]:
         self.status = status_candidate
       elif isinstance(status_candidate, str):
-        self.status = getattr(Availability, status_candidate.upper())
+        if status_candidate == "1" or status_candidate == "0":
+          self.status = int(status_candidate)
+        else:
+          self.status = getattr(Availability, status_candidate.upper())
       elif isinstance(status_candidate, int):
         self.status = Availability(status_candidate)
       else:

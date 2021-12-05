@@ -323,7 +323,7 @@ class TestWishlistsServer(unittest.TestCase):
       'short_desc': "this is a piggy",
       'inventory_product_id': 12,
     }
-    # valid request
+    # valid requests
     resp = self.app.post("/wishlists/{0}/products".format(w_instance_1.id),\
       json=p_instance_1, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
@@ -336,6 +336,24 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(product.pic_url, "www.piggy.com/1.png")
     self.assertEqual(product.short_desc, "this is a piggy")
     self.assertEqual(product.wishlist_id, w_instance_1.id)
+
+    p_instance_2 = {
+      'name': "Plush shark",
+      'price': 11.5,
+      'status': 1,
+      'inventory_product_id': 49,
+    }
+    resp = self.app.post("/wishlists/{0}/products".format(w_instance_1.id),\
+      json=p_instance_2, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+    new_json = resp.get_json()
+    product = Product.find_by_id(new_json['data'])
+    self.assertEqual(product.name, "Plush shark")
+    self.assertEqual(product.price, 11.5)
+    self.assertEqual(product.status, Availability.AVAILABLE)
+    self.assertEqual(product.wishlist_id, w_instance_1.id)
+    self.assertEqual(product.in_cart_status, InCartStatus.DEFAULT)
 
     # wrong payload
     resp = self.app.post("/wishlists/{0}/products".format(w_instance_1.id),\
