@@ -34,6 +34,28 @@ from service.models.product import Product
 from service.models.model_utils import Availability, InCartStatus, get_non_null_product_fields, db
 
 ######################################################################
+# GET INDEX
+######################################################################
+@app.route("/", strict_slashes=False)
+def index():
+  """ Serve static home page"""
+  return app.send_static_file("index.html")
+
+######################################################################
+# GET HEALTH CHECK
+######################################################################
+@app.route("/info")
+def info():
+  """ API info"""
+  return (
+    jsonify(
+      name="Wishlists REST API Service",
+      version="1.0",
+    ),
+    status.HTTP_200_OK,
+  )
+
+######################################################################
 # Configure Swagger before initializing it
 ######################################################################
 api = Api(app,
@@ -103,29 +125,6 @@ wishlist_vo = api.inherit(
     'products': fields.List(fields.Nested(full_product_model))
   }
 )
-
-
-######################################################################
-# GET HEALTH CHECK
-######################################################################
-@app.route("/info")
-def info():
-  """ API info"""
-  return (
-    jsonify(
-      name="Wishlists REST API Service",
-      version="1.0",
-    ),
-    status.HTTP_200_OK,
-  )
-
-######################################################################
-# GET INDEX
-######################################################################
-@app.route("/")
-def index():
-  """ Serve static home page"""
-  return app.send_static_file("index.html")
 
 ######################################################################
 #  PATH: /wishlists/{id}
