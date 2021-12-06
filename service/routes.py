@@ -130,10 +130,6 @@ update_product_model = api.model('Product', {
     description='ID of the product in inventory.'),
   'wishlist_id': fields.Integer(required=False,
     description='Wishlist ID that this product belongs to.'),
-  'in_cart_status': fields.String(required=False,
-    description='Flag indicating if this product has been placed in cart.' +
-      'Can only be changed with the add-to-cart endpoint.  Not in cart by default.',
-    enum=InCartStatus._member_names_),
 })
 
 full_product_model = api.inherit(
@@ -372,7 +368,9 @@ class ProductCollectionResource(Resource):
     product.deserialize(data)
     product.create()
 
-    return product.serialize(), status.HTTP_201_CREATED
+    location_url = api.url_for(ProductResource, wishlist_id=wishlist_id,product_id = product.id ,_external=True)
+
+    return product.serialize(), status.HTTP_201_CREATED, {'Location':location_url}
 
   @api.doc('delete_all_products_from_a_wishlist')
   @api.response(204,"Products deleted")
@@ -405,7 +403,6 @@ class ProductResource(Resource):
 
   Allows the manipulation on a single Product in a Wishlist
   GET - Returns a product in a wishlist
-  POST - Create a product in a wishlist
   DELETE - Delete a product from a wishlist
   PUT - Update a product in a wishlist
   """
