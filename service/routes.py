@@ -114,7 +114,7 @@ create_product_model = api.model('Product', {
     enum=InCartStatus._member_names_),
 })
 
-update_product_model = api.model('Product', {
+update_product_model = api.model('HelperUpdateProduct', {
   'name': fields.String(required=False,
     description='The name of the product'),
   'price': fields.Float(required=False,
@@ -182,8 +182,9 @@ class WishlistResource(Resource):
   # RENAME A WISHLIST
   #------------------------------------------------------------------
   @api.doc('rename_wishlists')
-  @api.response(404, 'Wishlist not found')
   @api.response(400, 'The posted Wishlist data was not valid')
+  @api.response(404, 'Wishlist not found')
+  @api.response(415, 'Unsupported media type : application/json expected')
   @api.expect(rename_wishlist_model)
   @api.marshal_with(full_wishlist_model, code = 200)
   def put(self, wishlist_id):
@@ -192,6 +193,12 @@ class WishlistResource(Resource):
     This endpoint will rename an existing wishlist
     """
     app.logger.info("Request to rename a wishlist")
+    if request.headers.get("Content-Type") != "application/json":
+      return abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
+        "Unsupported media type : application/json expected"
+      )
+
     wishlist = Wishlist.find_by_id(wishlist_id)
     if not wishlist:
       abort(status.HTTP_404_NOT_FOUND, "Wishlist with id '{}' was not found.".format(wishlist_id))
