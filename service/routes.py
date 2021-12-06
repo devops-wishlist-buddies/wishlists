@@ -175,7 +175,7 @@ class WishlistResource(Resource):
   @api.marshal_with(wishlist_vo)
   def get(self, wishlist_id):
     """
-    List all products in a wishlist based on a wishlist_id
+    Lists all products in a wishlist based on a wishlist_id
     """
     app.logger.info("Request to list products in a wishlist")
     wishlist = Wishlist.find_by_id(wishlist_id)
@@ -237,7 +237,7 @@ class WishlistResource(Resource):
   @api.response(204, 'Wishlist deleted')
   def delete(self, wishlist_id):
     """
-    Delete a wishlist
+    Deletes a wishlist
     This endpoint will delete a wishlist based the id specified in the URL
     """
     app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
@@ -348,6 +348,10 @@ class ProductCollectionResource(Resource):
   @api.response(400,"Expected a json request body")
   @api.expect(create_product_model)
   def post(self,wishlist_id):
+    """
+    Adds a product to a wishlist
+    This endpoint will add a new product to a wishlist
+    """
     app.logger.info("Request to create a product")
     if request.headers.get("Content-Type") != "application/json":
       return abort(
@@ -373,7 +377,8 @@ class ProductCollectionResource(Resource):
   @api.response(404,"Wishlist not found")
   def delete(self, wishlist_id):
     """
-    Delete all products from a wishlist
+    Deletes all products from a wishlist
+    This endpoint will delete all products in a wishlist
     """
     wishlist = Wishlist.find_by_id(wishlist_id)
 
@@ -413,7 +418,7 @@ class ProductResource(Resource):
   @api.marshal_with(full_product_model)
   def get(self,wishlist_id,product_id):
     """
-    Get a product in a wishlist based on a wishlist_id
+    Gets a product in a wishlist based on a wishlist_id
     This endpoint will firstly look for a wishlist based on a wishlist_id
     Then look for a product based on a product_id
     """
@@ -435,6 +440,10 @@ class ProductResource(Resource):
   @api.doc('delete_a_product')
   @api.response(404, "Wishlist not found")
   def delete(self, wishlist_id, product_id):
+    """
+    Deletes a product from a wishlist
+    This endpoint will delete an existing product in a wishlist
+    """
     app.logger.info(f"Request to delete products with id {product_id} from wishlist {wishlist_id}")
     wishlist = Wishlist.find_by_id(wishlist_id)
     if not wishlist:
