@@ -323,7 +323,7 @@ $(function () {
 
     ajax.done(function(res){
       flash_message("Success");
-      build_product_results_table(res["data"]);
+      build_product_results_table(res);
     });
 
     ajax.fail(function(res){
@@ -399,7 +399,7 @@ $(function () {
     });
 
     ajax.done(function(res){
-      build_product_results_table(res["data"]);
+      build_product_results_table(res);
       flash_message("Updated Success!");
     });
 

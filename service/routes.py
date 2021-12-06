@@ -20,6 +20,7 @@ Paths:
 TBD
 """
 
+from itertools import product
 import os
 import logging
 from flask import jsonify, request, make_response, abort
@@ -113,6 +114,24 @@ create_product_model = api.model('Product', {
     enum=InCartStatus._member_names_),
 })
 
+update_product_model = api.model('HelperUpdateProduct', {
+  'name': fields.String(required=False,
+    description='The name of the product'),
+  'price': fields.Float(required=False,
+    description='Price of the product.'),
+  'status': fields.String(required=False,
+    description='Availability status.',
+    enum=Availability._member_names_),
+  'pic_url': fields.String(required=False,
+    description='URL for a picture of the product.'),
+  'short_desc': fields.String(required=False,
+    description='Short description of the product.'),
+  'inventory_product_id': fields.Integer(required=False,
+    description='ID of the product in inventory.'),
+  'wishlist_id': fields.Integer(required=False,
+    description='Wishlist ID that this product belongs to.'),
+})
+
 full_product_model = api.inherit(
   'DBProductModel',
   create_product_model,
@@ -152,7 +171,7 @@ class WishlistResource(Resource):
   @api.marshal_with(wishlist_vo)
   def get(self, wishlist_id):
     """
-    List all products in a wishlist based on a wishlist_id
+    Lists all products in a wishlist based on a wishlist_id
     """
     app.logger.info("Request to list products in a wishlist")
     wishlist = Wishlist.find_by_id(wishlist_id)
@@ -163,8 +182,9 @@ class WishlistResource(Resource):
   # RENAME A WISHLIST
   #------------------------------------------------------------------
   @api.doc('rename_wishlists')
-  @api.response(404, 'Wishlist not found')
   @api.response(400, 'The posted Wishlist data was not valid')
+  @api.response(404, 'Wishlist not found')
+  @api.response(415, 'Unsupported media type : application/json expected')
   @api.expect(rename_wishlist_model)
   @api.marshal_with(full_wishlist_model, code = 200)
   def put(self, wishlist_id):
@@ -173,6 +193,12 @@ class WishlistResource(Resource):
     This endpoint will rename an existing wishlist
     """
     app.logger.info("Request to rename a wishlist")
+    if request.headers.get("Content-Type") != "application/json":
+      return abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
+        "Unsupported media type : application/json expected"
+      )
+
     wishlist = Wishlist.find_by_id(wishlist_id)
     if not wishlist:
       abort(status.HTTP_404_NOT_FOUND, "Wishlist with id '{}' was not found.".format(wishlist_id))
@@ -214,7 +240,7 @@ class WishlistResource(Resource):
   @api.response(204, 'Wishlist deleted')
   def delete(self, wishlist_id):
     """
-    Delete a wishlist
+    Deletes a wishlist
     This endpoint will delete a wishlist based the id specified in the URL
     """
     app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
@@ -277,6 +303,7 @@ class WishlistCollection(Resource):
   # CREATE A NEW WISHLIST
   #------------------------------------------------------------------
   @api.doc('create_wishlist')
+  @api.response(415, 'Unsupported media type : application/json expected')
   @api.response(400, 'The posted data was not valid')
   @api.expect(create_wishlist_model)
   @api.marshal_with(full_wishlist_model, code=201)
@@ -294,8 +321,13 @@ class WishlistCollection(Resource):
       )
 
     app.logger.info('Payload = %s', api.payload)
+    data = api.payload
+
+    if not isinstance(data, dict):
+      abort(status.HTTP_400_BAD_REQUEST, "Expected a json request body")
+
     wishlist = Wishlist()
-    wishlist.deserialize(api.payload)
+    wishlist.deserialize(data)
     wishlist.create()
     data = wishlist.serialize()
 
@@ -303,52 +335,156 @@ class WishlistCollection(Resource):
     return data, status.HTTP_201_CREATED, {'Location': location_url}
 
 ######################################################################
+#  PATH: /wishlists/{wishlist_id}/products
+######################################################################
+@api.route('/wishlists/<wishlist_id>/products')
+@api.param('wishlist_id', 'The Wishlist identifier')
+class ProductCollectionResource(Resource):
+  """
+  ProductCollectionResource class
+
+  Allows the manipulation on a collection of Products in a Wishlist
+  POST - Create a product in a wishlist
+  DELETE - Delete all products in a wishlist
+  """
+  @api.doc('create_a_product')
+  @api.response(400,"Expected a json request body")
+  @api.response(415,"Unsupported media type : application/json expected")
+  @api.expect(create_product_model)
+  @api.marshal_with(full_product_model,201)
+  def post(self,wishlist_id):
+    """
+    Adds a product to a wishlist
+    This endpoint will add a new product to a wishlist
+    """
+    app.logger.info("Request to create a product")
+    if request.headers.get("Content-Type") != "application/json":
+      return abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
+        "Unsupported media type : application/json expected"
+      )
+
+    app.logger.info('Payload = %s', api.payload)
+    data = api.payload
+
+    if not isinstance(data, dict):
+      abort(status.HTTP_400_BAD_REQUEST, "Expected a json request body")
+
+    data['wishlist_id'] = wishlist_id
+
+    product = Product()
+    product.deserialize(data)
+    product.create()
+
+    location_url = api.url_for(ProductResource, wishlist_id=wishlist_id,product_id = product.id ,_external=True)
+
+    return product.serialize(), status.HTTP_201_CREATED, {'Location':location_url}
+
+  @api.doc('delete_all_products_from_a_wishlist')
+  @api.response(204,"Products deleted")
+  def delete(self, wishlist_id):
+    """
+    Deletes all products from a wishlist
+    This endpoint will delete all products in a wishlist
+    """
+    wishlist = Wishlist.find_by_id(wishlist_id)
+
+    if wishlist:
+      product_list = wishlist.read()['products']
+      product_ids_list = [p["id"] for p in product_list]
+      app.logger.info(f"Request to delete all the products from wishlist {wishlist_id}")
+
+      wishlist.delete_products(product_ids_list)
+
+    return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
 #  PATH: /wishlists/{wishlist_id}/products/{product_id}
 ######################################################################
-# @api.route('/wishlists/<wishlist_id>/products/<product_id>')
-# @api.param('wishlist_id', 'The Wishlist identifier')
-# @api.param('product_id', 'The Product identifier')
+@api.route('/wishlists/<wishlist_id>/products/<product_id>')
+@api.param('wishlist_id', 'The Wishlist identifier')
+@api.param('product_id', 'The Product identifier')
 class ProductResource(Resource):
   """
   ProductResource class
 
-  Allows the manipulation on a a single Product in a Wishlist
-  GET - Returns the product in the wishlist
-  POST - Create the product in the wishlist
-  DELETE - Delete the product from the wishlist
+  Allows the manipulation on a single Product in a Wishlist
+  GET - Returns a product in a wishlist
+  DELETE - Delete a product from a wishlist
+  PUT - Update a product in a wishlist
   """
+  @api.doc('return_one_product')
+  @api.response(404, 'Product with id not found in wishlist with id')
+  @api.marshal_with(full_product_model)
+  def get(self,wishlist_id,product_id):
+    """
+    Gets a product in a wishlist based on a wishlist_id
+    This endpoint will firstly look for a wishlist based on a wishlist_id
+    Then look for a product based on a product_id
+    """
+    app.logger.info("Request to get a specific product in a wishlist")
+    wishlist_product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
-  def get(self):
-    pass
+    if not wishlist_product:
+      abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} and Product with" \
+          f"id {product_id} was not found in Wishlist_Product db"
+      )
 
-  def post(self):
-    pass
+    product = Product.find_by_id(product_id)
 
-  def put(self):
-    pass
+    if not product:
+      abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} was not found in Product db")
 
-  def delete(self):
-    pass
+    return product.serialize(), status.HTTP_200_OK
 
-######################################################################
-#  PATH: /wishlists/{wishlist_id}/products
-######################################################################
-# @api.route('/wishlists/<wishlist_id>/products', strict_slashes=False)
-# @api.param('wishlist_id', 'The Wishlist identifier')
-class ProductCollection(Resource):
-  """
-  ProductCollection class
+  @api.doc('delete_a_product')
+  @api.response(204, "Product deleted")
+  def delete(self, wishlist_id, product_id):
+    """
+    Deletes a product from a wishlist
+    This endpoint will delete an existing product in a wishlist
+    """
+    app.logger.info(f"Request to delete products with id {product_id} from wishlist {wishlist_id}")
+    wishlist = Wishlist.find_by_id(wishlist_id)
+    if wishlist:
+      wishlist.delete_products([product_id])
 
-  Allows the manipulation on a set of Products in a Wishlist
-  GET / - Returns all products in a wishlists in the database
-  DELETE / - Delete all products in a wishlist
-  """
+    return "", status.HTTP_204_NO_CONTENT
 
-  def get(self):
-    pass
+  @api.doc('update_a_product')
+  @api.response(400, "Expected a json request body")
+  @api.response(404, "Product not found")
+  @api.response(415, "Unsupported media type : application/json expected")
+  @api.expect(update_product_model)
+  @api.marshal_with(full_product_model)
+  def put(self, wishlist_id, product_id):
+    """
+    Updates a product
+    This endpoint will modify an existing product in a wishlist
+    """
+    app.logger.info("Request to update a product")
+    product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
+    if request.headers.get("Content-Type") != "application/json":
+      abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
+        "Unsupported media type : application/json expected"
+      )
 
-  def delete(self):
-    pass
+    if not product:
+      abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} not found")
+
+    app.logger.info('Payload = %s', api.payload)
+    data = api.payload
+    if not isinstance(data, dict):
+      abort( status.HTTP_400_BAD_REQUEST, "Expected a json request body")
+
+    product_fields = product.serialize()
+    product_fields.update(api.payload)
+    product.deserialize(product_fields)
+    product.update()
+
+    return product.serialize(), status.HTTP_200_OK
 
 # @api.route('/wishlists/<wishlist_id>/products/<product_id>/add-to-cart')
 # @api.param('wishlist_id', 'The Wishlist identifier')
@@ -366,216 +502,6 @@ class AddToCartResource(Resource):
 ###
 # TODO: MOVE THE FUNCTIONS BELOW INTO THE CLASSES ABOVE
 ###
-######################################################################
-# Delete all products from a wishlist
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products", methods=["DELETE"])
-def delete_products_from_wishlist(wishlist_id):
-  """
-  Delete all products from a wishlist
-  """
-  wishlist = Wishlist.find_by_id(wishlist_id)
-  if not wishlist:
-    return make_response(
-      jsonify(
-        data = [],
-        message = "Wishlist {} not found".format(wishlist_id)
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
-
-  product_list = wishlist.read()["products"]
-  product_ids_list = [p["id"] for p in product_list]
-  app.logger.info("Request to delete all the products from wishlist %s"\
-    % (wishlist_id))
-
-  cnt = wishlist.delete_products(product_ids_list)
-
-  if cnt != 0:
-    return make_response(
-      jsonify(
-        data = [],
-        message = "All products are deleted."
-      ),
-      status.HTTP_200_OK
-    )
-
-  return make_response(
-    jsonify(
-      data = [],
-      message = "There is no products in the wishlist, 0 products are deleted."
-    ),
-    status.HTTP_200_OK
-  )
-######################################################################
-# Delete a product from a wishlist
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["DELETE"])
-def delete_a_product_from_wishlist(wishlist_id, product_id):
-  """
-  Delete a product from a wishlist
-  This endpoint will delete a product from a wishlist based the wishlist_id
-  and the product_id specified in the URL
-  """
-  app.logger.info("Request to delete products with id %s from wishlist %s"\
-    % (product_id,wishlist_id))
-
-  wishlist = Wishlist.find_by_id(wishlist_id)
-  if not wishlist:
-    return make_response(
-      jsonify(
-        data = [],
-        message = "Wishlist {} not found".format(wishlist_id)
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
-  cnt = wishlist.delete_products([product_id])
-
-  if cnt == 0:
-    return make_response(
-      jsonify(
-        data = [],
-        message = "Product with id {} is not in this wishlist.".format(product_id)
-      ),
-      status.HTTP_200_OK
-  )
-  return make_response(
-    jsonify(
-      data = [],
-      message = "Product with id {} is deleted.".format(product_id)
-    ),
-    status.HTTP_200_OK
-  )
-
-######################################################################
-# GET A PRODUCT IN A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["GET"])
-def get_a_product_in_a_wishlist(wishlist_id, product_id):
-  """
-  Get a product in a wishlist based on a wishlist_id
-  This endpoint will firstly look for a wishlist based on a wishlist_id
-  Then look for a product based on a product_id
-  """
-  app.logger.info("Request to get a specific product in a wishlist")
-  wishlist_product= Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
-
-  if not wishlist_product:
-    return(
-      jsonify(
-        data = [],
-        message = f"Wishlist with id {wishlist_id} and Product with" \
-          f"id {product_id} was not found in Wishlist_Product db"
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
-
-  product = Product.find_by_id(product_id)
-  if not product:
-    return(
-      jsonify(
-        data = [],
-        message = f"Product with id {product_id} was not found in Product db"
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
-
-  return make_response(
-    jsonify(
-      data = product.serialize(),
-      message = f"Successfully get Product with id {product_id} in wishlist with id {wishlist_id}"
-    ),
-    status.HTTP_200_OK
-  )
-
-######################################################################
-# CREATE A NEW PRODUCT IN A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products", methods=["POST"])
-def create_product_in_wishlist(wishlist_id):
-  """
-  Creates a product
-  This endpoint will create a product based the data in the body that is posted
-  """
-  app.logger.info("Request to create a product")
-  data = {}
-
-  if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
-    app.logger.info("Processing FORM data")
-    data = {
-      "name": request.args.get("name"),
-      "price": request.args.get("price"),
-      "status": Availability.AVAILABLE \
-        if request.args.get("status") == '1' else Availability.UNAVAILABLE,
-      "pic_url": request.args.get("pic_url"),
-      "short_desc": request.args.get("short_desc"),
-      "wishlist_id": wishlist_id,
-      "inventory_product_id": request.args.get("inventory_product_id"),
-    }
-  else:
-    app.logger.info("Processing JSON data")
-    data = request.get_json()
-
-    request_data = request.get_json()
-    if not isinstance(request_data, dict):
-      return make_response(
-        jsonify(
-          data = [],
-          message = "Expected a json request body"
-        ),
-        status.HTTP_400_BAD_REQUEST
-      )
-
-    for key in request_data:
-      data[key] = request_data[key]
-
-    data["wishlist_id"] = wishlist_id
-
-  product = Product()
-  product.deserialize(data)
-  product.create()
-
-  return make_response(
-    jsonify(
-      data = product.id,
-      message = "Product Created!"
-    ),
-    status.HTTP_201_CREATED
-  )
-
-######################################################################
-# UPDATE A PRODUCT IN A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>", methods=["PUT"])
-def update_product_in_wishlist(wishlist_id, product_id):
-  """
-  Updates a product
-  This endpoint will modify an existing product in a wishlist
-  """
-  app.logger.info("Request to update a product")
-  product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
-  request_data = request.get_json()
-  if not isinstance(request_data, dict):
-    return make_response(
-      jsonify(
-        data = [],
-        message = "Expected a json request body"
-      ),
-      status.HTTP_400_BAD_REQUEST
-    )
-
-  product_fields = product.serialize()
-  product_fields.update(request_data)
-  product.deserialize(product_fields)
-  product.update()
-
-  return make_response(
-    jsonify(
-      data = product.id,
-      message = "Product Updated"
-    ),
-    status.HTTP_200_OK
-  )
 
 ######################################################################
 # ADD A PRODUCT IN A WISHLIST TO CART

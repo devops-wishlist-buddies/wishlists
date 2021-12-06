@@ -179,16 +179,15 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(wps), 3)
 
     resp = self.app.delete("/wishlists/16359/products")
-    self.assertEqual(resp.status_code, 404)
+    self.assertEqual(resp.status_code, 204)
 
     resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
-    self.assertEqual(resp.status_code, 200)
+    self.assertEqual(resp.status_code, 204)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 0)
 
     resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
-    self.assertEqual(resp.get_json()['message'],\
-       "There is no products in the wishlist, 0 products are deleted.")
+    self.assertEqual(resp.status_code,status.HTTP_204_NO_CONTENT)
 
     resp = self.app.get("/wishlists/1/products")
     self.assertEqual(resp.status_code, 405)
@@ -214,16 +213,15 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(wps), 3)
 
     resp = self.app.delete("/wishlists/16359/products/1")
-    self.assertEqual(resp.status_code, 404)
+    self.assertEqual(resp.status_code, 204)
 
     resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_1.id, p_instance_1.id))
-    self.assertEqual(resp.status_code, 200)
+    self.assertEqual(resp.status_code, 204)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 2)
 
     resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_2.id, p_instance_2.id))
-    self.assertEqual(resp.get_json()['message'], "Product with id {} is not in this wishlist."\
-      .format(p_instance_2.id))
+    self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 2)
 
@@ -293,10 +291,10 @@ class TestWishlistsServer(unittest.TestCase):
       )
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    data = resp.get_json()["data"]
+    data = resp.get_json()
     self.assertEqual(data["name"], p_instance_2.name)
     self.assertEqual(data["price"], p_instance_2.price)
-    self.assertEqual(data["status"], Availability.AVAILABLE.name)
+    self.assertEqual(data["status"].split('.')[1], Availability.AVAILABLE.name)
     self.assertEqual(data["pic_url"], p_instance_2.pic_url)
     self.assertEqual(data["short_desc"], p_instance_2.short_desc)
     self.assertEqual(data["wishlist_id"], p_instance_2.wishlist_id)
@@ -327,7 +325,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     new_json = resp.get_json()
-    product = Product.find_by_id(new_json['data'])
+    product = Product.find_by_id(new_json['id'])
     self.assertEqual(product.name, "piggy")
     self.assertEqual(product.price, 100.5)
     self.assertEqual(product.status, Availability.UNAVAILABLE)
@@ -346,7 +344,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     new_json = resp.get_json()
-    product = Product.find_by_id(new_json['data'])
+    product = Product.find_by_id(new_json['id'])
     self.assertEqual(product.name, "Plush shark")
     self.assertEqual(product.price, 11.5)
     self.assertEqual(product.status, Availability.AVAILABLE)
@@ -377,14 +375,14 @@ class TestWishlistsServer(unittest.TestCase):
       "/wishlists/{0}/products?name=mug&price=10&status=1&pic_url=www.piggy.com/1.png"\
       "&short_desc=\"the best mug in the world\"&inventory_product_id=30".format(w_instance_2.id),\
       content_type="application/x-www-form-urlencoded")
-    self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+    self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     # invalid request as url-encoded (missing fields)
     resp = self.app.post(\
       "/wishlists/{0}/products?name=mug&price=10&status=1&pic_url=www.piggy.com/1.png"\
       "&short_desc=\"the best mug in the world\"".format(w_instance_2.id),\
       content_type="application/x-www-form-urlencoded")
-    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+    self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
 
   def test_rename_wishlist(self):
@@ -470,11 +468,16 @@ class TestWishlistsServer(unittest.TestCase):
       'name': 'new and improved piggy',
       'status': Availability.AVAILABLE
     }
-    product_id = resp.get_json()['data']
+    product_id = resp.get_json()['id']
+    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, 1000023),\
+      json=updated_fields, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
       json=updated_fields, content_type="application/json")
 
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
     altered_product = Product.find_by_id(product_id)
     self.assertEqual(altered_product.name, updated_fields['name'])
     self.assertEqual(altered_product.status, updated_fields['status'])
@@ -484,6 +487,11 @@ class TestWishlistsServer(unittest.TestCase):
     updated_fields = {
       'some_invalid_field': 'will it break?'
     }
+
+    resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
+      json=updated_fields, content_type="multipart/form-data")
+    self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
     resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
       json=updated_fields, content_type="application/json")
 
