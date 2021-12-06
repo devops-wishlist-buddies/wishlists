@@ -74,7 +74,7 @@ create_wishlist_model = api.model('Wishlist', {
   'user_id': fields.Integer(required=True,
     description='User ID who the wishlist belongs to.'),
 })
-rename_wishlist_model = api.model('Helper_Rename_Wishlist', {
+rename_wishlist_model = api.model('HelperRenameWishlist', {
   'name': fields.String(required=True,
     description='The name of the wishlist.')
 })
@@ -299,9 +299,8 @@ class WishlistCollection(Resource):
     wishlist.create()
     data = wishlist.serialize()
 
-    # TODO Add location header to response once WishlistResource is implemented
-    # location_url = api.url_for(WishlistResource, wishlist_id=wishlist.id, _external=True)
-    return data, status.HTTP_201_CREATED
+    location_url = api.url_for(WishlistResource, wishlist_id=wishlist.id, _external=True)
+    return data, status.HTTP_201_CREATED, {'Location': location_url}
 
 ######################################################################
 #  PATH: /wishlists/{wishlist_id}/products/{product_id}
