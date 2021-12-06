@@ -180,7 +180,7 @@ $(function () {
 
     ajax.done(function(res){
       // TODO: remove this ternary after READ is moved to restx too
-      build_wishlist_results_table(wishlist_id ? res['data'] : res);
+      build_wishlist_results_table(wishlist_id ? res : res);
       flash_message("Success");
     });
 
@@ -214,7 +214,7 @@ $(function () {
 
     ajax.done(function(res){
       // update_wishlist_form_data(res["data"]);
-      build_wishlist_results_table(res["data"]);
+      build_wishlist_results_table(res);
       flash_message("Success");
     });
 
