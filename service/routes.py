@@ -344,9 +344,10 @@ class ProductCollectionResource(Resource):
   POST - Create a product in a wishlist
   """
   @api.doc('create_a_product')
-  @api.response(415,"Unsupported media type : application/json expected")
   @api.response(400,"Expected a json request body")
+  @api.response(415,"Unsupported media type : application/json expected")
   @api.expect(create_product_model)
+  @api.marshal_with(full_product_model,201)
   def post(self,wishlist_id):
     """
     Adds a product to a wishlist
@@ -371,10 +372,10 @@ class ProductCollectionResource(Resource):
     product.deserialize(data)
     product.create()
 
-    return product.id, status.HTTP_201_CREATED
+    return product.serialize(), status.HTTP_201_CREATED
 
   @api.doc('delete_all_products_from_a_wishlist')
-  @api.response(404,"Wishlist not found")
+  @api.response(204,"Products deleted")
   def delete(self, wishlist_id):
     """
     Deletes all products from a wishlist
@@ -382,19 +383,14 @@ class ProductCollectionResource(Resource):
     """
     wishlist = Wishlist.find_by_id(wishlist_id)
 
-    if not wishlist:
-      abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} not found")
+    if wishlist:
+      product_list = wishlist.read()['products']
+      product_ids_list = [p["id"] for p in product_list]
+      app.logger.info(f"Request to delete all the products from wishlist {wishlist_id}")
 
-    product_list = wishlist.read()['products']
-    product_ids_list = [p["id"] for p in product_list]
-    app.logger.info(f"Request to delete all the products from wishlist {wishlist_id}")
+      wishlist.delete_products(product_ids_list)
 
-    cnt = wishlist.delete_products(product_ids_list)
-
-    if cnt != 0:
-      return f"All products in wishlist {wishlist_id} are deleted", status.HTTP_200_OK
-
-    return f"No products in wishlist {wishlist_id}", status.HTTP_200_OK
+    return "", status.HTTP_204_NO_CONTENT
 
 
 ######################################################################
@@ -438,7 +434,7 @@ class ProductResource(Resource):
     return product.serialize(), status.HTTP_200_OK
 
   @api.doc('delete_a_product')
-  @api.response(404, "Wishlist not found")
+  @api.response(204, "Product deleted")
   def delete(self, wishlist_id, product_id):
     """
     Deletes a product from a wishlist
@@ -446,20 +442,17 @@ class ProductResource(Resource):
     """
     app.logger.info(f"Request to delete products with id {product_id} from wishlist {wishlist_id}")
     wishlist = Wishlist.find_by_id(wishlist_id)
-    if not wishlist:
-      abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} not found")
+    if wishlist:
+      wishlist.delete_products([product_id])
 
-    cnt = wishlist.delete_products([product_id])
-
-    if cnt == 0:
-      return f"Product with id {product_id} is not in this wishlist",status.HTTP_200_OK
-
-    return f"Product with id {product_id} is deleted", status.HTTP_200_OK
+    return "", status.HTTP_204_NO_CONTENT
 
   @api.doc('update_a_product')
-  @api.response(415, "Unsupported media type : application/json expected")
   @api.response(400, "Expected a json request body")
+  @api.response(404, "Product not found")
+  @api.response(415, "Unsupported media type : application/json expected")
   @api.expect(update_product_model)
+  @api.marshal_with(full_product_model)
   def put(self, wishlist_id, product_id):
     """
     Updates a product
@@ -474,7 +467,7 @@ class ProductResource(Resource):
       )
 
     if not product:
-      return f"Product with id {product_id} not found", status.HTTP_200_OK
+      abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} not found")
 
     app.logger.info('Payload = %s', api.payload)
     data = api.payload
@@ -486,7 +479,7 @@ class ProductResource(Resource):
     product.deserialize(product_fields)
     product.update()
 
-    return product.id, status.HTTP_200_OK
+    return product.serialize(), status.HTTP_200_OK
 
 # @api.route('/wishlists/<wishlist_id>/products/<product_id>/add-to-cart')
 # @api.param('wishlist_id', 'The Wishlist identifier')

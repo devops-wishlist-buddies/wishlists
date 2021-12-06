@@ -179,16 +179,15 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(wps), 3)
 
     resp = self.app.delete("/wishlists/16359/products")
-    self.assertEqual(resp.status_code, 404)
+    self.assertEqual(resp.status_code, 204)
 
     resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
-    self.assertEqual(resp.status_code, 200)
+    self.assertEqual(resp.status_code, 204)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 0)
 
     resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
-    self.assertEqual(resp.get_json(),\
-       "No products in wishlist 1")
+    self.assertEqual(resp.status_code,status.HTTP_204_NO_CONTENT)
 
     resp = self.app.get("/wishlists/1/products")
     self.assertEqual(resp.status_code, 405)
@@ -214,16 +213,15 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(wps), 3)
 
     resp = self.app.delete("/wishlists/16359/products/1")
-    self.assertEqual(resp.status_code, 404)
+    self.assertEqual(resp.status_code, 204)
 
     resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_1.id, p_instance_1.id))
-    self.assertEqual(resp.status_code, 200)
+    self.assertEqual(resp.status_code, 204)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 2)
 
     resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_2.id, p_instance_2.id))
-    self.assertEqual(resp.get_json(), "Product with id {} is not in this wishlist"\
-      .format(p_instance_2.id))
+    self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
     self.assertEqual(len(new_product_list), 2)
 
@@ -327,7 +325,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     new_json = resp.get_json()
-    product = Product.find_by_id(new_json)
+    product = Product.find_by_id(new_json['id'])
     self.assertEqual(product.name, "piggy")
     self.assertEqual(product.price, 100.5)
     self.assertEqual(product.status, Availability.UNAVAILABLE)
@@ -346,7 +344,7 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     new_json = resp.get_json()
-    product = Product.find_by_id(new_json)
+    product = Product.find_by_id(new_json['id'])
     self.assertEqual(product.name, "Plush shark")
     self.assertEqual(product.price, 11.5)
     self.assertEqual(product.status, Availability.AVAILABLE)
@@ -470,10 +468,10 @@ class TestWishlistsServer(unittest.TestCase):
       'name': 'new and improved piggy',
       'status': Availability.AVAILABLE
     }
-    product_id = resp.get_json()
+    product_id = resp.get_json()['id']
     resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, 1000023),\
       json=updated_fields, content_type="application/json")
-    self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     resp = self.app.put("/wishlists/{0}/products/{1}".format(w_instance_1.id, product_id),\
       json=updated_fields, content_type="application/json")
