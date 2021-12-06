@@ -345,6 +345,7 @@ class ProductCollectionResource(Resource):
 
   Allows the manipulation on a collection of Products in a Wishlist
   POST - Create a product in a wishlist
+  DELETE - Delete all products in a wishlist
   """
   @api.doc('create_a_product')
   @api.response(400,"Expected a json request body")
