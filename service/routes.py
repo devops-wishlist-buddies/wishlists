@@ -486,9 +486,9 @@ class ProductResource(Resource):
 
     return product.serialize(), status.HTTP_200_OK
 
-# @api.route('/wishlists/<wishlist_id>/products/<product_id>/add-to-cart')
-# @api.param('wishlist_id', 'The Wishlist identifier')
-# @api.param('product_id', 'The Product identifier')
+@api.route('/wishlists/<wishlist_id>/products/<product_id>/add-to-cart')
+@api.param('wishlist_id', 'The Wishlist identifier')
+@api.param('product_id', 'The Product identifier')
 class AddToCartResource(Resource):
   """
   AddToCartResource class
@@ -496,46 +496,25 @@ class AddToCartResource(Resource):
   Allows to place a product in a wishlist in the cart
   PUT - place the product in the wishlist in the cart
   """
-  def put(self):
-    pass
 
-###
-# TODO: MOVE THE FUNCTIONS BELOW INTO THE CLASSES ABOVE
-###
+  @api.doc('place_a_product_to_shopping_cart')
+  @api.response(404, "Product not found in the wishlist")
+  @api.marshal_with(full_product_model)
+  def put(self, wishlist_id, product_id):
+    """
+    Moves a product to a shopping cart
+    This endpoint will move an existing product in a wishlist to a shopping cart
+    """
+    app.logger.info("Request to place a product in wishlist to cart")
+    product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
-######################################################################
-# ADD A PRODUCT IN A WISHLIST TO CART
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>/products/<int:product_id>/add-to-cart", methods=["PUT"])
-def add_product_to_cart(wishlist_id, product_id):
-  """
-  Updates a product in_cart_status to indicate placing an item in a shopcart
-  This endpoint will modify an existing product in a wishlist
-  """
+    if not product:
+      abort(status.HTTP_404_NOT_FOUND,f"Product with id {product_id} was not found in wishlist with id {wishlist_id}")
 
-  app.logger.info("Request to place a product in wishlist to cart")
-  product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
-  if not product:
-    return(
-      jsonify(
-        data = [],
-        message = f"Product with id {product_id} was not found in wishlist with id {wishlist_id}"
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
+    product.in_cart_status = InCartStatus.IN_CART
+    product.update()
 
-  # Call to Shopcarts API here with this product's inventory_product_id. Assuming success:
-  product.in_cart_status = InCartStatus.IN_CART
-  product.update()
-
-  return make_response(
-    jsonify(
-      data = product.id,
-      message = "Product placed in shopping cart."
-    ),
-    status.HTTP_200_OK
-  )
-
+    return product.serialize(),status.HTTP_200_OK
 
 ######################################################################
 # INITIALIZE DATABASE
