@@ -75,6 +75,10 @@ create_wishlist_model = api.model('Wishlist', {
   'user_id': fields.Integer(required=True,
     description='User ID who the wishlist belongs to.'),
 })
+rename_wishlist_model = api.model('HelperRenameWishlist', {
+  'name': fields.String(required=True,
+    description='The name of the wishlist.')
+})
 
 full_wishlist_model = api.inherit(
   'DBWishlistModel',
@@ -152,8 +156,8 @@ wishlist_vo = api.inherit(
 ######################################################################
 #  PATH: /wishlists/{id}
 ######################################################################
-# @api.route('/wishlists/<wishlist_id>')
-# @api.param('wishlist_id', 'The Wishlist identifier')
+@api.route('/wishlists/<wishlist_id>')
+@api.param('wishlist_id', 'The Wishlist identifier')
 class WishlistResource(Resource):
   """
   WishlistResource class
@@ -163,18 +167,85 @@ class WishlistResource(Resource):
   PUT /{wishlist_id} - Update a Wishlist with the id
   DELETE /{wishlist_id} -  Deletes a Wishlist with the id
   """
+  # ------------------------------------------------------------------
+  # RETRIEVE A Wishlist
+  # ------------------------------------------------------------------
+  @api.doc('get_wishlists')
+  @api.response(404, 'Wishlist not found')
+  @api.marshal_with(wishlist_vo)
+  def get(self, wishlist_id):
+    """
+    List all products in a wishlist based on a wishlist_id
+    """
+    app.logger.info("Request to list products in a wishlist")
+    wishlist = Wishlist.find_by_id(wishlist_id)
+    wishlist_products = Product.find_all_by_wishlist_id(wishlist_id)
+    return WishlistVo(wishlist, wishlist_products).serialize(), status.HTTP_200_OK
 
-  def get(self):
-    pass
+  #------------------------------------------------------------------
+  # RENAME A WISHLIST
+  #------------------------------------------------------------------
+  @api.doc('rename_wishlists')
+  @api.response(404, 'Wishlist not found')
+  @api.response(400, 'The posted Wishlist data was not valid')
+  @api.expect(rename_wishlist_model)
+  @api.marshal_with(full_wishlist_model, code = 200)
+  def put(self, wishlist_id):
+    """
+    Renames a wishlist
+    This endpoint will rename an existing wishlist
+    """
+    app.logger.info("Request to rename a wishlist")
+    wishlist = Wishlist.find_by_id(wishlist_id)
+    if not wishlist:
+      abort(status.HTTP_404_NOT_FOUND, "Wishlist with id '{}' was not found.".format(wishlist_id))
 
-  def post(self):
-    pass
+    app.logger.info('Payload = %s', api.payload)
+    data = api.payload
 
-  def put(self):
-    pass
+    query_res = Wishlist.find_all_by_user_id(wishlist.user_id)
+    res = []
+    for i in query_res:
+      res.append(i['name'])
 
-  def delete(self):
-    pass
+    num = 0
+    wishlist_fields = wishlist.serialize()
+
+    while 1:
+      if num == 0:
+        if data['name'] in res:
+          num += 1
+        else:
+          break
+      else:
+        if data['name'] + ' {0}'.format(num) in res:
+          num += 1
+        else:
+          data['name'] = data['name'] + ' {0}'.format(num)
+          break
+
+    wishlist_fields.update(data)
+    wishlist.deserialize(wishlist_fields)
+    wishlist.update()
+
+    return wishlist.serialize(), status.HTTP_200_OK
+
+  #------------------------------------------------------------------
+  # DELETE A Wishlist
+  #------------------------------------------------------------------
+  @api.doc('delete_wishlists')
+  @api.response(204, 'Wishlist deleted')
+  def delete(self, wishlist_id):
+    """
+    Delete a wishlist
+    This endpoint will delete a wishlist based the id specified in the URL
+    """
+    app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
+    wishlist = Wishlist.find_by_id(wishlist_id)
+    if wishlist:
+      wishlist.delete()
+      app.logger.info("Wishlist deleted")
+    return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
 #  PATH: /wishlists
@@ -257,9 +328,8 @@ class WishlistCollection(Resource):
     wishlist.create()
     data = wishlist.serialize()
 
-    # TODO Add location header to response once WishlistResource is implemented
-    # location_url = api.url_for(WishlistResource, wishlist_id=wishlist.id, _external=True)
-    return data, status.HTTP_201_CREATED
+    location_url = api.url_for(WishlistResource, wishlist_id=wishlist.id, _external=True)
+    return data, status.HTTP_201_CREATED, {'Location': location_url}
 
 ######################################################################
 #  PATH: /wishlists/{wishlist_id}/products
@@ -425,139 +495,6 @@ class AddToCartResource(Resource):
 ###
 # TODO: MOVE THE FUNCTIONS BELOW INTO THE CLASSES ABOVE
 ###
-
-######################################################################
-# DELETE A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>", methods=["DELETE"])
-def delete_wishlists(wishlist_id):
-  """
-  Delete a wishlist
-  This endpoint will delete a wishlist based the id specified in the URL
-  """
-  app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
-  wishlist = Wishlist.find_by_id(wishlist_id)
-
-  if wishlist:
-    wishlist.delete()
-    return make_response(
-      jsonify(
-        data = [],
-        message = "Wishlist Deleted!"
-      ),
-      status.HTTP_200_OK
-    )
-  return make_response(
-    jsonify(
-      data = [],
-      message = "Wishlist {} not found".format(wishlist_id)
-    ),
-    status.HTTP_200_OK
-  )
-
-######################################################################
-# LIST PRODUCTS IN A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>", methods=["GET"])
-def list_products_in_wishlist(wishlist_id):
-  """
-  List all products in a wishlist based on a wishlist_id
-  """
-  app.logger.info("Request to list products in a wishlist")
-  wishlist_products = Product.find_all_by_wishlist_id(wishlist_id)
-  res = []
-  for product in wishlist_products:
-    if not product:
-      return make_response(
-        jsonify(
-          data = [],
-          message = "Product {} with id {} was not found".format(product.name, product.id)
-        ),
-        status.HTTP_404_NOT_FOUND
-      )
-    res.append(product)
-
-  wishlist = Wishlist.find_by_id(wishlist_id)
-  if not wishlist:
-    return make_response(
-      jsonify(
-        data = [],
-        message = "Wishlist with id {} was not found".format(wishlist_id)
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
-
-  return make_response(
-    jsonify(
-      data = WishlistVo(wishlist,res).serialize(),
-      message = "Getting Products from wishlists with id {} success".format(wishlist_id)
-    ),
-    status.HTTP_200_OK
-  )
-
-######################################################################
-# RENAME A WISHLIST
-######################################################################
-@app.route("/wishlists/<int:wishlist_id>", methods=["PUT"])
-def rename_a_wishlist(wishlist_id):
-  """
-  Renames a wishlist
-  This endpoint will rename an existing wishlist
-  """
-  app.logger.info("Request to rename a wishlist")
-  wishlist = Wishlist.find_by_id(wishlist_id)
-  if not wishlist:
-    return make_response(
-      jsonify(
-        data=[],
-        message="Wishlist with id {} not found".format(wishlist_id)
-      ),
-      status.HTTP_404_NOT_FOUND
-    )
-
-  request_data = request.get_json()
-  if not request_data['name']:
-    return make_response(
-      jsonify(
-        data=[],
-        message = "Field name cannot be null"
-      ),
-      status.HTTP_400_BAD_REQUEST
-    )
-
-  query_res = Wishlist.find_all_by_user_id(wishlist.user_id)
-  res = []
-  for i in query_res:
-    res.append(i['name'])
-
-  num=0
-  wishlist_fields = wishlist.serialize()
-
-  while 1:
-    if num==0:
-      if request_data['name'] in res:
-        num=num+1
-      else:
-        wishlist_fields.update(request_data)
-        break
-    else:
-      if request_data['name']+' {0}'.format(num) in res:
-        num=num+1
-      else:
-        request_data['name'] = request_data['name'] + ' {0}'.format(num)
-        wishlist_fields.update(request_data)
-        break
-
-  wishlist.deserialize(wishlist_fields)
-  wishlist.update()
-
-  return make_response(
-    jsonify(
-      data = wishlist.serialize(),
-      message = "Wishlist with id {} is renamed.".format(wishlist_id)
-    ),
-    status.HTTP_200_OK
-  )
 
 ######################################################################
 # ADD A PRODUCT IN A WISHLIST TO CART
