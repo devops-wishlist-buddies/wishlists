@@ -160,7 +160,7 @@ class WishlistResource(Resource):
     return WishlistVo(wishlist, wishlist_products).serialize(), status.HTTP_200_OK
 
   #------------------------------------------------------------------
-  # UPDATE AN EXISTING PET
+  # RENAME A WISHLIST
   #------------------------------------------------------------------
   @api.doc('rename_wishlists')
   @api.response(404, 'Wishlist not found')

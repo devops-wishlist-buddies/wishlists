@@ -253,7 +253,7 @@ class TestWishlistsServer(unittest.TestCase):
     )
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
     resp_body = resp.get_json()
-    # self.assertEqual(len(resp_body["products"]), 3)
+    self.assertEqual(len(resp_body["products"]), 3)
     self.assertEqual(resp_body["id"], 1)
 
     resp = self.app.get(
