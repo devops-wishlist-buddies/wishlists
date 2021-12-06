@@ -34,6 +34,28 @@ from service.models.product import Product
 from service.models.model_utils import Availability, InCartStatus, get_non_null_product_fields, db
 
 ######################################################################
+# GET INDEX
+######################################################################
+@app.route("/", strict_slashes=False)
+def index():
+  """ Serve static home page"""
+  return app.send_static_file("index.html")
+
+######################################################################
+# GET HEALTH CHECK
+######################################################################
+@app.route("/info")
+def info():
+  """ API info"""
+  return (
+    jsonify(
+      name="Wishlists REST API Service",
+      version="1.0",
+    ),
+    status.HTTP_200_OK,
+  )
+
+######################################################################
 # Configure Swagger before initializing it
 ######################################################################
 api = Api(app,
@@ -43,7 +65,6 @@ api = Api(app,
   default='wishlists',
   default_label='Wishlists CRUD operations',
   doc='/apidocs/', # default also could use doc='/apidocs/'
-  prefix='/api'
 )
 
 # Define the model so that the docs reflect what can be sent
@@ -63,8 +84,8 @@ full_wishlist_model = api.inherit(
   }
 )
 
-wishlist_arg = reqparse.RequestParser()
-wishlist_arg.add_argument('user_id', type=int, required=False, help='List Wishlists by user id.')
+wishlist_args = reqparse.RequestParser()
+wishlist_args.add_argument('user_id', type=int, required=False, help='List Wishlists by user id.')
 
 create_product_model = api.model('Product', {
   'name': fields.String(required=True,
@@ -97,33 +118,19 @@ full_product_model = api.inherit(
   }
 )
 
-######################################################################
-# GET HEALTH CHECK
-######################################################################
-@app.route("/info")
-def info():
-  """ API info"""
-  return (
-    jsonify(
-      name="Wishlists REST API Service",
-      version="1.0",
-    ),
-    status.HTTP_200_OK,
-  )
-
-######################################################################
-# GET INDEX
-######################################################################
-@app.route("/")
-def index():
-  """ Serve static home page"""
-  return app.send_static_file("index.html")
+wishlist_vo = api.inherit(
+  'FullWishlistModel',
+  full_wishlist_model,
+  {
+    'products': fields.List(fields.Nested(full_product_model))
+  }
+)
 
 ######################################################################
 #  PATH: /wishlists/{id}
 ######################################################################
-@api.route('/wishlists/<wishlist_id>')
-@api.param('wishlist_id', 'The Wishlist identifier')
+# @api.route('/wishlists/<wishlist_id>')
+# @api.param('wishlist_id', 'The Wishlist identifier')
 class WishlistResource(Resource):
   """
   WishlistResource class
@@ -158,18 +165,79 @@ class WishlistCollection(Resource):
   GET / - Returns all wishlists in the database
   POST / - Create a Wishlist
   """
+  #------------------------------------------------------------------
+  # LIST WISHLISTS
+  #------------------------------------------------------------------
+  @api.doc('list_wishlists')
+  @api.expect(wishlist_args, validate=True)
+  @api.marshal_list_with(wishlist_vo)
   def get(self):
-    pass
+    """
+    Lists wishlists
+    This endpoint will return all wishlists in the database or wishlists with a specific user_id.
+    """
+    args = wishlist_args.parse_args()
+    user_id = args['user_id']
 
+    if not user_id:
+      app.logger.info("Request for all wishlists")
+      query_res = Wishlist.find_all()
+      res = [r.read() for r in query_res]
+      app.logger.info(res)
+
+      if not res:
+        msg = "No wishlists found!"
+      else:
+        msg = "All the wishlists."
+
+      app.logger.info(msg)
+      return res, status.HTTP_200_OK
+
+    user_id = int(user_id)
+    app.logger.info("Request for wishlists with user_id: %s", user_id)
+    res = Wishlist.find_all_by_user_id(user_id)
+
+    if not res:
+      app.logger.info("No wishlists found for user_id '%s'." % user_id)
+
+    return res, status.HTTP_200_OK
+
+  #------------------------------------------------------------------
+  # CREATE A NEW WISHLIST
+  #------------------------------------------------------------------
+  @api.doc('create_wishlist')
+  @api.response(400, 'The posted data was not valid')
+  @api.expect(create_wishlist_model)
+  @api.marshal_with(full_wishlist_model, code=201)
   def post(self):
-    pass
+    """
+    Creates a wishlist
+    This endpoint will create a wishlist based the data in the body.
+    """
+    app.logger.info("Request to create a wishlist")
+    # Check for form submission data
+    if request.headers.get("Content-Type") != "application/json":
+      return abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
+        "Unsupported media type : application/json expected"
+      )
+
+    app.logger.info('Payload = %s', api.payload)
+    wishlist = Wishlist()
+    wishlist.deserialize(api.payload)
+    wishlist.create()
+    data = wishlist.serialize()
+
+    # TODO Add location header to response once WishlistResource is implemented
+    # location_url = api.url_for(WishlistResource, wishlist_id=wishlist.id, _external=True)
+    return data, status.HTTP_201_CREATED
 
 ######################################################################
 #  PATH: /wishlists/{wishlist_id}/products/{product_id}
 ######################################################################
-@api.route('/wishlists/<wishlist_id>/products/<product_id>')
-@api.param('wishlist_id', 'The Wishlist identifier')
-@api.param('product_id', 'The Product identifier')
+# @api.route('/wishlists/<wishlist_id>/products/<product_id>')
+# @api.param('wishlist_id', 'The Wishlist identifier')
+# @api.param('product_id', 'The Product identifier')
 class ProductResource(Resource):
   """
   ProductResource class
@@ -195,8 +263,8 @@ class ProductResource(Resource):
 ######################################################################
 #  PATH: /wishlists/{wishlist_id}/products
 ######################################################################
-@api.route('/wishlists/<wishlist_id>/products', strict_slashes=False)
-@api.param('wishlist_id', 'The Wishlist identifier')
+# @api.route('/wishlists/<wishlist_id>/products', strict_slashes=False)
+# @api.param('wishlist_id', 'The Wishlist identifier')
 class ProductCollection(Resource):
   """
   ProductCollection class
@@ -212,9 +280,9 @@ class ProductCollection(Resource):
   def delete(self):
     pass
 
-@api.route('/wishlists/<wishlist_id>/products/<product_id>/add-to-cart')
-@api.param('wishlist_id', 'The Wishlist identifier')
-@api.param('product_id', 'The Product identifier')
+# @api.route('/wishlists/<wishlist_id>/products/<product_id>/add-to-cart')
+# @api.param('wishlist_id', 'The Wishlist identifier')
+# @api.param('product_id', 'The Product identifier')
 class AddToCartResource(Resource):
   """
   AddToCartResource class
@@ -228,78 +296,6 @@ class AddToCartResource(Resource):
 ###
 # TODO: MOVE THE FUNCTIONS BELOW INTO THE CLASSES ABOVE
 ###
-
-######################################################################
-# CREATE A NEW WISHLIST
-######################################################################
-@app.route("/wishlists", methods=["POST"])
-def create_wishlists():
-  """
-  Creates a wishlist
-  This endpoint will create a wishlist based the data in the body that is posted
-  or data that is sent via an html form post.
-  """
-  app.logger.info("Request to create a wishlist")
-  data = {}
-  # Check for form submission data
-  if request.headers.get("Content-Type") != "application/json":
-    return abort(
-      status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
-      "Unsupported media type : application/json expected"
-    )
-
-  app.logger.info("Processing JSON data")
-  data = request.get_json()
-  wishlist = Wishlist()
-  wishlist.deserialize(data)
-  wishlist.create()
-  data = wishlist.serialize()
-  return make_response(
-    jsonify(
-      data = data,
-      message = "Wishlist Created!"
-    ),
-    status.HTTP_201_CREATED
-  )
-
-######################################################################
-# List WISHLISTS
-######################################################################
-@app.route("/wishlists", methods=["GET"])
-def list_all_wishlists():
-  """
-  Lists wishlists
-  This endpoint will return all wishlists in the database
-  or wishlists with a specific user_id.
-  """
-  user_id = request.args.get('user_id')
-  if not user_id:
-    app.logger.info("Request for all wishlists")
-    query_res = Wishlist.find_all()
-    res = [r.read() for r in query_res]
-
-    if not res:
-      msg = "No wishlists found!"
-    else:
-      msg = "All the wishlists."
-
-    return make_response(
-      jsonify(data = res, message = msg),
-      status.HTTP_200_OK
-    )
-
-  user_id = int(user_id)
-  app.logger.info("Request for wishlists with user_id: %s", user_id)
-  res = Wishlist.find_all_by_user_id(user_id)
-  if not res:
-    msg = "No wishlists found for user_id '%s'." % user_id
-  else:
-    msg = "Wishlists for user_id '%s'." % user_id
-
-  return make_response(
-    jsonify(data = res, message = msg),
-    status.HTTP_200_OK
-  )
 
 ######################################################################
 # DELETE A WISHLIST

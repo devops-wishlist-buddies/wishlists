@@ -131,15 +131,15 @@ $(function () {
 
     var ajax = $.ajax({
         type: "POST",
-        url: `/wishlists`,
+        url: "/wishlists",
         contentType:"application/json",
         data: JSON.stringify(data),
     });
 
     ajax.done(function(res){
       // update_wishlist_form_data(res["data"]);
-      build_wishlist_results_table(res["data"]);
-      flash_message(res["message"]);
+      build_wishlist_results_table(res);
+      flash_message("Wishlist Created!");
     });
 
     ajax.fail(function(res){
@@ -166,22 +166,21 @@ $(function () {
 
     const user_id = $("#wishlist-user-id").val();
     const wishlist_id = $("#wishlist-id").val();
-    let queryString = "?";
+    let queryString = "";
 
     if (user_id) {
-      queryString += "user_id=" + user_id;
+      queryString += "?user_id=" + user_id;
     }
 
     const url = wishlist_id ? `/wishlists/${wishlist_id}` : `/wishlists`+ queryString;
     var ajax = $.ajax({
       type: "GET",
       url,
-      contentType: "application/json",
-      data: ''
     });
 
     ajax.done(function(res){
-      build_wishlist_results_table(res['data']);
+      // TODO: remove this ternary after READ is moved to restx too
+      build_wishlist_results_table(wishlist_id ? res['data'] : res);
       flash_message("Success");
     });
 

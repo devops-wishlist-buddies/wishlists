@@ -33,9 +33,9 @@ def step_impl(context):
     """ Delete all Wishlists and load new ones """
     headers = {'Content-Type': 'application/json'}
     # list all of the wishlists and delete them one by one
-    context.resp = requests.get(context.base_url + '/wishlists', headers=headers)
+    context.resp = requests.get(context.base_url + '/wishlists')
     expect(context.resp.status_code).to_equal(200)
-    for wishlist in context.resp.json()['data']:
+    for wishlist in context.resp.json():
         context.resp = requests.delete(context.base_url + '/wishlists/' + str(wishlist["id"]), headers=headers)
         expect(context.resp.status_code).to_equal(200)
 
@@ -51,7 +51,7 @@ def step_impl(context):
         context.resp = requests.post(create_url, data=payload, headers=headers)
         expect(context.resp.status_code).to_equal(201)
         parsed_response = context.resp.json()
-        context.wishlist_ids.append(parsed_response.get('data').get('id'))
+        context.wishlist_ids.append(parsed_response.get('id'))
 
 
 @given('the following products')

@@ -88,7 +88,9 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
     new_json = resp.get_json()
-    wl = Wishlist.find_by_id(new_json['data']["id"])
+    # location = resp.headers.get("Location", None)
+    # self.assertNotEqual(location, None)
+    wl = Wishlist.find_by_id(new_json["id"])
     self.assertEqual(wl.name, "test")
     self.assertEqual(wl.user_id, 1)
 
@@ -107,8 +109,8 @@ class TestWishlistsServer(unittest.TestCase):
     """List all wishlists"""
     resp = self.app.get("/wishlists")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    d = resp.get_json()
-    self.assertEqual(d["message"],"No wishlists found!")
+    data = resp.get_json()
+    self.assertEqual(len(data), 0)
 
     t1 = {"name": "test 1", "user_id": 1}
     t2 = {"name": "test 2", "user_id": 1}
@@ -120,8 +122,8 @@ class TestWishlistsServer(unittest.TestCase):
     wishlist2.create()
     resp = self.app.get("/wishlists")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    d = resp.get_json()['data']
-    self.assertEqual(len(d), 2)
+    data = resp.get_json()
+    self.assertEqual(len(data), 2)
 
   def test_list_wishlists_by_userid(self):
     """List wishlists by userid"""
@@ -136,14 +138,14 @@ class TestWishlistsServer(unittest.TestCase):
 
     resp = self.app.get("/wishlists?user_id=1")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    d = resp.get_json()["data"]
-    self.assertEqual(len(d), 2)
-    self.assertEqual(d, Wishlist.find_all_by_user_id(1))
+    data = resp.get_json()
+    self.assertEqual(len(data), 2)
+    self.assertEqual(data, Wishlist.find_all_by_user_id(1))
 
     resp = self.app.get("/wishlists?user_id=2")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    d = resp.get_json()
-    self.assertEqual(d["message"],"No wishlists found for user_id '2'.")
+    data = resp.get_json()
+    self.assertEqual(len(data), 0)
 
   def test_delete_wishlist(self):
     """ Delete a Wishlist """
