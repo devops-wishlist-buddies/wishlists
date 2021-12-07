@@ -27,7 +27,7 @@ def step_impl(context, message):
 
 @then('I should not see "{message}"')
 def step_impl(context, message):
-    error_msg = "I should not see '%s' in '%s'" % (message, context.resp.text)
+    error_msg = "I should not see '%s' in '%s'" % (message, context.driver.page_source)
     ensure(message in context.resp.text, False, error_msg)
 
 @when('I set the "{element_name}" to "{text_string}"')
@@ -44,6 +44,7 @@ def step_impl(context, element_name):
     element_id = element_name.lower()
     element = context.driver.find_element_by_id(element_id)
     expect(element.get_attribute('value')).to_be(u'')
+
 ##################################################################
 # These two function simulate copy and paste
 ##################################################################
@@ -55,6 +56,17 @@ def step_impl(context, element_name):
     )
     context.clipboard = element.get_attribute('value')
     logging.info('Clipboard contains: %s', context.clipboard)
+
+@when('I copy the wishlist "{element}" value')
+def step_impl(context, element):
+  elements = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_all_elements_located(
+      (By.XPATH, '//div[@class="wishlist-block__'+element+'"]')
+    )
+  )
+  id = elements[0].text
+  context.clipboard = id
+  logging.info('Clipboard contains %s', id)
 
 @when('I paste the "{element_name}" field')
 def step_impl(context, element_name):
@@ -82,6 +94,52 @@ def step_impl(context, name):
         )
     )
     expect(found).to_be(True)
+
+@then('I should see "{name}" in the results as wishlist "{element}"')
+def step_impl(context, name, element):
+  # find all elements with matching classname
+  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_all_elements_located(
+      (By.XPATH, '//div[@class="wishlist-block__'+element+'"]')
+    )
+  )
+  matching_element = ''
+  for el in candidates:
+    if el.text == name:
+      matching_element = el
+
+  # verify that it's in the results
+  found = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search-results'),
+            matching_element.text
+        )
+    )
+
+  expect(found).to_be(True)
+
+@then('I should see "{name}" in the results as product "{element}"')
+def step_impl(context, name, element):
+  # find all elements with matching classname
+  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_all_elements_located(
+      (By.XPATH, '//div[@class="products-item__'+element+'"]')
+    )
+  )
+  matching_element = ''
+  for el in candidates:
+    if el.text == name:
+      matching_element = el
+
+  # verify that it's in the results
+  found = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search-results'),
+            matching_element.text
+        )
+    )
+
+  expect(found).to_be(True)
 
 @then('I should not see "{name}" in the results')
 def step_impl(context, name):
@@ -119,48 +177,40 @@ def step_impl(context, element_name, text_string):
     element.clear()
     element.send_keys(text_string)
 
-@when('I copy the first cell with class "{classname}"')
-def step_impl(context, classname):
-    element = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
-        expected_conditions.presence_of_element_located((By.CLASS_NAME, classname))
-    )
-    top_element_value = element.text
-    context.clipboard = top_element_value
-    logging.info('Clipboard contains: %s', context.clipboard)
 
-@when('I copy a random cell with class "{classname}"')
-def step_impl(context, classname):
-    context.driver.implicitly_wait(context.WAIT_SECONDS)
-    elements = context.driver.find_elements_by_class_name(classname)
-    random_element = choice(elements)
-    context.clipboard = random_element.text
-    logging.info('Clipboard contains: %s', context.clipboard)
-
-# for testing simplicity we will assume that proucts have different names
-@when('I copy the product id of "{product_name}"')
+# for testing simplicity we will assume that proucts have different names and
+# do not repeat in different wishlists.
+@when('I copy the product id of "{product_name}" from wishlist results')
 def step_impl(context, product_name):
   elements = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
-    expected_conditions.presence_of_element_located(
-      (By.XPATH, '//td[contains(text(), \"'+product_name+'\") and contains(@class, "product-cell")]')
+    expected_conditions.presence_of_all_elements_located(
+      (By.CLASS_NAME, 'wishlist-block__products-item')
     )
   )
+  matching_product_block = ''
+  for elem in elements:
+    if product_name in elem.text:
+      matching_product_block = elem
 
-  field_json = json.loads(elements.text)
-  for element in field_json:
-    if element["name"] == product_name:
-      context.clipboard = element["id"]
-      break
+  assert matching_product_block != ''
 
-@when('I copy the wishlist id of "{product_name}"')
+  product_id = matching_product_block.get_attribute('id')
+  context.clipboard = product_id.split('-')[-1]
+  logging.info('Clipboard contains: %s', context.clipboard)
+
+@when('I copy the wishlist id of "{product_name}" from wishlist results')
 def step_impl(context, product_name):
   elements = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
-    expected_conditions.presence_of_element_located(
-      (By.XPATH, '//td[contains(text(), \"'+product_name+'\") and contains(@class, "product-cell")]')
+    expected_conditions.presence_of_all_elements_located(
+      (By.CLASS_NAME, 'wishlist-block')
     )
   )
+  matching_wishlist_block = ''
+  for elem in elements:
+    if product_name in elem.text:
+      matching_wishlist_block = elem
 
-  field_json = json.loads(elements.text)
-  for element in field_json:
-    if element["name"] == product_name:
-      context.clipboard = element["wishlist_id"]
-      break
+  assert matching_wishlist_block != ''
+  wishlist_id = matching_wishlist_block.get_attribute('id')
+  context.clipboard = wishlist_id.split('-')[-1]
+  logging.info('Clipboard contains: %s', context.clipboard)

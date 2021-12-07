@@ -20,50 +20,89 @@ $(function () {
     $("#wishlist-product-description").val(res.short_desc);
   }
 
-  // Creates the results table
-  function add_wishlist_row(record, results_table) {
-    const id = record.id || '';
+  // Creates the results section for each wishlist
+  function add_wishlist_row(record, parent) {
+    const wishlist_id = record.id || '';
     const name = record.name || '';
     const user_id = record.user_id || '';
-    const product_list = JSON.stringify(record.products) || '';
-    const row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td><td class=\"col-md-4\">"+name+
-      "</td><td class=\"col-md-2\">"+user_id+"</td><td class=\"col-md-6 product-cell\">"+product_list +"</td></tr>";
-    results_table.append(row);
+    let wishlist_block = $("<div>", {"class": "wishlist-block", "id": `wishlist-block-${wishlist_id}`},);
+    wishlist_block.append(`<div class="wishlist-block__name">${name}</div>
+    <div class="d-inline">(#<div class="wishlist-block__id">${wishlist_id}</div>)</div>
+    <div>By user <div class="wishlist-block__user-id">${user_id}</div></div>`
+    );
+    if (!record.products) {
+      parent.append(wishlist_block);
+      return;
+    }
+
+    let products_list = $("<div>", {"class": "wishlist-block__products"});
+    for (item of record.products) {
+      const { id, inventory_product_id, name, pic_url='', price, short_desc='', status, in_cart_status } = item;
+      console.log(item)
+      let product_list_item = $("<div>", {"class": "wishlist-block__products-item", "id": `products-item-${id}`});
+
+      if (pic_url)
+        product_list_item.append(`<div class="products-item__image"><img class="img-thumbnail" src=${pic_url} /></div>`);
+
+        product_list_item.append(`<div>
+          <div class="products-item__name">${name}</div>
+          ${short_desc ? `<div class="products-item__desc">${short_desc}</div>` : ''}
+          <div>$<div class="products-item__price">${price}</div></div>
+          <div class="products-item__status">${status.toLowerCase()}</div>
+          <div>#<div class="products-item__id">${id}</div>, sku <div class="products-item__inv-id">${inventory_product_id}</div></div>
+          ${in_cart_status != 'DEFAULT' ? "<div class=\"products-item__in-cart\">This product is in the shopping cart.</div>" : ''}
+          <div class="d-none products-item__wishlist-id">${wishlist_id}</div>
+        </div>`);
+
+      products_list.append(product_list_item);
+    }
+
+    if (record.products.length == 0) {
+      wishlist_block.append('<div>Wishlist is empty.</div>')
+    } else {
+      wishlist_block.append(products_list);
+    }
+    parent.append(wishlist_block);
   }
 
   function build_wishlist_results_table(data) {
     $("#search-results").empty();
-    let results_table = $("<table>", {"class": "table-striped", "cellpadding": "10"});
-    let header = $('<tr>');
-    header.append('<th class="col-md-2">ID</th>');
-    header.append('<th class="col-md-4">Name</th>');
-    header.append('<th class="col-md-2">User_ID</th>');
-    header.append('<th class="col-md-6">Products</th></tr>');
-    results_table.append(header);
+    let results_block = $("<div>");
+
     if (Array.isArray(data)) {
-      for (let i = 0; i < data.length; i++) {
-        add_wishlist_row(data[i], results_table);
-      }
+      for (let i=0; i<data.length; i++)
+        add_wishlist_row(data[i], results_block);
     } else {
-      add_wishlist_row(data, results_table);
+      add_wishlist_row(data, results_block);
     }
 
-    $("#search-results").append(results_table);
+    $("#search-results").append(results_block);
   }
 
   function add_product_row(data, results_table) {
-    const { id, inventory_product_id, name, pic_url='', price, short_desc='', status, wishlist_id } = data;
+    const {
+      id,
+      inventory_product_id,
+      name,
+      pic_url='',
+      price,
+      short_desc='',
+      status,
+      wishlist_id,
+      in_cart_status
+    } = data;
 
-    const row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td>"
+    let row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td>"
       +"<td class=\"col-md-2\">"+name+"</td>"
       +"<td class=\"col-md-2\">"+price+"</td>"
       +"<td class=\"col-md-2\">"+inventory_product_id +"</td>"
       +"<td class=\"col-md-2\">"+wishlist_id +"</td>"
       +"<td class=\"col-md-2\">"+status+"</td>"
-      +"<td class=\"col-md-2\">"+short_desc +"</td>"
-      +"<td class=\"col-md-2\"><a href=\""+pic_url +"\">pic</a></td>"
-      +"</tr>";
 
+    if (short_desc) row += "<td class=\"col-md-2\">"+short_desc +"</td>"
+    if (pic_url) row += "<td class=\"col-md-2\"><a href=\""+pic_url +"\">pic</a></td>"
+
+    row += "</tr>";
     results_table.append(row);
   }
 
