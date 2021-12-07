@@ -391,6 +391,9 @@ class TestWishlistsServer(unittest.TestCase):
     updated_fields = {
       'name': "new-name"
     }
+    wrong_fields = {
+      "id" : "123"
+    }
 
     w_instance_1 = WishlistFactory()
 
@@ -412,6 +415,10 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.put("/wishlists/{0}".format(w_instance_1.id),\
       json=updated_fields, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    resp = self.app.put("/wishlists/{0}".format(w_instance_1.id),\
+      json=wrong_fields, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     altered_wishlist = Wishlist.find_by_id(w_instance_1.id)
     self.assertEqual(altered_wishlist.name, updated_fields['name'])

@@ -206,6 +206,9 @@ class WishlistResource(Resource):
     app.logger.info('Payload = %s', api.payload)
     data = api.payload
 
+    if "name" not in data:
+      abort(status.HTTP_400_BAD_REQUEST, "The posted data wrong")
+
     query_res = Wishlist.find_all_by_user_id(wishlist.user_id)
     res = []
     for i in query_res:
