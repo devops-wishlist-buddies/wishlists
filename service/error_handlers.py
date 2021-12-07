@@ -80,3 +80,8 @@ def internal_server_error(error):
     ),
     status.HTTP_500_INTERNAL_SERVER_ERROR,
   )
+
+@app.errorhandler(TypeError)
+def request_type_error(error):
+  """Handles Type Error from bad data"""
+  return bad_request(error)
