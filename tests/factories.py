@@ -20,7 +20,7 @@ import random
 from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyDecimal
 from service.models.product import Product
 from service.models.wishlist import Wishlist
-from service.models.model_utils import Availability
+from service.models.model_utils import Availability, InCartStatus
 class ProductFactory(factory.Factory):
   """Helper class to create dummy Product data for tests"""
   class Meta:
@@ -33,6 +33,7 @@ class ProductFactory(factory.Factory):
   short_desc = factory.lazy_attribute(lambda obj :\
     'this is a %s with price %s and status %s' % (obj.name , obj.price , obj.status))
   inventory_product_id = FuzzyInteger(1, 400)
+  in_cart_status = InCartStatus.DEFAULT
 
 class WishlistFactory(factory.Factory):
   """Helper class to create dummy Wishlist data for tests"""

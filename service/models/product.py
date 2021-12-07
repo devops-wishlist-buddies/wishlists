@@ -41,6 +41,7 @@ class Product(db.Model):
     """Create Product instance in database"""
     logger.info("Creating %s ...", self.name)
     self.id = None
+    self.in_cart_status = InCartStatus.DEFAULT #ensure default value upon creation
     db.session.add(self)
     db.session.commit()
 

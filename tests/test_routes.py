@@ -294,7 +294,7 @@ class TestWishlistsServer(unittest.TestCase):
     data = resp.get_json()
     self.assertEqual(data["name"], p_instance_2.name)
     self.assertEqual(data["price"], p_instance_2.price)
-    self.assertEqual(data["status"].split('.')[1], Availability.AVAILABLE.name)
+    self.assertEqual(data["status"], Availability.AVAILABLE.name)
     self.assertEqual(data["pic_url"], p_instance_2.pic_url)
     self.assertEqual(data["short_desc"], p_instance_2.short_desc)
     self.assertEqual(data["wishlist_id"], p_instance_2.wishlist_id)
