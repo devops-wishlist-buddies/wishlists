@@ -207,7 +207,7 @@ class WishlistResource(Resource):
     data = api.payload
 
     if "name" not in data:
-      abort(status.HTTP_400_BAD_REQUEST, "The posted data wrong")
+      abort(status.HTTP_400_BAD_REQUEST, "name field is missing")
 
     query_res = Wishlist.find_all_by_user_id(wishlist.user_id)
     res = []
