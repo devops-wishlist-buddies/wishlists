@@ -179,7 +179,7 @@ class TestProductModel(unittest.TestCase):
     self.assertIn("name", data)
     self.assertEqual(data["name"], product_instance.name)
     self.assertIn("status", data)
-    self.assertEqual(data["status"], product_instance.status)
+    self.assertEqual(data["status"], product_instance.status.name)
     self.assertIn("price", data)
     self.assertEqual(data["price"], product_instance.price)
     self.assertIn("pic_url", data)
@@ -188,14 +188,14 @@ class TestProductModel(unittest.TestCase):
     self.assertEqual(data["short_desc"], product_instance.short_desc)
     self.assertIn("inventory_product_id", data)
     self.assertEqual(data["inventory_product_id"], product_instance.inventory_product_id)
-    self.assertEqual(data["in_cart_status"], product_instance.in_cart_status)
+    self.assertEqual(data["in_cart_status"], product_instance.in_cart_status.name)
 
   def test_deserialize_a_product(self):
     """Test deserialization of a Product"""
     data = {
       'name': "piggy",
       'price': 100.5,
-      'status': Availability.UNAVAILABLE,
+      'status': 'Unavailable',
       'pic_url': "www.piggy.com/1.png",
       'short_desc': "this is a piggy",
       'wishlist_id': 5,
@@ -255,7 +255,7 @@ class TestProductModel(unittest.TestCase):
     }
     self.assertRaises(DataValidationError, product_instance.deserialize, data)
 
-        # some fields can be null
+    # some fields can be null
     data = {
       'id': 5,
       'name': "monitor",

@@ -41,6 +41,7 @@ class Product(db.Model):
     """Create Product instance in database"""
     logger.info("Creating %s ...", self.name)
     self.id = None
+    self.in_cart_status = InCartStatus.DEFAULT #ensure default value upon creation
     db.session.add(self)
     db.session.commit()
 
@@ -63,12 +64,12 @@ class Product(db.Model):
       "id": self.id,
       "name": self.name,
       "price": self.price,
-      "status": self.status,
+      "status": self.status.name,
       "pic_url": self.pic_url,
       "short_desc": self.short_desc,
       "inventory_product_id": self.inventory_product_id,
       "wishlist_id": self.wishlist_id,
-      "in_cart_status": self.in_cart_status,
+      "in_cart_status": self.in_cart_status.name,
     }
 
     return {k: v for k, v in prep_data.items() if v}
