@@ -6,11 +6,6 @@ from . import app, status
 ######################################################################
 # Error Handlers
 ######################################################################
-@app.errorhandler(DataValidationError)
-def request_validation_error(error):
-  """ Handles Value Errors from bad data """
-  return bad_request(error)
-
 
 @app.errorhandler(status.HTTP_400_BAD_REQUEST)
 def bad_request(error):
@@ -24,3 +19,13 @@ def bad_request(error):
       ),
       status.HTTP_400_BAD_REQUEST,
   )
+
+@app.errorhandler(DataValidationError)
+def request_validation_error(error):
+  """ Handles Value Errors from bad data """
+  return bad_request(error)
+
+@app.errorhandler(TypeError)
+def request_type_error(error):
+  """Handles Type Error from bad data"""
+  return bad_request(error)
