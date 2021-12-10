@@ -167,12 +167,15 @@ class WishlistResource(Resource):
   # RETRIEVE A Wishlist
   # ------------------------------------------------------------------
   @api.doc('get_wishlists')
+  @api.response(400, 'Integer value expected for field: Wishlist ID')
   @api.response(404, 'Wishlist not found')
   @api.marshal_with(wishlist_vo)
   def get(self, wishlist_id):
     """
     Lists all products in a wishlist based on a wishlist_id
     """
+    if not wishlist_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, "Integer value expected for field: Wishlist ID")
     app.logger.info("Request to list products in a wishlist")
     wishlist = Wishlist.find_by_id(wishlist_id)
     wishlist_products = Product.find_all_by_wishlist_id(wishlist_id)
@@ -198,6 +201,9 @@ class WishlistResource(Resource):
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
         "Unsupported media type : application/json expected"
       )
+
+    if not wishlist_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, "Integer value expected for field: Wishlist ID")
 
     wishlist = Wishlist.find_by_id(wishlist_id)
     if not wishlist:
@@ -241,12 +247,16 @@ class WishlistResource(Resource):
   #------------------------------------------------------------------
   @api.doc('delete_wishlists')
   @api.response(204, 'Wishlist deleted')
+  @api.response(400, 'Integer value expected for field: Wishlist ID')
   def delete(self, wishlist_id):
     """
     Deletes a wishlist
     This endpoint will delete a wishlist based the id specified in the URL
     """
     app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
+    if not wishlist_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, "Integer value expected for field: Wishlist ID")
+
     wishlist = Wishlist.find_by_id(wishlist_id)
     if wishlist:
       wishlist.delete()
@@ -373,6 +383,9 @@ class ProductCollectionResource(Resource):
     if not isinstance(data, dict):
       abort(status.HTTP_400_BAD_REQUEST, "Expected a json request body")
 
+    if not wishlist_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, "Integer value expected for field: Wishlist ID")
+
     data['wishlist_id'] = wishlist_id
 
     product = Product()
@@ -384,12 +397,16 @@ class ProductCollectionResource(Resource):
     return product.serialize(), status.HTTP_201_CREATED, {'Location':location_url}
 
   @api.doc('delete_all_products_from_a_wishlist')
-  @api.response(204,"Products deleted")
+  @api.response(204, "Products deleted")
+  @api.response(400, 'Integer value expected for field: Wishlist ID')
   def delete(self, wishlist_id):
     """
     Deletes all products from a wishlist
     This endpoint will delete all products in a wishlist
     """
+    if not wishlist_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, "Integer value expected for field: Wishlist ID")
+
     wishlist = Wishlist.find_by_id(wishlist_id)
 
     if wishlist:
@@ -418,6 +435,7 @@ class ProductResource(Resource):
   PUT - Update a product in a wishlist
   """
   @api.doc('return_one_product')
+  @api.response(400, 'Integer value expected for fields: Wishlist ID and Product ID')
   @api.response(404, 'Product with id not found in wishlist with id')
   @api.marshal_with(full_product_model)
   def get(self,wishlist_id,product_id):
@@ -427,6 +445,9 @@ class ProductResource(Resource):
     Then look for a product based on a product_id
     """
     app.logger.info("Request to get a specific product in a wishlist")
+    if not wishlist_id.isdigit() or not product_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+
     wishlist_product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
     if not wishlist_product:
@@ -443,12 +464,16 @@ class ProductResource(Resource):
 
   @api.doc('delete_a_product')
   @api.response(204, "Product deleted")
+  @api.response(400, 'Integer value expected for fields: Wishlist ID and Product ID')
   def delete(self, wishlist_id, product_id):
     """
     Deletes a product from a wishlist
     This endpoint will delete an existing product in a wishlist
     """
     app.logger.info(f"Request to delete products with id {product_id} from wishlist {wishlist_id}")
+    if not wishlist_id.isdigit() or not product_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+
     wishlist = Wishlist.find_by_id(wishlist_id)
     if wishlist:
       wishlist.delete_products([product_id])
@@ -467,6 +492,9 @@ class ProductResource(Resource):
     This endpoint will modify an existing product in a wishlist
     """
     app.logger.info("Request to update a product")
+    if not wishlist_id.isdigit() or not product_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+
     product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
     if request.headers.get("Content-Type") != "application/json":
       abort(
@@ -501,6 +529,7 @@ class AddToCartResource(Resource):
   """
 
   @api.doc('place_a_product_to_shopping_cart')
+  @api.response(400, "Integer value expected for fields: Wishlist ID and Product ID")
   @api.response(404, "Product not found in the wishlist")
   @api.marshal_with(full_product_model)
   def put(self, wishlist_id, product_id):
@@ -509,6 +538,9 @@ class AddToCartResource(Resource):
     This endpoint will move an existing product in a wishlist to a shopping cart
     """
     app.logger.info("Request to place a product in wishlist to cart")
+    if not wishlist_id.isdigit() or not product_id.isdigit():
+      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+
     product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
     if not product:
