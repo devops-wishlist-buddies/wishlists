@@ -69,19 +69,19 @@ api = Api(app,
 )
 
 # Define the model so that the docs reflect what can be sent
-create_wishlist_model = api.model('Wishlist', {
+create_wishlist_model = api.model('Create_Wishlist_Model', {
   'name': fields.String(required=True,
     description='The name of the wishlist.'),
   'user_id': fields.Integer(required=True,
     description='User ID who the wishlist belongs to.'),
 })
-rename_wishlist_model = api.model('HelperRenameWishlist', {
+rename_wishlist_model = api.model('Rename_Wishlist_Model', {
   'name': fields.String(required=True,
     description='The name of the wishlist.')
 })
 
 full_wishlist_model = api.inherit(
-  'DBWishlistModel',
+  'Read_Wishlist_Model',
   create_wishlist_model,
   {
     'id': fields.Integer(readOnly=True,
@@ -92,7 +92,7 @@ full_wishlist_model = api.inherit(
 wishlist_args = reqparse.RequestParser()
 wishlist_args.add_argument('user_id', type=int, required=False, help='List Wishlists by user id.')
 
-create_product_model = api.model('Product', {
+create_product_model = api.model('Create_Product_Model', {
   'name': fields.String(required=True,
     description='The name of the product'),
   'price': fields.Float(required=True,
@@ -114,7 +114,7 @@ create_product_model = api.model('Product', {
     enum=InCartStatus._member_names_),
 })
 
-update_product_model = api.model('HelperUpdateProduct', {
+update_product_model = api.model('Update_Product_Model', {
   'name': fields.String(required=False,
     description='The name of the product'),
   'price': fields.Float(required=False,
@@ -133,7 +133,7 @@ update_product_model = api.model('HelperUpdateProduct', {
 })
 
 full_product_model = api.inherit(
-  'DBProductModel',
+  'Read_Product_Model',
   create_product_model,
   {
     'id': fields.String(readOnly=True,
@@ -142,7 +142,7 @@ full_product_model = api.inherit(
 )
 
 wishlist_vo = api.inherit(
-  'FullWishlistModel',
+  'List_Wishlist/Product_Model',
   full_wishlist_model,
   {
     'products': fields.List(fields.Nested(full_product_model))
@@ -171,7 +171,8 @@ class WishlistResource(Resource):
   @api.marshal_with(wishlist_vo)
   def get(self, wishlist_id):
     """
-    Lists all products in a wishlist based on a wishlist_id
+    Read on Wishlists
+    This endpoint will list all products in a wishlist based on a wishlist_id.
     """
     app.logger.info("Request to list products in a wishlist")
     wishlist = Wishlist.find_by_id(wishlist_id)
@@ -189,8 +190,8 @@ class WishlistResource(Resource):
   @api.marshal_with(full_wishlist_model, code = 200)
   def put(self, wishlist_id):
     """
-    Renames a wishlist
-    This endpoint will rename an existing wishlist
+    Update on Wishlists
+    This endpoint will rename an existing wishlist.
     """
     app.logger.info("Request to rename a wishlist")
     if request.headers.get("Content-Type") != "application/json":
@@ -243,8 +244,8 @@ class WishlistResource(Resource):
   @api.response(204, 'Wishlist deleted')
   def delete(self, wishlist_id):
     """
-    Deletes a wishlist
-    This endpoint will delete a wishlist based the id specified in the URL
+    Delete on Wishlists
+    This endpoint will delete a wishlist based the id specified in the URL.
     """
     app.logger.info("Request to delete wishlist with id: %s", wishlist_id)
     wishlist = Wishlist.find_by_id(wishlist_id)
@@ -273,7 +274,7 @@ class WishlistCollection(Resource):
   @api.marshal_list_with(wishlist_vo)
   def get(self):
     """
-    Lists wishlists
+    List on Wishlists
     This endpoint will return all wishlists in the database or wishlists with a specific user_id.
     """
     args = wishlist_args.parse_args()
@@ -312,7 +313,7 @@ class WishlistCollection(Resource):
   @api.marshal_with(full_wishlist_model, code=201)
   def post(self):
     """
-    Creates a wishlist
+    Create on Wishlists
     This endpoint will create a wishlist based the data in the body.
     """
     app.logger.info("Request to create a wishlist")
@@ -357,8 +358,8 @@ class ProductCollectionResource(Resource):
   @api.marshal_with(full_product_model,201)
   def post(self,wishlist_id):
     """
-    Adds a product to a wishlist
-    This endpoint will add a new product to a wishlist
+    Create on Products
+    This endpoint will add a new product to a wishlist.
     """
     app.logger.info("Request to create a product")
     if request.headers.get("Content-Type") != "application/json":
@@ -387,8 +388,8 @@ class ProductCollectionResource(Resource):
   @api.response(204,"Products deleted")
   def delete(self, wishlist_id):
     """
-    Deletes all products from a wishlist
-    This endpoint will delete all products in a wishlist
+    Action "Delete All" on Products
+    This endpoint will delete all products in a wishlist.
     """
     wishlist = Wishlist.find_by_id(wishlist_id)
 
@@ -422,9 +423,9 @@ class ProductResource(Resource):
   @api.marshal_with(full_product_model)
   def get(self,wishlist_id,product_id):
     """
-    Gets a product in a wishlist based on a wishlist_id
+    Read on Products
     This endpoint will firstly look for a wishlist based on a wishlist_id
-    Then look for a product based on a product_id
+    Then look for a product based on a product_id.
     """
     app.logger.info("Request to get a specific product in a wishlist")
     wishlist_product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
@@ -445,8 +446,8 @@ class ProductResource(Resource):
   @api.response(204, "Product deleted")
   def delete(self, wishlist_id, product_id):
     """
-    Deletes a product from a wishlist
-    This endpoint will delete an existing product in a wishlist
+    Delete on Products
+    This endpoint will delete an existing product in a wishlist.
     """
     app.logger.info(f"Request to delete products with id {product_id} from wishlist {wishlist_id}")
     wishlist = Wishlist.find_by_id(wishlist_id)
@@ -463,8 +464,8 @@ class ProductResource(Resource):
   @api.marshal_with(full_product_model)
   def put(self, wishlist_id, product_id):
     """
-    Updates a product
-    This endpoint will modify an existing product in a wishlist
+    Update on Products
+    This endpoint will modify an existing product in a wishlist.
     """
     app.logger.info("Request to update a product")
     product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
@@ -505,8 +506,8 @@ class AddToCartResource(Resource):
   @api.marshal_with(full_product_model)
   def put(self, wishlist_id, product_id):
     """
-    Moves a product to a shopping cart
-    This endpoint will move an existing product in a wishlist to a shopping cart
+    Action "Move" on Products
+    This endpoint will move an existing product in a wishlist to a shopping cart.
     """
     app.logger.info("Request to place a product in wishlist to cart")
     product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
