@@ -46,7 +46,7 @@ def step_impl(context, element_name):
     expect(element.get_attribute('value')).to_be(u'')
 
 ##################################################################
-# These two function simulate copy and paste
+# These functions simulate copy and paste
 ##################################################################
 @when('I copy the "{element_name}" field')
 def step_impl(context, element_name):
@@ -95,7 +95,14 @@ def step_impl(context, name):
     )
     expect(found).to_be(True)
 
-@then('I should see "{name}" in the results as wishlist "{element}"')
+@then('I should not see "{name}" in the results')
+def step_impl(context, name):
+    element = context.driver.find_element_by_id('search-results')
+    error_msg = "I should not see '%s' in '%s'" % (name, element.text)
+    ensure(name in element.text, False, error_msg)
+
+# Searching in the Results wishlists block
+@then('I should see value "{name}" in the wishlist results as wishlist "{element}"')
 def step_impl(context, name, element):
   # find all elements with matching classname
   candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
@@ -118,7 +125,22 @@ def step_impl(context, name, element):
 
   expect(found).to_be(True)
 
-@then('I should see "{name}" in the results as product "{element}"')
+@then('I should not see value "{name}" in the wishlist results as wishlist "{element}"')
+def step_impl(context, name, element):
+  # find all elements with matching classname
+  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_all_elements_located(
+      (By.XPATH, '//div[@class="wishlist-block__'+element+'"]')
+    )
+  )
+  matching_element = None
+  for el in candidates:
+    if el.text == name:
+      matching_element = el
+
+  expect(matching_element).to_be(None)
+
+@then('I should see value "{name}" in the wishlist results as product "{element}"')
 def step_impl(context, name, element):
   # find all elements with matching classname
   candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
@@ -141,11 +163,57 @@ def step_impl(context, name, element):
 
   expect(found).to_be(True)
 
-@then('I should not see "{name}" in the results')
-def step_impl(context, name):
-    element = context.driver.find_element_by_id('search-results')
-    error_msg = "I should not see '%s' in '%s'" % (name, element.text)
-    ensure(name in element.text, False, error_msg)
+@then('I should not see value "{name}" in the wishlist results as product "{element}"')
+def step_impl(context, name, element):
+  # find all elements with matching classname
+  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_all_elements_located(
+      (By.XPATH, '//div[@class="products-item__'+element+'"]')
+    )
+  )
+  matching_element = None
+  for el in candidates:
+    if el.text == name:
+      matching_element = el
+
+  expect(matching_element).to_be(None)
+
+
+# Searching in the Results products table
+@then('I should not see value "{name}" in the product results as product "{element}"')
+def step_impl(context, name, element):
+  # find all elements with matching classname
+  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_all_elements_located(
+      (By.XPATH, '//td[contains(@class, "results-product-table__'+element+'")]')
+    )
+  )
+  matching_element = None
+  for el in candidates:
+    if el.text == name:
+      matching_element = el
+
+  expect(matching_element).to_be(None)
+
+@then('I should see value "{name}" in the product results as product "{element}"')
+def step_impl(context, name, element):
+  # find all elements with matching classname
+  element = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_element_located(
+      (By.XPATH, '//td[contains(text(), \"'+name+'\") and contains(@class, "results-product-table__'+element+'")]')
+    )
+  )
+
+  # verify that it's in the results
+  found = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, 'search-results'),
+            element.text
+        )
+    )
+
+  expect(found).to_be(True)
+
 
 @then('I should see the message "{message}"')
 def step_impl(context, message):
