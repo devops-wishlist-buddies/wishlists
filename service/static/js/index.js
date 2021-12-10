@@ -2,6 +2,17 @@ $(function () {
   // ****************************************
   //  U T I L I T Y   F U N C T I O N S
   // ****************************************
+  const ERROR_MESSAGES = {
+    USER_ID_WRONG_TYPE: "User ID should be an integer.",
+    WISHLIST_ID: "Wishlist ID should be defined as an integer.",
+    USER_ID_WISHLIST_NAME_MISSING: "User ID and name should be defined.",
+    WISHLIST_NAME_MISSING: "Wishlist name cannot be empty.",
+    PRODUCT_NAME_MISSING: "Wishlist name cannot be empty.",
+    MISSING_PRODUCT_FIELDS: "Inventory ID, product name, product price and wishlist ID should be defined.",
+    PRODUCT_FIELDS_WRONG_TYPE: "Inventory ID, product price and wishlist ID should be integers.",
+    PRODUCT_ID_WISHLIST_ID: "Product ID and Wishlist ID should be defined as integers.",
+    PRODUCT_IID_AND_PRICE: "Inventory ID and Price should be defined as Integer and Float respectively.",
+  };
 
   // Updates the form with data from the response
   function update_wishlist_form_data(res) {
@@ -92,15 +103,15 @@ $(function () {
       in_cart_status
     } = data;
 
-    let row = "<tr><td class=\"results-table__wishlist-id col-md-2\">"+id+"</td>"
-      +"<td class=\"col-md-2\">"+name+"</td>"
-      +"<td class=\"col-md-2\">"+price+"</td>"
-      +"<td class=\"col-md-2\">"+inventory_product_id +"</td>"
-      +"<td class=\"col-md-2\">"+wishlist_id +"</td>"
-      +"<td class=\"col-md-2\">"+status+"</td>"
+    let row = "<tr><td class=\"results-product-table__product-id col-md-2\">"+id+"</td>"
+      +"<td class=\"results-product-table__name col-md-2\">"+name+"</td>"
+      +"<td class=\"results-product-table__price col-md-2\">"+price+"</td>"
+      +"<td class=\"results-tproduct-able__inv-id col-md-2\">"+inventory_product_id +"</td>"
+      +"<td class=\"results-product-table__wishlist-id col-md-2\">"+wishlist_id +"</td>"
+      +"<td class=\"results-product-table__status col-md-2\">"+status+"</td>"
 
-    if (short_desc) row += "<td class=\"col-md-2\">"+short_desc +"</td>"
-    if (pic_url) row += "<td class=\"col-md-2\"><a href=\""+pic_url +"\">pic</a></td>"
+    if (short_desc) row += "<td class=\"results-product-table__desc col-md-2\">"+short_desc +"</td>"
+    if (pic_url) row += "<td class=\"results-product-table__image col-md-2\"><a href=\""+pic_url +"\">pic</a></td>"
 
     row += "</tr>";
     results_table.append(row);
@@ -159,13 +170,18 @@ $(function () {
     var user_id = $("#wishlist-user-id").val();
 
     if (!name || !user_id) {
-      flash_message("User id and name should be defined")
+      flash_message(ERROR_MESSAGES.USER_ID_WISHLIST_NAME_MISSING)
+      return;
+    }
+
+    if (isNaN(parseInt(user_id))) {
+      flash_message(ERROR_MESSAGES.USER_ID_WRONG_TYPE)
       return;
     }
 
     var data = {
       "name": name,
-      "user_id": Number(user_id),
+      "user_id": parseInt(user_id),
     };
 
     var ajax = $.ajax({
@@ -207,11 +223,21 @@ $(function () {
     const wishlist_id = $("#wishlist-id").val();
     let queryString = "";
 
-    if (user_id) {
-      queryString += "?user_id=" + user_id;
+    if (wishlist_id && isNaN(parseInt(wishlist_id))) {
+      flash_message(ERROR_MESSAGES.WISHLIST_ID);
+      return;
     }
 
-    const url = wishlist_id ? `/wishlists/${wishlist_id}` : `/wishlists`+ queryString;
+    if (user_id && isNaN(parseInt(user_id))) {
+      flash_message(ERROR_MESSAGES.USER_ID_WRONG_TYPE);
+      return;
+    }
+
+    if (user_id) {
+      queryString += "?user_id=" + parseInt(user_id);
+    }
+
+    const url = wishlist_id ? `/wishlists/${parseInt(wishlist_id)}` : `/wishlists`+ queryString;
     var ajax = $.ajax({
       type: "GET",
       url,
@@ -237,7 +263,17 @@ $(function () {
     clear_table();
 
     var name = $("#wishlist-name").val();
-    var id = $("#wishlist-id").val();
+    var id = parseInt($("#wishlist-id").val());
+
+    if (isNaN(id)) {
+      flash_message(ERROR_MESSAGES.WISHLIST_ID);
+      return;
+    }
+
+    if (name === "") {
+      flash_message(ERROR_MESSAGES.WISHLIST_NAME_MISSING);
+      return;
+    }
 
     var data = {
       "name": name,
@@ -271,7 +307,12 @@ $(function () {
     event.preventDefault();
     clear_table();
 
-    var wishlist_id = $("#wishlist-id").val();
+    var wishlist_id = parseInt($("#wishlist-id").val());
+
+    if (isNaN(wishlist_id)) {
+      flash_message(ERROR_MESSAGES.WISHLIST_ID);
+      return;
+    }
 
     var ajax = $.ajax({
       type: "DELETE",
@@ -298,16 +339,24 @@ $(function () {
     event.preventDefault();
     clear_table();
 
-    const inventory_product_id = $("#wishlist-inventory-product-id").val();
+    const inventory_product_id_value = $("#wishlist-inventory-product-id").val();
     const product_name = $("#wishlist-product-name").val();
-    const product_price = $("#wishlist-product-price").val();
+    const product_price_value = $("#wishlist-product-price").val();
     const product_status = $("#wishlist-product-status").val();
     const product_pic = $("#wishlist-product-pic").val();
     const product_description = $("#wishlist-product-description").val();
-    const wishlist_id = $('#wishlist-id').val();
+    const wishlist_id = parseInt($('#wishlist-id').val());
 
-    if (!inventory_product_id || !product_name || !product_price || !wishlist_id) {
-      flash_message('Inventory ID, product name, product price and wishlist id should be defined')
+    if (!inventory_product_id_value || !product_name || !product_price_value) {
+      flash_message(ERROR_MESSAGES.MISSING_PRODUCT_FIELDS);
+      return;
+    }
+
+    const inventory_product_id = parseInt(inventory_product_id_value);
+    const product_price = parseFloat(product_price_value);
+
+    if (isNaN(inventory_product_id) || isNaN(product_price) || isNaN(wishlist_id)) {
+      flash_message(ERROR_MESSAGES.PRODUCT_FIELDS_WRONG_TYPE);
       return;
     }
 
@@ -345,11 +394,11 @@ $(function () {
     event.preventDefault();
     clear_table();
 
-    const product_id = $('#wishlist-product-id').val();
-    const wishlist_id = $('#wishlist-id').val();
+    const product_id = parseInt($('#wishlist-product-id').val());
+    const wishlist_id = parseInt($('#wishlist-id').val());
 
-    if (!product_id || !wishlist_id) {
-      flash_message("Product Id and Wishlist id should be defined.")
+    if (isNaN(product_id) || isNaN(wishlist_id)) {
+      flash_message("Product ID and Wishlist ID should be defined as integers.")
       return;
     }
 
@@ -379,8 +428,13 @@ $(function () {
     event.preventDefault();
     clear_table();
 
-    const product_id = $("#wishlist-product-id").val();
-    const wishlist_id = $("#wishlist-id").val();
+    const product_id = parseInt($("#wishlist-product-id").val());
+    const wishlist_id = parseInt($("#wishlist-id").val());
+
+    if (isNaN(product_id) || isNaN(wishlist_id)) {
+      flash_message(ERROR_MESSAGES.PRODUCT_ID_WISHLIST_ID);
+      return;
+    }
 
     var ajax = $.ajax({
       type: "DELETE",
@@ -407,28 +461,34 @@ $(function () {
     event.preventDefault();
     clear_table();
 
-    const wishlist_id = $("#wishlist-id").val();
+    const wishlist_id = parseInt($("#wishlist-id").val());
     const name = $("#wishlist-product-name").val();
-    const product_id = $("#wishlist-product-id").val();
+    const product_id = parseInt($("#wishlist-product-id").val());
     const i_id = $("#wishlist-inventory-product-id").val();
     const price = $("#wishlist-product-price").val();
     const status = $("#wishlist-product-status").val();
     const pic = $("#wishlist-product-pic").val();
     const desc = $("#wishlist-product-description").val();
+    console.log(wishlist_id, product_id)
+
+    if (isNaN(wishlist_id) || isNaN(product_id)) {
+      flash_message(ERROR_MESSAGES.PRODUCT_ID_WISHLIST_ID);
+      return;
+    }
+
+    if ((i_id && isNaN(parseInt(i_id))) || (price && isNaN(parseInt(price)))) {
+      flash_message(ERROR_MESSAGES.PRODUCT_IID_AND_PRICE);
+      return;
+    }
 
     const data = {
       status: parseInt(status),
       ...name && { name },
       ...i_id && { inventory_product_id: parseInt(i_id) },
-      ...price && { price: parseFloat(price) },
+      ...price && { price: parseInt(price) },
       ...pic && {pic_url: pic},
       ...desc && { short_desc: desc }
     };
-
-    if(!data){
-      flash_message("Nothing Updated!");
-      return;
-    }
 
     var ajax = $.ajax({
       type: "PUT",
@@ -454,11 +514,11 @@ $(function () {
     event.preventDefault();
     clear_table();
 
-    const product_id = $('#wishlist-product-id').val();
-    const wishlist_id = $('#wishlist-id').val();
+    const product_id = parseInt($('#wishlist-product-id').val());
+    const wishlist_id = parseInt($('#wishlist-id').val());
 
-    if (!product_id || !wishlist_id) {
-      flash_message('Product id and wishlist id should be defined')
+    if (isNaN(product_id) || isNaN(wishlist_id)) {
+      flash_message(ERROR_MESSAGES.PRODUCT_ID_WISHLIST_ID);
       return;
     }
 

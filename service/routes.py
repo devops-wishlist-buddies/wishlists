@@ -175,6 +175,9 @@ class WishlistResource(Resource):
     """
     app.logger.info("Request to list products in a wishlist")
     wishlist = Wishlist.find_by_id(wishlist_id)
+    if not wishlist:
+      abort(status.HTTP_404_NOT_FOUND, "Wishlist with id {} was not found".format(wishlist_id))
+
     wishlist_products = Product.find_all_by_wishlist_id(wishlist_id)
     return WishlistVo(wishlist, wishlist_products).serialize(), status.HTTP_200_OK
 
