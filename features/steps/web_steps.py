@@ -95,6 +95,12 @@ def step_impl(context, name):
     )
     expect(found).to_be(True)
 
+@then('I should not see "{name}" in the results')
+def step_impl(context, name):
+    element = context.driver.find_element_by_id('search-results')
+    error_msg = "I should not see '%s' in '%s'" % (name, element.text)
+    ensure(name in element.text, False, error_msg)
+
 # Searching in the Results wishlists block
 @then('I should see value "{name}" in the wishlist results as wishlist "{element}"')
 def step_impl(context, name, element):
@@ -118,6 +124,21 @@ def step_impl(context, name, element):
     )
 
   expect(found).to_be(True)
+
+@then('I should not see value "{name}" in the wishlist results as wishlist "{element}"')
+def step_impl(context, name, element):
+  # find all elements with matching classname
+  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_all_elements_located(
+      (By.XPATH, '//div[@class="wishlist-block__'+element+'"]')
+    )
+  )
+  matching_element = None
+  for el in candidates:
+    if el.text == name:
+      matching_element = el
+
+  expect(matching_element).to_be(None)
 
 @then('I should see value "{name}" in the wishlist results as product "{element}"')
 def step_impl(context, name, element):
@@ -156,12 +177,6 @@ def step_impl(context, name, element):
       matching_element = el
 
   expect(matching_element).to_be(None)
-
-@then('I should not see "{name}" in the results')
-def step_impl(context, name):
-    element = context.driver.find_element_by_id('search-results')
-    error_msg = "I should not see '%s' in '%s'" % (name, element.text)
-    ensure(name in element.text, False, error_msg)
 
 
 # Searching in the Results products table

@@ -80,6 +80,7 @@ Scenario: Rename a wishlist
     And I press the "Search-wishlist" button
     Then I should see value "New Name" in the wishlist results as wishlist "name"
     And I should not see "My wishlist" in the results
+    And I should not see "My wishlist" in the wishlist results as wishlist "name"
 
 Scenario: Read a wishlist
     When I visit the "Home Page"
