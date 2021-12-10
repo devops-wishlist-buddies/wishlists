@@ -476,7 +476,7 @@ $(function () {
       return;
     }
 
-    if ((i_id && isNaN(parseInt(i_id))) || (price && isNaN(parseInt(price)))) {
+    if ((i_id && isNaN(parseInt(i_id))) || (price && isNaN(parseFloat(price)))) {
       flash_message(ERROR_MESSAGES.PRODUCT_IID_AND_PRICE);
       return;
     }
@@ -485,7 +485,7 @@ $(function () {
       status: parseInt(status),
       ...name && { name },
       ...i_id && { inventory_product_id: parseInt(i_id) },
-      ...price && { price: parseInt(price) },
+      ...price && { price: parseFloat(price) },
       ...pic && {pic_url: pic},
       ...desc && { short_desc: desc }
     };
