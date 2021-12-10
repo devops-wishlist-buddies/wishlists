@@ -105,21 +105,17 @@ def step_impl(context, name):
 @then('I should see value "{name}" in the wishlist results as wishlist "{element}"')
 def step_impl(context, name, element):
   # find all elements with matching classname
-  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
-    expected_conditions.presence_of_all_elements_located(
-      (By.XPATH, '//div[@class="wishlist-block__'+element+'"]')
+  element = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_element_located(
+      (By.XPATH, '//div[contains(text(), \"'+name+'\") and contains(@class, "wishlist-block__'+element+'")]')
     )
   )
-  matching_element = ''
-  for el in candidates:
-    if el.text == name:
-      matching_element = el
 
   # verify that it's in the results
   found = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element(
             (By.ID, 'search-results'),
-            matching_element.text
+            element.text
         )
     )
 
@@ -128,36 +124,26 @@ def step_impl(context, name, element):
 @then('I should not see value "{name}" in the wishlist results as wishlist "{element}"')
 def step_impl(context, name, element):
   # find all elements with matching classname
-  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
-    expected_conditions.presence_of_all_elements_located(
-      (By.XPATH, '//div[@class="wishlist-block__'+element+'"]')
-    )
+  candidates = context.driver.find_elements_by_xpath(
+    'div[contains(text(), \"'+name+'\") and contains(@class, "wishlist-block__'+element+'")]'
   )
-  matching_element = None
-  for el in candidates:
-    if el.text == name:
-      matching_element = el
 
-  expect(matching_element).to_be(None)
+  expect(len(candidates)).to_be(0)
 
 @then('I should see value "{name}" in the wishlist results as product "{element}"')
 def step_impl(context, name, element):
   # find all elements with matching classname
-  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
-    expected_conditions.presence_of_all_elements_located(
-      (By.XPATH, '//div[@class="products-item__'+element+'"]')
+  element = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
+    expected_conditions.presence_of_element_located(
+      (By.XPATH, '//div[contains(text(), \"'+name+'\") and contains(@class, "products-item__'+element+'")]')
     )
   )
-  matching_element = ''
-  for el in candidates:
-    if el.text == name:
-      matching_element = el
 
   # verify that it's in the results
   found = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element(
             (By.ID, 'search-results'),
-            matching_element.text
+            element.text
         )
     )
 
@@ -166,17 +152,11 @@ def step_impl(context, name, element):
 @then('I should not see value "{name}" in the wishlist results as product "{element}"')
 def step_impl(context, name, element):
   # find all elements with matching classname
-  candidates = WebDriverWait(context.driver, context.WAIT_SECONDS).until(
-    expected_conditions.presence_of_all_elements_located(
-      (By.XPATH, '//div[@class="products-item__'+element+'"]')
-    )
+  candidates = context.driver.find_elements_by_xpath(
+    'div[contains(text(), \"'+name+'\") and contains(@class, "products-item__'+element+'")]'
   )
-  matching_element = None
-  for el in candidates:
-    if el.text == name:
-      matching_element = el
 
-  expect(matching_element).to_be(None)
+  expect(len(candidates)).to_be(0)
 
 
 # Searching in the Results products table
