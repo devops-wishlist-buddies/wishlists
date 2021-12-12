@@ -105,6 +105,10 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.delete("/wishlists", json=new_wl, content_type="application/json")
     self.assertEqual(resp.status_code,405)
 
+    new_wl = ["user_id", "1"]
+    resp = self.app.post("/wishlists", json=new_wl, content_type="application/json")
+    self.assertEqual(resp.status_code, 400)
+
   def test_list_all_wishlists(self):
     """List all wishlists"""
     resp = self.app.get("/wishlists")
@@ -160,6 +164,9 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.delete("{0}/{1}".format(BASE_URL, 20000), content_type="application/json")
     self.assertEqual(resp.status_code,204)
 
+    resp = self.app.delete("{0}/{1}".format(BASE_URL, "abs"), content_type="application/json")
+    self.assertEqual(resp.status_code,400)
+
   def test_delete_products_from_wishlist(self):
     """Delete products from wishlist"""
     w_instance_1 = WishlistFactory()
@@ -188,6 +195,9 @@ class TestWishlistsServer(unittest.TestCase):
 
     resp = self.app.delete("/wishlists/{}/products".format(w_instance_1.id))
     self.assertEqual(resp.status_code,status.HTTP_204_NO_CONTENT)
+
+    resp = self.app.delete("/wishlists/abc/products")
+    self.assertEqual(resp.status_code,status.HTTP_400_BAD_REQUEST)
 
     resp = self.app.get("/wishlists/1/products")
     self.assertEqual(resp.status_code, 405)
@@ -453,6 +463,12 @@ class TestWishlistsServer(unittest.TestCase):
       json={'name': None}, content_type="application/json")
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+    resp = self.app.put("/wishlists/2b",\
+      json={'name': None}, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    resp = self.app.put("/wishlists/{0}".format(w_instance_1.id), content_type="text/javascript")
+    self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
   def test_update_product_in_wishlist(self):
     """Update product"""
@@ -514,6 +530,10 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
     self.assertEqual(resp.get_json()['message'], "Field name cannot be null")
 
+    resp = self.app.put("/wishlists/abs/products/{0}".format(product_id),\
+      json={'name': None}, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
   def test_add_product_to_cart(self):
     """ Tests "Add product to shopcart" action on a product in a wishlist """
     w_instance_1 = WishlistFactory()
@@ -532,4 +552,7 @@ class TestWishlistsServer(unittest.TestCase):
 
     resp = self.app.put("/wishlists/{0}/products/{1}/add-to-cart".format(w_instance_1.id, 15))
     self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    resp = self.app.put("/wishlists/abs/products/ebd/add-to-cart")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
