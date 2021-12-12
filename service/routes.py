@@ -321,7 +321,7 @@ class WishlistCollection(Resource):
     app.logger.info("Request to create a wishlist")
     # Check for form submission data
     if request.headers.get("Content-Type") != "application/json":
-      return abort(
+      abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
         "Unsupported media type : application/json expected"
       )
@@ -365,7 +365,7 @@ class ProductCollectionResource(Resource):
     """
     app.logger.info("Request to create a product")
     if request.headers.get("Content-Type") != "application/json":
-      return abort(
+      abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, \
         "Unsupported media type : application/json expected"
       )

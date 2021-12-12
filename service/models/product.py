@@ -43,20 +43,31 @@ class Product(db.Model):
     self.id = None
     self.in_cart_status = InCartStatus.DEFAULT #ensure default value upon creation
     db.session.add(self)
-    db.session.commit()
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
+
+    return self.id
 
   def update(self):
     """Update Product instance in database"""
     logger.info("Updating %s ...", self.name)
     if not self.id:
       raise DataValidationError("Update called with empty ID field")
-    db.session.commit()
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
 
   def delete(self):
     """Delete Product instance in database"""
     logger.info("Deleting %s ...", self.name)
     db.session.delete(self)
-    db.session.commit()
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
 
   def serialize(self) -> dict:
     """serialize a Product into a dictionary"""

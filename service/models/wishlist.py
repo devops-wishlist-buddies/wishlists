@@ -52,15 +52,20 @@ class Wishlist(db.Model):
     logger.info("Creating %s ...", self.name)
     self.id = None
     db.session.add(self)
-    db.session.commit()
-    return self.id
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
 
   def update(self):
     """Update Wishlist instance in database"""
     logger.info("Updating wishlist %s ...", self.name)
     if not self.id:
       raise DataValidationError("Update called with empty ID field")
-    db.session.commit()
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
 
   def read(self):
     """Read Wishlist instance from database"""
@@ -98,8 +103,10 @@ class Wishlist(db.Model):
     Product.delete_all_by_wishlist_id(self.id)
     logger.info("Deleting wishlist %s", self.name)
     db.session.delete(self)
-    db.session.commit()
-    return 1
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
 
   @classmethod
   def find_all(cls):
