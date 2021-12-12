@@ -17,7 +17,7 @@ from flask import Flask
 from sqlalchemy import asc
 
 from service.models.product import Product
-from service.models.model_utils import EntityNotFoundError, db,logger,DataValidationError
+from service.models.model_utils import MAX_NAME_LENGTH, EntityNotFoundError, db,logger,DataValidationError
 
 class Wishlist(db.Model):
   __tablename__ = 'wishlist'
@@ -36,13 +36,18 @@ class Wishlist(db.Model):
   def deserialize(self,data):
     try:
       if isinstance(data['name'],str) and isinstance(data['user_id'],int):
-        self.name = data['name']
         self.user_id = data['user_id']
       else:
         raise TypeError("Invalid type of name or user_id, string" \
           "expected for name and integer expected for user_id")
+
+      if len(data['name']) <= MAX_NAME_LENGTH:
+        self.name = data['name']
+      else:
+        raise KeyError(f"Name field should be shorter than {MAX_NAME_LENGTH} characters")
+
     except KeyError as error:
-      raise DataValidationError("Invalid Wishlist: missing " + error.args[0])
+      raise DataValidationError(error.args[0])
     except TypeError as error:
       raise DataValidationError(error.args[0])
     return self

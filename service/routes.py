@@ -32,7 +32,7 @@ from . import status  # HTTP Status Codes
 # Import Flask application
 from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
-from service.models.model_utils import Availability, InCartStatus, get_non_null_product_fields, db
+from service.models.model_utils import Availability, DataValidationError, InCartStatus, get_non_null_product_fields, db
 
 ######################################################################
 # GET INDEX
@@ -521,6 +521,15 @@ class AddToCartResource(Resource):
     product.update()
 
     return product.serialize(),status.HTTP_200_OK
+
+
+@api.errorhandler(DataValidationError)
+def handle_data_validation_error(error):
+  return {"message":error.args[0]}, status.HTTP_400_BAD_REQUEST
+
+@api.errorhandler(TypeError)
+def handle_type_error(error):
+  return {"message":error.args[0]}, status.HTTP_400_BAD_REQUEST
 
 ######################################################################
 # INITIALIZE DATABASE
