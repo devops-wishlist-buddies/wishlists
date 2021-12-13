@@ -66,6 +66,7 @@ Scenario: Rename a wishlist
     And I press the "rename-wishlist" button
     Then I should see the message "Wishlist name cannot be empty."
 
+
     When I press the "wishlists-clear" button
     And I press the "Search-wishlist" button
     Then I should see the message "Success"
