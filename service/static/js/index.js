@@ -2,12 +2,14 @@ $(function () {
   // ****************************************
   //  U T I L I T Y   F U N C T I O N S
   // ****************************************
+  const STRING_LIMIT = 64499;
   const ERROR_MESSAGES = {
     USER_ID_WRONG_TYPE: "User ID should be an integer.",
     WISHLIST_ID: "Wishlist ID should be defined as an integer.",
     USER_ID_WISHLIST_NAME_MISSING: "User ID and name should be defined.",
     WISHLIST_NAME_MISSING: "Wishlist name cannot be empty.",
     PRODUCT_NAME_MISSING: "Wishlist name cannot be empty.",
+    NAME_TOO_LONG: "Name field should be shorter than 65000 characters",
     MISSING_PRODUCT_FIELDS: "Inventory ID, product name, product price and wishlist ID should be defined.",
     PRODUCT_FIELDS_WRONG_TYPE: "Inventory ID, product price and wishlist ID should be integers.",
     PRODUCT_ID_WISHLIST_ID: "Product ID and Wishlist ID should be defined as integers.",
@@ -102,16 +104,17 @@ $(function () {
       wishlist_id,
       in_cart_status
     } = data;
-
+    const in_cart_label = in_cart_status === 'DEFAULT' ? 'Not in cart' : 'Added to cart';
     let row = "<tr><td class=\"results-product-table__product-id col-md-2\">"+id+"</td>"
       +"<td class=\"results-product-table__name col-md-2\">"+name+"</td>"
       +"<td class=\"results-product-table__price col-md-2\">"+price+"</td>"
       +"<td class=\"results-tproduct-able__inv-id col-md-2\">"+inventory_product_id +"</td>"
       +"<td class=\"results-product-table__wishlist-id col-md-2\">"+wishlist_id +"</td>"
       +"<td class=\"results-product-table__status col-md-2\">"+status+"</td>"
+      +"<td class=\"results-product-table__in-cart-status col-md-2\">"+in_cart_label+"</td>";
 
-    if (short_desc) row += "<td class=\"results-product-table__desc col-md-2\">"+short_desc +"</td>"
-    if (pic_url) row += "<td class=\"results-product-table__image col-md-2\"><a href=\""+pic_url +"\">pic</a></td>"
+    if (short_desc) row += "<td class=\"results-product-table__desc col-md-2\">"+short_desc +"</td>";
+    if (pic_url) row += "<td class=\"results-product-table__image col-md-2\"><a href=\""+pic_url +"\">pic</a></td>";
 
     row += "</tr>";
     results_table.append(row);
@@ -127,6 +130,7 @@ $(function () {
     header.append('<th class="col-md-2">Inventory \#</th></tr>');
     header.append('<th class="col-md-2">Wishlist ID</th></tr>');
     header.append('<th class="col-md-2">Status</th></tr>');
+    header.append('<th class="col-md-2">In Cart Status</th></tr>');
     header.append('<th class="col-md-2">Description</th></tr>');
     header.append('<th class="col-md-2">Picture</th></tr>');
 
@@ -176,6 +180,11 @@ $(function () {
 
     if (isNaN(parseInt(user_id))) {
       flash_message(ERROR_MESSAGES.USER_ID_WRONG_TYPE)
+      return;
+    }
+
+    if (name.length > STRING_LIMIT) {
+      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
       return;
     }
 
@@ -275,6 +284,11 @@ $(function () {
       return;
     }
 
+    if (name.length > STRING_LIMIT) {
+      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
+      return;
+    }
+
     var data = {
       "name": name,
     };
@@ -359,6 +373,12 @@ $(function () {
       flash_message(ERROR_MESSAGES.PRODUCT_FIELDS_WRONG_TYPE);
       return;
     }
+
+    if (product_name.length > STRING_LIMIT) {
+      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
+      return;
+    }
+
 
     const data = {
       "name": product_name,
@@ -480,6 +500,12 @@ $(function () {
       flash_message(ERROR_MESSAGES.PRODUCT_IID_AND_PRICE);
       return;
     }
+
+    if (name.length > STRING_LIMIT) {
+      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
+      return;
+    }
+
 
     const data = {
       status: parseInt(status),
