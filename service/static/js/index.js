@@ -102,16 +102,17 @@ $(function () {
       wishlist_id,
       in_cart_status
     } = data;
-
+    const in_cart_label = in_cart_status === 'DEFAULT' ? 'Not in cart' : 'Added to cart';
     let row = "<tr><td class=\"results-product-table__product-id col-md-2\">"+id+"</td>"
       +"<td class=\"results-product-table__name col-md-2\">"+name+"</td>"
       +"<td class=\"results-product-table__price col-md-2\">"+price+"</td>"
       +"<td class=\"results-tproduct-able__inv-id col-md-2\">"+inventory_product_id +"</td>"
       +"<td class=\"results-product-table__wishlist-id col-md-2\">"+wishlist_id +"</td>"
       +"<td class=\"results-product-table__status col-md-2\">"+status+"</td>"
+      +"<td class=\"results-product-table__in-cart-status col-md-2\">"+in_cart_label+"</td>";
 
-    if (short_desc) row += "<td class=\"results-product-table__desc col-md-2\">"+short_desc +"</td>"
-    if (pic_url) row += "<td class=\"results-product-table__image col-md-2\"><a href=\""+pic_url +"\">pic</a></td>"
+    if (short_desc) row += "<td class=\"results-product-table__desc col-md-2\">"+short_desc +"</td>";
+    if (pic_url) row += "<td class=\"results-product-table__image col-md-2\"><a href=\""+pic_url +"\">pic</a></td>";
 
     row += "</tr>";
     results_table.append(row);
@@ -127,6 +128,7 @@ $(function () {
     header.append('<th class="col-md-2">Inventory \#</th></tr>');
     header.append('<th class="col-md-2">Wishlist ID</th></tr>');
     header.append('<th class="col-md-2">Status</th></tr>');
+    header.append('<th class="col-md-2">In Cart Status</th></tr>');
     header.append('<th class="col-md-2">Description</th></tr>');
     header.append('<th class="col-md-2">Picture</th></tr>');
 
@@ -480,6 +482,7 @@ $(function () {
       flash_message(ERROR_MESSAGES.PRODUCT_IID_AND_PRICE);
       return;
     }
+
 
     const data = {
       status: parseInt(status),
