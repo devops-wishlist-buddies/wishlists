@@ -225,6 +225,9 @@ class TestWishlistsServer(unittest.TestCase):
     resp = self.app.delete("/wishlists/16359/products/1")
     self.assertEqual(resp.status_code, 204)
 
+    resp = self.app.delete("/wishlists/abc/products/def")
+    self.assertEqual(resp.status_code, 400)
+
     resp = self.app.delete("/wishlists/{}/products/{}".format(w_instance_1.id, p_instance_1.id))
     self.assertEqual(resp.status_code, 204)
     new_product_list = Product.find_all_by_wishlist_id(w_instance_1.id)
@@ -237,6 +240,11 @@ class TestWishlistsServer(unittest.TestCase):
 
   def test_list_products_in_wishlist(self):
     """List all products in a wishlist"""
+    resp = self.app.get(
+      "/wishlists/1",
+      content_type = "application/json"
+    )
+    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
     w_instance_1 = WishlistFactory()
     w_instance_1.create()
     w_instance_2 = WishlistFactory()
@@ -254,6 +262,12 @@ class TestWishlistsServer(unittest.TestCase):
 
     wps = Product.find_all()
     self.assertEqual(len(wps),3)
+
+    resp = self.app.get(
+      "/wishlists/abc",
+      content_type = "application/json"
+    )
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     resp = self.app.get(
       "/wishlists/{0}".format(w_instance_1.id),
@@ -296,6 +310,18 @@ class TestWishlistsServer(unittest.TestCase):
     self.assertEqual(len(wps),4)
 
     resp = resp = self.app.get(
+      "/wishlists/abc/products/def",
+      content_type = "application/json"
+    )
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    resp = resp = self.app.get(
+      "/wishlists/{0}/products/100000".format(w_instance_1.id),
+      content_type = "application/json"
+    )
+    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    resp = resp = self.app.get(
           "/wishlists/{0}/products/{1}".format(w_instance_1.id, p_instance_2.id),
           content_type = "application/json"
       )
@@ -329,6 +355,10 @@ class TestWishlistsServer(unittest.TestCase):
       'short_desc': "this is a piggy",
       'inventory_product_id': 12,
     }
+
+    resp = self.app.post("/wishlists/abc/products",json=p_instance_1, content_type="application/json")
+    self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     # valid requests
     resp = self.app.post("/wishlists/{0}/products".format(w_instance_1.id),\
       json=p_instance_1, content_type="application/json")
