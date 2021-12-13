@@ -17,7 +17,18 @@ Wishlists Service
 
 Paths:
 ------
-TBD
+/wishlists -- Lists wishlists
+/wishlists -- Creates a wishlist
+/wishlists/{wishlist_id} -- Renames a wishlist
+/wishlists/{wishlist_id} -- Lists all products in a wishlist based on a wishlist_id
+/wishlists/{wishlist_id} -- Deletes a wishlist
+/wishlists/{wishlist_id}/products -- Adds a product to a wishlist
+/wishlists/{wishlist_id}/products -- Deletes all products from a wishlist
+/wishlists/{wishlist_id}/products/{product_id} -- Updates a product
+/wishlists/{wishlist_id}/products/{product_id} -- Gets a product in a wishlist based on a wishlist_id
+/wishlists/{wishlist_id}/products/{product_id} -- Deletes a product from a wishlist
+/wishlists/{wishlist_id}/products/{product_id}/add-to-cart -- Moves a product to a shopping cart
+
 """
 
 from itertools import product
