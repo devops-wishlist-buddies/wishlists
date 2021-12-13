@@ -16,18 +16,18 @@
 Wishlists Service
 
 Paths:
-------
-/wishlists -- Lists wishlists
-/wishlists -- Creates a wishlist
-/wishlists/{wishlist_id} -- Renames a wishlist
-/wishlists/{wishlist_id} -- Lists all products in a wishlist based on a wishlist_id
-/wishlists/{wishlist_id} -- Deletes a wishlist
-/wishlists/{wishlist_id}/products -- Adds a product to a wishlist
-/wishlists/{wishlist_id}/products -- Deletes all products from a wishlist
-/wishlists/{wishlist_id}/products/{product_id} -- Updates a product
-/wishlists/{wishlist_id}/products/{product_id} -- Gets a product in a wishlist based on a wishlist_id
-/wishlists/{wishlist_id}/products/{product_id} -- Deletes a product from a wishlist
-/wishlists/{wishlist_id}/products/{product_id}/add-to-cart -- Moves a product to a shopping cart
+
+GET /wishlists -- List on Wishlists
+POST /wishlists -- Create on Wishlists
+GET /wishlists/{wishlist_id} -- Read on Wishlists
+DELETE /wishlists/{wishlist_id} -- Delete on Wishlists
+PUT /wishlists/{wishlist_id} -- Update on Wishlists
+DELETE /wishlists/{wishlist_id}/products -- Action "Delete All" on Products
+POST /wishlists/{wishlist_id}/products -- Create on products
+GET /wishlists/{wishlist_id}/products/{product_id} -- Read on Products
+DELETE /wishlists/{wishlist_id}/products/{product_id} -- Delete on Products
+PUT /wishlists/{wishlist_id}/products/{product_id} -- Update on Products
+PUT /wishlists/{wishlist_id}/products/{product_id}/add-to-cart -- Action "Move" on Products
 
 """
 
