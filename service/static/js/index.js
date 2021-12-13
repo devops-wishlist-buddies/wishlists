@@ -2,14 +2,12 @@ $(function () {
   // ****************************************
   //  U T I L I T Y   F U N C T I O N S
   // ****************************************
-  const STRING_LIMIT = 64499;
   const ERROR_MESSAGES = {
     USER_ID_WRONG_TYPE: "User ID should be an integer.",
     WISHLIST_ID: "Wishlist ID should be defined as an integer.",
     USER_ID_WISHLIST_NAME_MISSING: "User ID and name should be defined.",
     WISHLIST_NAME_MISSING: "Wishlist name cannot be empty.",
     PRODUCT_NAME_MISSING: "Wishlist name cannot be empty.",
-    NAME_TOO_LONG: "Name field should be shorter than 65000 characters",
     MISSING_PRODUCT_FIELDS: "Inventory ID, product name, product price and wishlist ID should be defined.",
     PRODUCT_FIELDS_WRONG_TYPE: "Inventory ID, product price and wishlist ID should be integers.",
     PRODUCT_ID_WISHLIST_ID: "Product ID and Wishlist ID should be defined as integers.",
@@ -183,11 +181,6 @@ $(function () {
       return;
     }
 
-    if (name.length > STRING_LIMIT) {
-      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
-      return;
-    }
-
     var data = {
       "name": name,
       "user_id": parseInt(user_id),
@@ -284,11 +277,6 @@ $(function () {
       return;
     }
 
-    if (name.length > STRING_LIMIT) {
-      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
-      return;
-    }
-
     var data = {
       "name": name,
     };
@@ -373,12 +361,6 @@ $(function () {
       flash_message(ERROR_MESSAGES.PRODUCT_FIELDS_WRONG_TYPE);
       return;
     }
-
-    if (product_name.length > STRING_LIMIT) {
-      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
-      return;
-    }
-
 
     const data = {
       "name": product_name,
@@ -498,11 +480,6 @@ $(function () {
 
     if ((i_id && isNaN(parseInt(i_id))) || (price && isNaN(parseFloat(price)))) {
       flash_message(ERROR_MESSAGES.PRODUCT_IID_AND_PRICE);
-      return;
-    }
-
-    if (name.length > STRING_LIMIT) {
-      flash_message(ERROR_MESSAGES.NAME_TOO_LONG);
       return;
     }
 
