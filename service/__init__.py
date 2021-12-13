@@ -30,7 +30,7 @@ app = Flask(__name__)
 app.config.from_object("config")
 app.json_encoder = JsonEncoder
 # Import the rutes After the Flask app is created
-from service import routes, models, error_handlers
+from service import routes
 
 # Set up logging for production
 if __name__ != "__main__":

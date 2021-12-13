@@ -4,6 +4,8 @@ import decimal
 from flask.json import JSONEncoder
 from flask_sqlalchemy import SQLAlchemy
 
+MAX_NAME_LENGTH = 64
+
 logger = logging.getLogger("flask.app")
 db = SQLAlchemy()
 

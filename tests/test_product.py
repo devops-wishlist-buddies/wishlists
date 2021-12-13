@@ -266,6 +266,17 @@ class TestProductModel(unittest.TestCase):
     }
     self.assertRaises(DataValidationError, product_instance.deserialize, data)
 
+    data = {
+      'name': "thishisjidfjiwnfkndkcviojwrqknnfdhshdyufwernewnfndsvjkjhfiweriwngmnkngmfnkljvkj",
+      'price': 100.5,
+      'status': 'Unavailable',
+      'pic_url': "www.piggy.com/1.png",
+      'short_desc': "this is a piggy",
+      'wishlist_id': 5,
+      'inventory_product_id': 315
+    }
+    self.assertRaises(DataValidationError, product_instance.deserialize, data)
+
 
 
   def test_deserialize_bad_status(self):

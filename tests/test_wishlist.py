@@ -217,6 +217,17 @@ class TestWishlistModel(unittest.TestCase):
     w_instance = Wishlist()
     self.assertRaises(DataValidationError, w_instance.deserialize, data)
 
+  def test_deserialize_bad_data(self):
+    """Test deserialization of a Wishlist with missing data"""
+    data = {
+      'id':1,
+      'name':'sdfhefjkfhjsdhuifwuiehrjwefjkhuovihwrjkhealjhiudshfuiherjhiuoehfioaehnrkjskncvjknds',
+      'user_id':10
+    }
+
+    w_instance = Wishlist()
+    self.assertRaises(DataValidationError, w_instance.deserialize, data)
+
   def test_add_products(self):
     """Test adding products to a wishlist"""
     w_instance = WishlistFactory()

@@ -19,7 +19,7 @@ wishlist_id
 
 from flask import Flask
 from sqlalchemy import asc
-from .model_utils import db, logger, Availability, InCartStatus, DataValidationError, get_non_null_product_fields
+from .model_utils import MAX_NAME_LENGTH, db, logger, Availability, InCartStatus, DataValidationError, get_non_null_product_fields
 
 class Product(db.Model):
 
@@ -43,20 +43,31 @@ class Product(db.Model):
     self.id = None
     self.in_cart_status = InCartStatus.DEFAULT #ensure default value upon creation
     db.session.add(self)
-    db.session.commit()
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
+
+    return self.id
 
   def update(self):
     """Update Product instance in database"""
     logger.info("Updating %s ...", self.name)
     if not self.id:
       raise DataValidationError("Update called with empty ID field")
-    db.session.commit()
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
 
   def delete(self):
     """Delete Product instance in database"""
     logger.info("Deleting %s ...", self.name)
     db.session.delete(self)
-    db.session.commit()
+    try:
+      db.session.commit()
+    except:
+      db.session.rollback()
 
   def serialize(self) -> dict:
     """serialize a Product into a dictionary"""
@@ -90,6 +101,9 @@ class Product(db.Model):
         if data.get(non_null_key) is None:
           raise DataValidationError("Field {0} cannot be null".format(non_null_key))
 
+      if len(data.get('name')) > MAX_NAME_LENGTH:
+        raise AttributeError(f"Name field should be shorter than {MAX_NAME_LENGTH} characters")
+
       self.name = data.get('name')
       self.price = float(data.get('price'))
 
@@ -112,11 +126,9 @@ class Product(db.Model):
       self.short_desc = data.get('short_desc')
       self.inventory_product_id = int(data.get('inventory_product_id'))
       self.wishlist_id = int(data.get('wishlist_id'))
-    except TypeError as error:
-      raise DataValidationError("Invalud Product: body of request contained bad or no data")
     except AttributeError as error:
       logger.error(error)
-      raise DataValidationError("Unable to parse dictionary")
+      raise DataValidationError(error.args[0])
     return self
 
   @classmethod
