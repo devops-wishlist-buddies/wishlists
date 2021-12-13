@@ -462,17 +462,12 @@ class ProductResource(Resource):
     if not wishlist_id.isdigit() or not product_id.isdigit():
       abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
 
-    wishlist_product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
-
-    if not wishlist_product:
-      abort(status.HTTP_404_NOT_FOUND, f"Wishlist with id {wishlist_id} and Product with" \
-          f"id {product_id} was not found in Wishlist_Product db"
-      )
-
-    product = Product.find_by_id(product_id)
+    product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
     if not product:
-      abort(status.HTTP_404_NOT_FOUND, f"Product with id {product_id} was not found in Product db")
+      abort(status.HTTP_404_NOT_FOUND, f"Product with wishlist_id {wishlist_id} and " \
+          f"id {product_id} was not found in Product db"
+      )
 
     return product.serialize(), status.HTTP_200_OK
 
