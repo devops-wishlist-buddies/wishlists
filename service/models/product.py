@@ -17,9 +17,9 @@ inventory_product_id
 wishlist_id
 """
 
-from flask import Flask
 from sqlalchemy import asc
-from .model_utils import MAX_NAME_LENGTH, db, logger, Availability, InCartStatus, DataValidationError, get_non_null_product_fields
+from .model_utils import MAX_NAME_LENGTH, db, logger, \
+  Availability, InCartStatus, DataValidationError, get_non_null_product_fields
 
 class Product(db.Model):
 

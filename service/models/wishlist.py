@@ -17,9 +17,11 @@ from flask import Flask
 from sqlalchemy import asc
 
 from service.models.product import Product
-from service.models.model_utils import MAX_NAME_LENGTH, EntityNotFoundError, db,logger,DataValidationError
+from service.models.model_utils import MAX_NAME_LENGTH, EntityNotFoundError, db, \
+  logger,DataValidationError
 
 class Wishlist(db.Model):
+  """Represents a Wishlist Model in the database."""
   __tablename__ = 'wishlist'
 
   id = db.Column(db.Integer,primary_key = True)
@@ -27,6 +29,7 @@ class Wishlist(db.Model):
   user_id = db.Column(db.Integer, nullable=False)
 
   def serialize(self)->dict:
+    """Turns a Wishlist instance into a dictionary-like object"""
     return {
       'id':self.id,
       'user_id':self.user_id,
@@ -34,6 +37,7 @@ class Wishlist(db.Model):
     }
 
   def deserialize(self,data):
+    """Turns a dictionary-like object into a Wishlist class instance"""
     try:
       if isinstance(data['name'],str) and isinstance(data['user_id'],int):
         self.user_id = data['user_id']
@@ -143,6 +147,7 @@ class Wishlist(db.Model):
     return [vo.serialize() for vo in res]
 
 class WishlistVo:
+  """Represents a full Wishlist Model with a list of Products that it includes."""
   def __init__(self,wishlist:Wishlist,products:list) -> None:
     self.id = wishlist.id
     self.name = wishlist.name
