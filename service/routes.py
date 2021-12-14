@@ -31,11 +31,8 @@ PUT /wishlists/{wishlist_id}/products/{product_id}/add-to-cart -- Action "Move" 
 
 """
 
-from itertools import product
-import os
-import logging
-from flask import jsonify, request, make_response, abort
-from flask_restx import Api, Resource, fields, reqparse, inputs
+from flask import jsonify, request, abort
+from flask_restx import Api, Resource, fields, reqparse
 
 from . import app
 from . import status  # HTTP Status Codes
@@ -43,7 +40,7 @@ from . import status  # HTTP Status Codes
 # Import Flask application
 from service.models.wishlist import Wishlist, WishlistVo
 from service.models.product import Product
-from service.models.model_utils import Availability, DataValidationError, InCartStatus, get_non_null_product_fields, db
+from service.models.model_utils import db, DataValidationError, InCartStatus, Availability
 
 ######################################################################
 # GET INDEX
@@ -407,7 +404,12 @@ class ProductCollectionResource(Resource):
     product.deserialize(data)
     product.create()
 
-    location_url = api.url_for(ProductResource, wishlist_id=wishlist_id,product_id = product.id ,_external=True)
+    location_url = api.url_for(
+      ProductResource,
+      wishlist_id=wishlist_id,
+      product_id = product.id,
+      _external=True
+    )
 
     return product.serialize(), status.HTTP_201_CREATED, {'Location':location_url}
 
@@ -461,7 +463,10 @@ class ProductResource(Resource):
     """
     app.logger.info("Request to get a specific product in a wishlist")
     if not wishlist_id.isdigit() or not product_id.isdigit():
-      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+      abort(
+        status.HTTP_400_BAD_REQUEST,
+        'Integer field expected for fields: Wishlist ID and Product ID'
+      )
 
     product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
@@ -482,7 +487,10 @@ class ProductResource(Resource):
     """
     app.logger.info(f"Request to delete products with id {product_id} from wishlist {wishlist_id}")
     if not wishlist_id.isdigit() or not product_id.isdigit():
-      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+      abort(
+        status.HTTP_400_BAD_REQUEST,
+        'Integer field expected for fields: Wishlist ID and Product ID'
+      )
 
     wishlist = Wishlist.find_by_id(wishlist_id)
     if wishlist:
@@ -503,7 +511,10 @@ class ProductResource(Resource):
     """
     app.logger.info("Request to update a product")
     if not wishlist_id.isdigit() or not product_id.isdigit():
-      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+      abort(
+        status.HTTP_400_BAD_REQUEST,
+        'Integer field expected for fields: Wishlist ID and Product ID'
+      )
 
     product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
     if request.headers.get("Content-Type") != "application/json":
@@ -549,12 +560,18 @@ class AddToCartResource(Resource):
     """
     app.logger.info("Request to place a product in wishlist to cart")
     if not wishlist_id.isdigit() or not product_id.isdigit():
-      abort(status.HTTP_400_BAD_REQUEST, 'Integer field expected for fields: Wishlist ID and Product ID')
+      abort(
+        status.HTTP_400_BAD_REQUEST,
+        'Integer field expected for fields: Wishlist ID and Product ID'
+      )
 
     product = Product.find_by_wishlist_id_and_product_id(wishlist_id, product_id)
 
     if not product:
-      abort(status.HTTP_404_NOT_FOUND,f"Product with id {product_id} was not found in wishlist with id {wishlist_id}")
+      abort(
+        status.HTTP_404_NOT_FOUND,
+        f"Product with id {product_id} was not found in wishlist with id {wishlist_id}"
+      )
 
     product.in_cart_status = InCartStatus.IN_CART
     product.update()

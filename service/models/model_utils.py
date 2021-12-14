@@ -1,3 +1,7 @@
+"""
+Utility classes and methods to support API Models
+"""
+
 from enum import Enum
 import logging
 import decimal
@@ -20,10 +24,14 @@ class EntityNotFoundError(KeyError):
   pass
 
 class Availability(Enum):
+  """Enumerator denoting possible values of Product availability"""
+
   AVAILABLE = 1
   UNAVAILABLE = 0
 
 class InCartStatus(Enum):
+  """Enumerator denoting possible values of Product in-cart status"""
+
   ORDERED = 2
   IN_CART = 1
   DEFAULT = 0
